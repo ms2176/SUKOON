@@ -1,12 +1,36 @@
-import { Box, Heading, HStack, Stack } from "@chakra-ui/react";
+import { Box, Button, Heading, HStack, Stack } from "@chakra-ui/react";
 import './Navbar.css'
 import { FaHome } from "react-icons/fa";
 import { GiCircleForest } from "react-icons/gi";
 import { SlGraph } from "react-icons/sl";
 import { MdAccountCircle } from "react-icons/md";
 import { BsDoorClosed } from "react-icons/bs";
+import { useNavigate } from 'react-router-dom'; // Import useNavigate
 
 const Navbar = () => {
+
+    const navigate = useNavigate();
+
+    const goToHome = () => {
+        navigate('/Home')
+    }
+
+    const goToRooms = () => {
+        navigate('/Rooms')
+    }
+
+    const goToBeati = () => {
+        navigate('/Beati')
+    }
+
+    const goToStats = () => {
+        navigate('/Stats')
+    }
+
+    const goToAccount = () => {
+        navigate('/Account')
+    }
+
   return (
     <Box
       position="fixed"  // Keeps it fixed on the screen
@@ -18,44 +42,54 @@ const Navbar = () => {
       className="navContainer"
       
     >
-        <HStack bg={'transparent'} display={'flex'} justifyContent={'center'} alignItems={'center'} alignContent={'center'} spaceX={'5%'} mb={2}>
-            <Stack spaceY={-3} display={'flex'} justifyContent={'center'} alignItems={'center'} alignContent={'center'}>
-                <FaHome size={'50%'} style={{background: 'transparent'}} color="#21334a"/>
-                <Heading color="#21334a" fontSize={'70%'} bg={'transparent'} textAlign={'center'}>
-                    Home
-                </Heading>
+        <HStack bg={'transparent'} display={'flex'} justifyContent={'center'} alignItems={'center'} alignContent={'center'} spaceX={'05%'} mb={2}>
+            <Button className="navButton" onClick={goToHome}>
+                <Stack spaceY={-3} display={'flex'} justifyContent={'center'} alignItems={'center'} alignContent={'center'}>
+                    <FaHome size={'70%'} style={{background: 'transparent'}} color="#21334a"/>
+                    <Heading color="#21334a" fontSize={'90%'} bg={'transparent'} textAlign={'center'}>
+                        Home
+                    </Heading>
+                
+                </Stack>
+            </Button>
             
-            </Stack>
+            <Button className="navButton" onClick={goToRooms}>
+                <Stack spaceY={-3} display={'flex'} justifyContent={'center'} alignItems={'center'} alignContent={'center'}>
+                    <BsDoorClosed size={'70%'} style={{background: 'transparent'}} color="#21334a"/>
+                    <Heading color="#21334a" fontSize={'90%'} bg={'transparent'} textAlign={'center'}>
+                        Rooms
+                    </Heading>
 
-            <Stack spaceY={-3} display={'flex'} justifyContent={'center'} alignItems={'center'} alignContent={'center'}>
-                <BsDoorClosed size={'50%'} style={{background: 'transparent'}} color="#21334a"/>
-                <Heading color="#21334a" fontSize={'70%'} bg={'transparent'} textAlign={'center'}>
-                    Rooms
-                </Heading>
+                </Stack>
+            </Button>
 
-            </Stack>
-            
-            <Stack spaceY={-3} display={'flex'} justifyContent={'center'} alignItems={'center'} alignContent={'center'}>
-                <GiCircleForest size={'50%'} style={{background: 'transparent'}} color="#21334a"/>
-                <Heading color="#21334a" fontSize={'70%'} bg={'transparent'} textAlign={'center'}>
-                    Be'ati
-                </Heading>
-            </Stack>
+            <Button className="navButton" onClick={goToBeati}>
+                <Stack spaceY={-3} display={'flex'} justifyContent={'center'} alignItems={'center'} alignContent={'center'}>
+                    <GiCircleForest size={'70%'} style={{background: 'transparent'}} color="#21334a"/>
+                    <Heading color="#21334a" fontSize={'90%'} bg={'transparent'} textAlign={'center'}>
+                        Be'ati
+                    </Heading>
+                </Stack>
+            </Button>
 
-            <Stack spaceY={-3} display={'flex'} justifyContent={'center'} alignItems={'center'} alignContent={'center'}>
-                <SlGraph size={'50%'} style={{background: 'transparent'}} color="#21334a"/>
-                <Heading color="#21334a" fontSize={'70%'} bg={'transparent'} textAlign={'center'}>
-                    Stats
-                </Heading>
-            </Stack>
+            <Button className="navButton" onClick={goToStats}>
+                <Stack spaceY={-3} display={'flex'} justifyContent={'center'} alignItems={'center'} alignContent={'center'}>
+                    <SlGraph size={'70%'} style={{background: 'transparent'}} color="#21334a"/>
+                    <Heading color="#21334a" fontSize={'90%'} bg={'transparent'} textAlign={'center'}>
+                        Stats
+                    </Heading>
+                </Stack>
+            </Button>
 
-            <Stack spaceY={-3} display={'flex'} justifyContent={'center'} alignItems={'center'} alignContent={'center'}>
-                <MdAccountCircle size={'50%'} style={{background: 'transparent'}} color="#21334a"/>
-                <Heading color="#21334a" fontSize={'70%'} bg={'transparent'} textAlign={'center'}>
-                    Account
-                </Heading>
+            <Button className="navButton" onClick={goToAccount}>
+                <Stack spaceY={-3} display={'flex'} justifyContent={'center'} alignItems={'center'} alignContent={'center'}>
+                    <MdAccountCircle size={'70%'} style={{background: 'transparent'}} color="#21334a"/>
+                    <Heading color="#21334a" fontSize={'90%'} bg={'transparent'} textAlign={'center'}>
+                        Account
+                    </Heading>
 
-            </Stack>
+                </Stack>
+            </Button>
             
             
         </HStack>

@@ -115,6 +115,10 @@ const Login = () => {
     navigate('/ResetPassword')
   }
 
+  const goToHome = () => {
+    navigate('/Home')
+  }
+
   
 
   return (
@@ -213,10 +217,13 @@ const Login = () => {
             className='next-Button' 
             backgroundColor={'#6cce58'} 
             color={'#f6f6f6'} 
-            onClick={(e) => {
-              e.preventDefault(); 
-              handleLogin(e as unknown as React.FormEvent<HTMLFormElement>);
-            }}
+            onClick={
+              // (e) => {
+              // e.preventDefault(); 
+              // handleLogin(e as unknown as React.FormEvent<HTMLFormElement>);
+              goToHome
+            }
+          //}
           >
             Next
           </Button>

@@ -3,6 +3,7 @@ import { Box, Grid, GridItem, Text, VStack, Image, Center } from '@chakra-ui/rea
 import { Link } from 'react-router-dom'; // Import Link from react-router-dom
 import ToggleButton from './toggleButton';
 import AddDeviceButton from './addDeviceButton';
+import { useParams } from 'react-router-dom';
 
 // Import device images (Icons)
 import LightImg from '@/images/devicesIcons/lamp.png';
@@ -13,6 +14,9 @@ import ConsoleImg from '@/images/devicesIcons/console.png';
 import FanImg from '@/images/devicesIcons/fan.png';
 
 const Devices = () => {
+
+  const { roomId } = useParams<{ roomId: string }>();
+  
   const initialDevices = [
     { id: 1, name: 'Light', isOn: false, image: LightImg },
     { id: 2, name: 'TV', isOn: false, image: TvImg },

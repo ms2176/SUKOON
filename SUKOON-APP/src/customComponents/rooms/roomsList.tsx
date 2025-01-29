@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Button, Box, Text, Image, Grid, Heading, Flex } from '@chakra-ui/react';
 import { useNavigate } from 'react-router-dom'; 
 import AddRoom from './addRooms'; 
+import { useParams } from 'react-router-dom';
 
 // Import room images
 import LivingRoomImg from '@/images/roomsImage/livingRoom.jpeg';

@@ -78,7 +78,7 @@ const AccInfo = () => {
       </Flex>
 
 
-      <VStack spacing={4} align="stretch" mt={6}>
+      <VStack spaceY={4} align="stretch" mt={6}>
           <FormControl>
             <FormLabel>Name</FormLabel>
             <Input placeholder="Enter your name" />

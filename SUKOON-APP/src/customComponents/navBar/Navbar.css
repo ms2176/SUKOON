@@ -2,10 +2,19 @@
     .navContainer {
         width: 100%;
         background-color: orange;
-        z-index: 1;
+        z-index: 2;
         position: fixed;
         border-radius: 20px;
         box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
 
+    }
+    
+    .navButton {
+        z-index: 2;
+        background: transparent;
+        width: auto;
+        height: auto;
+        color: black;
+        
     }
 }
