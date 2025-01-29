@@ -20,7 +20,7 @@ import {
     FormLabel,
     FormErrorMessage,
     FormHelperText,
-  } from "@chakra-ui/react";
+  } from '@chakra-ui/form-control';
 import { Field } from "@/components/ui/field"
 
 import { FiSettings, FiArrowLeft} from 'react-icons/fi';
