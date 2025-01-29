@@ -32,6 +32,11 @@ const Devices = () => {
     );
   };
 
+  // Function to add new device
+  const handleAddDevice = (newDevice: { id: number; name: string; image: string; isOn: boolean }) => {
+    setDevices((prevDevices) => [...prevDevices, newDevice]); // Add new device at the end
+  };
+
   return (
     <Box bg="white" minH="100vh" p={4}>
       {/* Room Header */}
@@ -94,15 +99,16 @@ const Devices = () => {
         ))}
       </Grid>
 
-      {/* Add New Device Button */}
+      {/* Add New Device Button with onAddDevice */}
       <Center mt={6}>
-        <AddDeviceButton />
+        <AddDeviceButton onAddDevice={handleAddDevice} />
       </Center>
     </Box>
   );
 };
 
 export default Devices;
+
 
 
 
