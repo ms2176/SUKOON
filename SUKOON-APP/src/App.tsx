@@ -14,6 +14,7 @@ import RoomList from './customComponents/rooms/roomsList';
 import Devices from './customComponents/rooms/devices';
 import AccountsPage from './customComponents/accountManage/AccountsPage';
 import AccInfo from './customComponents/accountManage/AccInfo';
+import DeviceControlPage from './customComponents/rooms/DeviceControlPage';
 
 // Layout component that includes the Navbar
 const AuthenticatedLayout = ({ children }: { children: React.ReactNode }) => {
@@ -64,6 +65,12 @@ const App = () => {
             <Devices />
           </AuthenticatedLayout>
         } /> {/* Room page */}
+
+<Route path="/devices/:roomId/:deviceId" element={
+  <AuthenticatedLayout>
+    <DeviceControlPage />
+  </AuthenticatedLayout>
+} />
 
         <Route path="/stats" element={
           <AuthenticatedLayout>

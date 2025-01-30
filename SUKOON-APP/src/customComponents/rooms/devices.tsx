@@ -78,17 +78,17 @@ const Devices = () => {
             >
               {/* Device Icon (Link wrapped around the Image) */}
               <Box position="relative">
-                <Link to={`/device/${device.id}`}>
-                  <Image
-                    src={device.image}
-                    alt={device.name}
-                    boxSize="64px"
-                    borderRadius="full"
-                    bg={device.isOn ? 'green.50' : 'gray.50'}
-                    p={2}
-                    transition="all 0.3s ease"
-                  />
-                </Link>
+              <Link to={`/devices/${roomId}/${device.id}`}>
+  <Image
+    src={device.image}
+    alt={device.name}
+    boxSize="64px"
+    borderRadius="full"
+    bg={device.isOn ? 'green.50' : 'gray.50'}
+    p={2}
+    transition="all 0.3s ease"
+  />
+</Link>
               </Box>
 
               {/* Device Name */}

@@ -1,7 +1,8 @@
 import React, { useState } from "react";
-import "./ACControlPage.css"; // Updated styles
+import "./DeviceControlPage.css"; // Updated styles
+import { useParams } from 'react-router-dom';
 
-const ACControlPage = () => {
+const DeviceControlPage = () => {
   const [temperature, setTemperature] = useState(25); // Default temperature
   const [power, setPower] = useState(true); // AC power toggle state
   const [activeMode, setActiveMode] = useState("wind"); // Default mode
@@ -112,7 +113,7 @@ const ACControlPage = () => {
   );
 };
 
-export default ACControlPage;
+export default DeviceControlPage;
 
 
 
