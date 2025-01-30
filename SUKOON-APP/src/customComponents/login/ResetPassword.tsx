@@ -87,7 +87,7 @@ const ResetPassword = () => {
         />
       </Flex>
 
-      <Stack className='signUpDataInputStack' spaceY={3} transform={'translate(-50%, -80%)'} bg={'transparent'} mt={'60%'}>
+      <Stack className='signUpDataInputStack' spaceY={3} transform={'translate(-50%, -50%)'} bg={'transparent'}>
         <Flex alignItems="center" width="100%" display={'flex'} position="relative" bg={'transparent'}>
           {/* Back Button */}
           <Button

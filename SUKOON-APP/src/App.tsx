@@ -8,6 +8,7 @@ import ResetPassword from '@/customComponents/login/ResetPassword.tsx';
 import OTP from '@/customComponents/login/OTP.tsx';
 import NewPass from '@/customComponents/login/NewPass.tsx';
 import Statistics from '@/customComponents/stats/stats_mainpage'; // Ensure the correct path to your Statistics component
+import EmailConfirm from './customComponents/login/EmailConfirm';
 
 const App = () => {
   return (
@@ -19,6 +20,7 @@ const App = () => {
       <Route path="/ResetPassword" element={<ResetPassword />} /> {/* Reset Password page */}
       <Route path="/OTP" element={<OTP />} /> {/* OTP page */}
       <Route path="/NewPass" element={<NewPass />} /> {/* New Password page */}
+      <Route path="/EmailConf" element={<EmailConfirm />} /> {/* New Password page */}
       <Route path="/stats" element={<Statistics />} /> {/* Statistics page */}
     </Routes>
   );

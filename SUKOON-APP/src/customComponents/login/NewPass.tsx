@@ -82,15 +82,15 @@ const ResetPassword = () => {
             <Text color={'white'} bg={'transparent'}>&lt;</Text>
       </Button>
 
-      <Stack spaceY={'50%'}>
+      <Stack spaceY={'20%'} bg={'transparent'} zIndex={'2'}>
 
-        <Heading textAlign={'center'} bg={'transparent'} color={'black'} fontSize={'120%'}>
+        <Heading textAlign={'center'} bg={'transparent'} color={'black'} fontSize={'120%'} zIndex={'2'}>
             Enter your new password:
         </Heading>
 
       
-        <Stack className='signUpDataInputStack' spaceY={3} bg={'transparent'}>
-            <Box width="130%" display="flex" flexDirection="column" p={0} m={0}>
+        <Stack className='signUpDataInputStack' bg={'transparent'}>
+            <Box width="130%" display="flex" flexDirection="column">
                 <FormControl isInvalid={!!passwordError} width={'100%'}>
 
                     <Box className='OuterInputBox'>

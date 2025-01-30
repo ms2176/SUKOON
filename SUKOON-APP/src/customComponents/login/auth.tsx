@@ -6,6 +6,10 @@ import { useNavigate } from 'react-router-dom'; // Import useNavigate
 const Auth = () => {
   const navigate = useNavigate(); // Initialize useNavigate
 
+  const goToEmailConf = () => {
+    navigate('/EmailConf')
+  }
+
   return (
     <div>
       <Stack className="loginStartStack">
@@ -44,7 +48,7 @@ const Auth = () => {
 
         <Text className="loginStart-text">
           By continuing, you agree to the{' '}
-          <span style={{ color: '#6cce58' }}>Terms of Service</span> and{' '}
+          <span style={{ color: '#6cce58' }} onClick={goToEmailConf}>Terms of Service</span> and{' '}
           <span style={{ color: '#6cce58' }}>Privacy Policy</span>
         </Text>
       </Stack>

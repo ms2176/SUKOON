@@ -127,7 +127,7 @@ const Register = () => {
             <Text color={'white'} bg={'transparent'}>&lt;</Text>
       </Button>
 
-      <Stack className='signUpDataInputStack' spaceY={3} bg={'transparent'}>
+      <Stack className='signUpDataInputStack' spaceY={3} bg={'transparent'} transform={'translate(-50%, -50%)'}>
         <Flex alignItems="center" width="100%" display={'flex'} bg={'transparent'}>
 
           <Heading textAlign="center" width="100%" color={'black'} bg={'transparent'}>
