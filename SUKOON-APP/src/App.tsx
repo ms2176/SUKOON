@@ -59,7 +59,7 @@ const App = () => {
           </AuthenticatedLayout>
         } /> {/* Rooms */}
 
-        <Route path="/devices:/roomId" element={
+        <Route path="/devices/:roomId" element={
           <AuthenticatedLayout>
             <Devices />
           </AuthenticatedLayout>
