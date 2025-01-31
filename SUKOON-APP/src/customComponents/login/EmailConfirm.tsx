@@ -39,7 +39,7 @@ const EmailConfirm = () => {
         />
       </Flex>
 
-      <Stack className='signUpDataInputStack' spaceY={3} transform={'translate(-50%, -80%)'} bg={'transparent'} mt={'90%'}>
+      <Stack className='signUpDataInputStack' spaceY={3} transform={'translate(-50%, -80%)'} bg={'transparent'}>
         <Flex alignItems="center" width="100%" display={'flex'} position="relative" bg={'transparent'}>
           {/* Back Button */}
           <Button
@@ -57,7 +57,7 @@ const EmailConfirm = () => {
             <Text color={'white'} bg={'transparent'}>&lt;</Text>
           </Button>
 
-          <Heading textAlign={'center'} mb={2} fontSize={'120%'} transform={'translateY(-50%)'}>
+          <Heading textAlign={'center'} fontSize={'120%'} className='emailConfHead'>
             A confirmation Email has been sent to your Email account. Please verify your email to continue through.
           </Heading>
 

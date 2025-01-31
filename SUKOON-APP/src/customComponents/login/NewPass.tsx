@@ -82,13 +82,13 @@ const ResetPassword = () => {
             <Text color={'white'} bg={'transparent'}>&lt;</Text>
       </Button>
 
-      <Stack spaceY={'20%'} bg={'transparent'} zIndex={'2'}>
+      <Stack spaceY={['50%', '20%', '20%', '20%']} bg={'transparent'} zIndex={'2'} className='resetContainer' position={'absolute'} top={'20%'} left={'50%'} transform={'translate(-50%, -50%)'}>
 
         <Heading textAlign={'center'} bg={'transparent'} color={'black'} fontSize={'120%'} zIndex={'2'}>
             Enter your new password:
         </Heading>
 
-      
+        
         <Stack className='signUpDataInputStack' bg={'transparent'}>
             <Box width="130%" display="flex" flexDirection="column">
                 <FormControl isInvalid={!!passwordError} width={'100%'}>

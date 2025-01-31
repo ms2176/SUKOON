@@ -132,7 +132,7 @@ const ResetPassword = () => {
       >
             <Text color={'white'} bg={'transparent'}>&lt;</Text>
       </Button>
-          <Flex display={'flex'} justify={'center'} alignItems={'center'} alignContent={'center'} height={'auto'} bg={'transparent'}>
+          <Flex className='otpContainer' display={'flex'} justify={'center'} alignItems={'center'} alignContent={'center'} height={'auto'} bg={'transparent'}>
             <form className="otp-Form">
     
                 <span className="mainHeading">Enter OTP</span>

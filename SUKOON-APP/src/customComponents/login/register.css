@@ -157,6 +157,10 @@
 
     }
 
+    .resetContainer {
+        width: 100%;
+    }
+
     
     @media (min-width: 481px) {
         .signUpDataInputStack {
@@ -173,6 +177,14 @@
             align-items: center;
             color: gray;
         }
+
+        .resetContainer {
+            transform: translate(0%, -50%);
+            width: 100%;
+            background: #000;
+        }
+
+        
     }
      
 
