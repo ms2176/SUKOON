@@ -1,7 +1,9 @@
 /* login.css */
-@media (max-width: 480px) {
+
     body {
         overflow: auto;
+        overflow-y: auto;
+        z-index: 20;
     }
 
    
@@ -85,5 +87,5 @@
 
   
     
-  }
+
   

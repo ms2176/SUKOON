@@ -8,19 +8,11 @@ import ResetPassword from '@/customComponents/login/ResetPassword.tsx';
 import OTP from '@/customComponents/login/OTP.tsx';
 import NewPass from '@/customComponents/login/NewPass.tsx';
 import Statistics from '@/customComponents/stats/stats_mainpage'; // Ensure the correct path to your Statistics component
+import Homepage from './customComponents/homepage/Homepage';
 
 const App = () => {
   return (
-    <Routes>
-      <Route path="/" element={<Auth />} />         {/* Home or Auth page */}
-      <Route path="/login" element={<Login />} />   {/* Login page */}
-      <Route path="/register" element={<Register />} /> {/* Register page */}
-      <Route path="/QRWait" element={<QRWait />} /> {/* QR Wait page */}
-      <Route path="/ResetPassword" element={<ResetPassword />} /> {/* Reset Password page */}
-      <Route path="/OTP" element={<OTP />} /> {/* OTP page */}
-      <Route path="/NewPass" element={<NewPass />} /> {/* New Password page */}
-      <Route path="/stats" element={<Statistics />} /> {/* Statistics page */}
-    </Routes>
+    <Homepage />
   );
 };
 
