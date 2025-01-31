@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { LuQrCode } from "react-icons/lu";
 import { FaCamera } from "react-icons/fa";
 import './QRWait.css';
-import { Box, Button, Heading, HStack, Input, Stack, Text } from '@chakra-ui/react';
+import { Box, Button, Heading, HStack, Input, Stack, Text, Flex } from '@chakra-ui/react';
 import { useNavigate } from 'react-router-dom';
 import './register.css'
 import { FormControl } from '@chakra-ui/form-control';
@@ -17,9 +17,6 @@ const QRWait = () => {
   const goToLogin = () => {
     navigate('/login');
   };
-
-  
-
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -60,8 +57,6 @@ const QRWait = () => {
     }
   };
 
-  
-
   const handleHubLink = async () => {
     if (!hubLink) {
       setHubLinkError("Please enter a valid hub link.");
@@ -101,66 +96,64 @@ const QRWait = () => {
       setHubLinkError("Error checking the hub link. Please try again.");
     }
   };
-  
 
   return (
-    <div style={{overflow: 'hidden'}}>
+    <Flex direction="column" height="100vh" overflow="hidden" overflowY={'auto'}>
+      {/* Green Box at the Top */}
+      <Box className='QRTop' flexShrink={0} />
 
-      <Box className='QRTop'></Box>
-      <Stack className='QRDataInputStack'>
+      {/* Stack Below the Green Box */}
+      <Flex flexGrow={1} direction="column" justifyContent="center" alignItems="center">
+        <Stack className='QRDataInputStack' align="center">
+          <LuQrCode style={{background:'transparent'}} size={'70%'} color='#0c1033'/>
+          <Heading className='QRHead'>
+            To get started, please scan your hub's QR code.
+          </Heading>
 
-        <LuQrCode style={{background:'transparent'}} size={'70%'} color='#0c1033'/>
-        <Heading className='QRHead'>
-          To get started, please scan your hub's QR code.
-        </Heading>
+          <Button 
+            className='next-Button' 
+            backgroundColor={'#6cce58'} 
+            color={'#f6f6f6'} 
+            width={'50%'}
+          >
+            Scan
+            <FaCamera style={{background:'transparent'}}/>
+          </Button>
 
-        <Button 
-          className='next-Button' 
-          backgroundColor={'#6cce58'} 
-          color={'#f6f6f6'} 
-          width={'50%'}
-        >
-          Scan
-          <FaCamera style={{background:'transparent'}}/>
-        </Button>
+          <HStack>
+            <Box className='regBox' />
+              <Text color={'black'}>
+                or
+              </Text>
+            <Box className='regBox' />
+          </HStack>
 
-        <HStack>
-          <Box className='regBox' />
-            <Text color={'black'}>
-              or
-            </Text>
-          <Box className='regBox' />
-        </HStack>
+          <Heading color={'lightgray'} textAlign={'center'}>
+            Enter your hub's link code.
+          </Heading>
 
-        <Heading>
-          Enter your hub's link code.
-        </Heading>
+          <Box width="100%" display="flex" flexDirection="column" p={0} m={0}>
+            <FormControl width={'100%'}>
+              <Box className='OuterInputBox'>
+                <Input
+                  placeholder="Link Code"
+                  className='InputData'
+                />
+              </Box>
+            </FormControl>
+          </Box>
 
-        <Box width="100%" display="flex" flexDirection="column" p={0} m={0}>
-          <FormControl width={'100%'}>
-            <Box className='OuterInputBox'>
-              <Input
-                placeholder="Link Code"
-                className='InputData'
-              />
-            </Box>
-
-          </FormControl>
-        </Box>
-
-        <Button 
-          className='next-Button' 
-          backgroundColor={'#6cce58'} 
-          color={'#f6f6f6'} 
-          width={'100%'}
-        >
-          Next
-        </Button>
-
-      </Stack>
-      
-      
-    </div>
+          <Button 
+            className='next-Button' 
+            backgroundColor={'#6cce58'} 
+            color={'#f6f6f6'} 
+            width={'100%'}
+          >
+            Next
+          </Button>
+        </Stack>
+      </Flex>
+    </Flex>
   );
 };
 

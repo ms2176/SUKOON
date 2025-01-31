@@ -1,23 +1,16 @@
 .QRTop {
-    display: flex;
     background: #6cc358;
-    width: 100%;
-    height: 20vw;
+    height: 10vh; /* Use vh for consistent height across different screen sizes */
 }
 
 .QRDataInputStack {
-    justify-content: center;
-    align-items: center;
-    align-content: center;
-    display: flex;
-    transform: translate(-50%, -50%);
     background: transparent;
-    position: absolute;
-    top: 50%;
-    left: 50%;
+    width: 100%;
+    max-width: 600px; /* Optional: to limit the width of the stack */
+    padding: 20px;
 }
 
 .QRHead {
-    color:lightgray;
+    color: lightgray;
     text-align: center;
 }
