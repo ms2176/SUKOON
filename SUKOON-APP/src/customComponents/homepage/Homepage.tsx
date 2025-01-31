@@ -61,12 +61,12 @@ const Homepage = () => {
     <div style={{ overflow: 'hidden' }}>
       <Stack className='homepageContainer' position={'relative'} display={'flex'} overflow={'hidden'}>
         <Box className='homepageHeader'>
-          <Heading bg={'transparent'} ml={'20px'} mt={'20px'} fontWeight={'extrabold'} className='introHomepage'>
+          <Heading bg={'transparent'} ml={'20px'} mt={'20px'} mb={'20px'} fontWeight={'extrabold'} className='introHomepage'>
             Ya Halla, <span className='guestIntro'>{username || 'guest'}</span>
           </Heading>
         </Box>
 
-        <HStack align="center" ml="20px" mt={'10px'} zIndex={1}>
+        <HStack align="center" ml="20px" mt={'10px'} zIndex={1} bg={'transparent'}>
           <Heading color={'#454545'} bg={'transparent'}>
             Homes:
           </Heading>
@@ -74,7 +74,7 @@ const Homepage = () => {
         </HStack>
 
         <Flex display={'flex'} justifyContent={'center'} alignItems={'center'} alignContent={'center'} mt={'25px'} zIndex={1} bg={'transparent'}>
-          <HStack spaceX={-5} justifyContent={'center'} alignItems={'center'} alignContent={'center'}>
+          <HStack spaceX={'-5%'} justifyContent={'center'} alignItems={'center'} alignContent={'center'} bg={'transparent'}>
             <MiniDisplays Icon={MdOutlinePhoneAndroid} title="Active devices:" value="8"></MiniDisplays>
             <MiniDisplays Icon={BsGraphUpArrow} title="Home Status:" value="Good"></MiniDisplays>
             <MiniDisplays Icon={MdOutlineBatterySaver} title="Energy Generation:" value="50KW/h"></MiniDisplays>
@@ -82,7 +82,7 @@ const Homepage = () => {
         </Flex>
 
         <Flex className='pulseBoxContainer'>
-          <Lottie loop animationData={PulseAnimation} play className='pulseAnimation' />
+          <Lottie loop animationData={PulseAnimation} play className='pulseAnimation' style={{background: 'transparent'}}/>
           <Box className='pulseBox'>
             <Heading bg={'transparent'} fontWeight={'bold'} className='totalConsShow'>
               50.1KW/h
