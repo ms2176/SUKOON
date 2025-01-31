@@ -124,7 +124,7 @@ const Homepage = () => {
           <Box
             bg={'white'}
             width={isExpanded ? '100vw' : '95%'}
-            height={isExpanded ? '100vh' : '50vw'}
+            height={isExpanded ? '100vh' : 'auto'}
             overflow={'scroll'}
             position={isExpanded ? 'fixed' : 'static'} 
             top={isExpanded ? '0' : 'auto'}
