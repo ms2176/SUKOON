@@ -19,16 +19,14 @@ const pinnedMenu = ({ isVisible, onClose, onPinItem}) => {
 
         <Flex position="absolute" width="100vw" height="100vh" justifyContent="center" alignItems="center" zIndex={10} display={'flex'}>
             <Box 
-                bg="#E4E4E7" 
                 width="95%" 
                 height="50vh" 
                 borderColor="#21334a" 
                 borderRadius={20} 
-                borderWidth={2} 
                 position="absolute" 
                 left="50%" 
                 transform="translate(-50%, -180%)"
-                
+                className='pinBox'
                 zIndex={10}
             >
                 <Stack bg={'transparent'} className='editStack' spaceY={'20px'}>
