@@ -61,6 +61,8 @@ html, body {
 .totConsHeading,
 .beatiHead,
 .greenhouseHead,
-.whatisGH {
+.whatisGH,
+.dailyConfigHead,
+.totalConfigHeader {
   font-family: 'SpotifyFont', sans-serif;
 }
