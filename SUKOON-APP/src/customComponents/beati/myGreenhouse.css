@@ -1,0 +1,57 @@
+.myGContainer {
+    width: 100%;
+    height: auto;
+    background: transparent;
+    display: flex;
+    position: relative;
+    margin-top: 5%;
+}
+
+.beatiBackButton {
+    justify-content: center;
+    align-items: center;
+    align-content: center;
+    background: #3627ba; 
+    position: absolute;
+    top: 2%;
+    left: 2%;
+    border-radius: 50%;
+
+}
+
+.greenhouseHead {
+    background: transparent;
+    color: #3627ba ;
+    font-family: 'SpotifyFont', 'sans-serif';
+    font-size: 150%;
+}
+
+.gardenInfo {
+    justify-content: center;
+    align-items: center;
+    align-content: center;
+    background: white; 
+    position: absolute;
+    top: 2%;
+    right: 2%;
+    
+    border-radius: 50%;
+}
+
+.flowerInfo {
+    width: 25%;
+    height: auto;
+    border-radius: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    justify-content: center;
+    display: flex;
+    align-items: center;
+    align-content: center;
+
+}
+
+.flowerInfoStack {
+    margin-top: 5%;
+    margin-left: 5%;
+    color: black;
+}
