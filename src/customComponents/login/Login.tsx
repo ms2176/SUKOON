@@ -54,7 +54,13 @@ const Login = () => {
     const result = await loginWithEmail(email, password);
     if (result.success) {
       sessionStorage.setItem("userEmail", email);
-      navigate("/home");
+      if (!result.verified) {
+        // If email isn't verified, send to verification page
+        navigate("/verification_hold");
+      } else {
+        // If verified, proceed to home
+        navigate("/home");
+      }
     } else {
       setEmailError("Invalid email or password");
     }

@@ -78,11 +78,12 @@ const Register = () => {
     const result = await registerWithEmail(email, password);
     if (result.success) {
       sessionStorage.setItem("userEmail", email);
-      navigate("/QRwait");
+      // Instead of going to QRwait, go to verification page
+      navigate("/verification_hold");
     } else {
       setEmailError(result.error);
     }
-  };
+};
 
   return (
     <div style={{ overflow: "auto" }}>
