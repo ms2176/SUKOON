@@ -21,7 +21,7 @@ const Slidebar: React.FC = () => {
           id="myRange"
           onChange={handleSliderChange} // Update value on change
         />
-        <p className="PB-range-slidervalue">{sliderValue}px</p> {/* Display updated value */}
+        <p className="PB-range-slidervalue">{sliderValue}KW</p> {/* Display updated value */}
       </div>
     </div>
   );
