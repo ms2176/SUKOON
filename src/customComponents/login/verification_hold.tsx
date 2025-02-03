@@ -172,7 +172,7 @@ const VerifyEmail = () => {
           p={4}
           borderRadius="full"
         >
-          <MdOutlineEmail size={40} color="white" />
+          <MdOutlineEmail size={40} color="white" style={{background: 'transparent'}}/>
         </Box>
 
         <Heading textAlign="center" size="lg" color={"black"}>
