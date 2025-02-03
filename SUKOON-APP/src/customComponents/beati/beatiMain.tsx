@@ -12,7 +12,7 @@ import TotalConfig from './totalConfig'
 
 const BeatiMain = () => {
 
-    const progressTotal = 25;
+    const progressTotal = 10;
     const progressDaily = 60;
     const navigate = useNavigate(); // Initialize useNavigate
 

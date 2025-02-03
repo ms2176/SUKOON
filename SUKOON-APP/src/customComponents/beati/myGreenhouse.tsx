@@ -14,7 +14,7 @@ const unlockedPlants = {
     Piranha: true,
     Roses: true,
     Sunflower: true,
-    Cactus: true,
+    Cactus: false,
   };
 
 
