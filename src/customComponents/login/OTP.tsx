@@ -132,23 +132,22 @@ const ResetPassword = () => {
       >
             <Text color={'white'} bg={'transparent'}>&lt;</Text>
       </Button>
-          <Flex className='otpContainer' display={'flex'} justify={'center'} alignItems={'center'} alignContent={'center'} height={'auto'} bg={'transparent'}>
-            <form className="otp-Form">
-    
-                <span className="mainHeading">Enter OTP</span>
-                <p className="otpSubheading">We have sent a verification code to your mobile number</p>
-                <div className="inputContainer">
-                    <input required={true} maxLength={1} type="text" className="otp-input" />
-                    <input required={true} maxLength={1} type="text" className="otp-input" />
-                    <input required={true} maxLength={1} type="text" className="otp-input" />
-                    <input required={true} maxLength={1} type="text" className="otp-input" /> 
-                </div>
-                <button className="verifyButton" type="submit" onClick={goToNewPass}>Verify</button>
-                <p className="resendNote">Didn't receive the code? <button className="resendBtn">Resend Code</button></p>
-                
-            </form>
+          <Stack className='otpContainer' display={'flex'} justify={'center'} alignItems={'center'} alignContent={'center'} height={'auto'} bg={'transparent'} spaceY={4}>
+            <Heading bg={'transparent'} textAlign={'center'} color={'gray'} width={'70%'}>
+              We have received your request successfully. If you have a registered account with us, then you will receive an Email with a reset link to your Email account.
+            </Heading>
 
-          </Flex>
+            <Button
+                        className="next-Button"
+                        backgroundColor={"#6cce58"}
+                        color={"#f6f6f6"}
+                        width={'80%'}
+                        onClick={goToAuth}
+                      >
+                        Go Back
+                      </Button>
+
+          </Stack>
         
 
 
