@@ -1,3 +1,4 @@
+/* Container for greenhouse content */
 .myGContainer {
     width: 100%;
     height: auto;
@@ -7,37 +8,41 @@
     margin-top: 5%;
 }
 
+/* Back button styling */
 .beatiBackButton {
     justify-content: center;
     align-items: center;
     align-content: center;
-    background: #3627ba; 
-    position: absolute;
-    top: 2%;
-    left: 2%;
+    background: #3627ba;
+    position: fixed;  /* Changed from absolute to fixed */
+    top: 5%;  /* Ensure it's visible at the top of the screen */
+    left: 5%;  /* Space from the left */
     border-radius: 50%;
-
+    z-index: 1000;  /* Ensure it stays on top of other elements */
 }
 
+/* Greenhouse heading styling */
 .greenhouseHead {
     background: transparent;
-    color: #3627ba ;
+    color: #3627ba;
     font-family: 'SpotifyFont', 'sans-serif';
     font-size: 150%;
 }
 
+/* Information button styling */
 .gardenInfo {
     justify-content: center;
     align-items: center;
     align-content: center;
-    background: white; 
-    position: absolute;
-    top: 2%;
-    right: 2%;
-    
+    background: white;
+    position: fixed;  /* Changed from absolute to fixed */
+    top: 5%;  /* Ensure it's visible at the top-right of the screen */
+    right: 5%;  /* Space from the right */
     border-radius: 50%;
+    z-index: 1000;  /* Ensure it stays on top of other elements */
 }
 
+/* Styling for flower info boxes */
 .flowerInfo {
     width: 25%;
     height: auto;
@@ -47,11 +52,24 @@
     display: flex;
     align-items: center;
     align-content: center;
-
 }
 
+/* Styling for flower info stacks */
 .flowerInfoStack {
     margin-top: 5%;
     margin-left: 5%;
     color: black;
+}
+
+/* Mobile-specific adjustments */
+@media (max-width: 480px) {
+    .beatiBackButton,
+    .gardenInfo {
+        width: 50px;  /* Ensure buttons are not too big */
+        height: 50px;  /* Adjust button size */
+    }
+
+    .flowerInfo {
+        width: 40%;  /* Adjust flower info box size for smaller screens */
+    }
 }
