@@ -10,6 +10,7 @@ import NewPass from "@/customComponents/login/NewPass.tsx";
 import Statistics from "@/customComponents/stats/stats_mainpage"; // Ensure the correct path to your Statistics component
 import EmailConfirm from "./customComponents/login/EmailConfirm";
 import VerifyEmail from "@/customComponents/login/verification_hold";
+import Home from '@/customComponents/homepage/Homepage'
 
 const App = () => {
   return (
@@ -26,6 +27,8 @@ const App = () => {
       {/* New Password page */}
       <Route path="/stats" element={<Statistics />} /> {/* Statistics page */}
       <Route path="/verification_hold" element={<VerifyEmail />} />
+      <Route path="/home" element={<Home />} />
+      
     </Routes>
   );
 };
