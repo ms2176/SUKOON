@@ -9,11 +9,11 @@ import OTP from '@/customComponents/login/OTP.tsx';
 import NewPass from '@/customComponents/login/NewPass.tsx';
 import Statistics from '@/customComponents/stats/stats_mainpage'; // Ensure the correct path to your Statistics component
 import Homepage from './customComponents/homepage/Homepage';
-import Navbar from './customComponents/navBar/Navbar';
+import Navbar from '../../src/customComponents/navBar/Navbar';
 import RoomList from './customComponents/rooms/roomsList';
 import Devices from './customComponents/rooms/devices';
-import AccountsPage from './customComponents/accountManage/AccountsPage';
-import AccInfo from './customComponents/accountManage/AccInfo';
+import AccountsPage from '../../src/customComponents/accountManage/AccountsPage';
+import AccInfo from '../../src/customComponents/accountManage/AccInfo';
 import DeviceControlPage from './customComponents/rooms/DeviceControlPage';
 import BeatiMain from './customComponents/beati/beatiMain';
 import MyGreenhouse from './customComponents/beati/myGreenhouse';
