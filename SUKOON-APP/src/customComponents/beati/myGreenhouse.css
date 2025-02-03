@@ -1,4 +1,6 @@
 /* Container for greenhouse content */
+
+
 .myGContainer {
     width: 100%;
     height: auto;
@@ -6,6 +8,30 @@
     display: flex;
     position: relative;
     margin-top: 5%;
+}
+
+.gardenCont {
+    position: relative;
+    width: 100%;
+    height: auto; /* Ensure it covers at least the full viewport height */
+    overflow: auto;
+    z-index: 0; /* Create a new stacking context */
+    border: 2px solid red;
+}
+
+.gardenCont::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 120%;
+    background-image: url("./beatiBack.png"); /* Replace with your image path */
+    background-size: cover; /* Ensure the image covers the entire container */
+    background-position: center; /* Center the image */
+    filter: blur(10px); /* Apply blur effect */
+    z-index: -1; /* Place the background behind the content */
+    border: 2px solid red;
 }
 
 /* Back button styling */
@@ -27,6 +53,7 @@
     color: #3627ba;
     font-family: 'SpotifyFont', 'sans-serif';
     font-size: 150%;
+    border: 2px solid red;
 }
 
 /* Information button styling */
@@ -40,6 +67,7 @@
     right: 5%;  /* Space from the right */
     border-radius: 50%;
     z-index: 1000;  /* Ensure it stays on top of other elements */
+    border: 2px solid red;
 }
 
 /* Styling for flower info boxes */
@@ -52,6 +80,7 @@
     display: flex;
     align-items: center;
     align-content: center;
+    border: 2px solid red;
 }
 
 /* Styling for flower info stacks */
@@ -59,6 +88,7 @@
     margin-top: 5%;
     margin-left: 5%;
     color: black;
+    border: 2px solid red;
 }
 
 /* Mobile-specific adjustments */

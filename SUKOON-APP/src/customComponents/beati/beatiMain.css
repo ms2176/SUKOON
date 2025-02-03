@@ -23,6 +23,7 @@
     left: 0;
     width: 100%;
     height: 100vh;
+    min-height: 100vh;
     background-image: url("./beatiBack.png"); /* Replace with your image path */
     background-size: cover; /* Ensure the image covers the entire container */
     background-position: center; /* Center the image */

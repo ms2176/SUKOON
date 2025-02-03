@@ -12,8 +12,8 @@ const unlockedPlants = {
     Bonsai: true,
     Daisy: true,
     Piranha: true,
-    Roses: false,
-    Sunflower: false,
+    Roses: true,
+    Sunflower: true,
     Cactus: true,
   };
 
@@ -34,7 +34,7 @@ const MyGreenhouse: React.FC = () => {
     };
 
   return (
-    <div className='beatiCont'>
+    <div className='gardenCont'>
 
         {isInfoVisible && <GardeninfoCard closeInfoCard={toggleInfoCard}/>}
         <Button className='beatiBackButton' onClick={goToBeati}>
@@ -60,8 +60,8 @@ const MyGreenhouse: React.FC = () => {
 
             <Stack bg={'transparent'} spaceY={'0%'}>
                 <Stack bg={'transparent'} spaceY={'-45%'}>
-                    <Shelf firstPlant="Roses" secondPlant="Cactus" unlockedPlants={unlockedPlants} spacing={50}/>
-                    <HStack bg={'transparent'} display={'flex'} alignContent={'center'} justifyContent={'center'} alignItems={'center'} spaceX={'25%'}>
+                    <Shelf firstPlant="Roses" secondPlant="Cactus" unlockedPlants={unlockedPlants} spacing={51}/>
+                    <HStack bg={'transparent'} display={'flex'} alignContent={'center'} justifyContent={'center'} alignItems={'center'} spaceX={'10%'}>
                         <Box className='flowerInfo'>
 
                             <Stack bg={'transparent'} className='flowerInfoStack' spaceY={'-20%'}>
@@ -97,8 +97,8 @@ const MyGreenhouse: React.FC = () => {
                 </Stack>  
 
                 <Stack bg={'transparent'} spaceY={'-45%'}>
-                    <Shelf firstPlant="Bonsai" secondPlant="Daisy" unlockedPlants={unlockedPlants} spacing={52}/>
-                    <HStack bg={'transparent'} display={'flex'} alignContent={'center'} justifyContent={'center'} alignItems={'center'} spaceX={'25%'}>
+                    <Shelf firstPlant="Bonsai" secondPlant="Daisy" unlockedPlants={unlockedPlants} spacing={53}/>
+                    <HStack bg={'transparent'} display={'flex'} alignContent={'center'} justifyContent={'center'} alignItems={'center'} spaceX={'10%'}>
                         
 
                             <Box className='flowerInfo'>
@@ -134,7 +134,7 @@ const MyGreenhouse: React.FC = () => {
                 <Stack bg={'transparent'} spaceY={'-45%'}>
                     <Shelf firstPlant="Sunflower" secondPlant="Piranha" unlockedPlants={unlockedPlants} spacing={58}/>
 
-                    <HStack bg={'transparent'} display={'flex'} alignContent={'center'} justifyContent={'center'} alignItems={'center'} spaceX={'25%'}>
+                    <HStack bg={'transparent'} display={'flex'} alignContent={'center'} justifyContent={'center'} alignItems={'center'} spaceX={'10%'}>
                         <Box className='flowerInfo'>
 
                             <Stack bg={'transparent'} className='flowerInfoStack' spaceY={'-20%'}>

@@ -20,7 +20,7 @@ const GardeninfoCard: React.FC<GardeninfoCardProps> = ({ closeInfoCard }) => {
             </Button>
 
             <Stack bg={'transparent'} display={'flex'} justifyContent={'center'} alignContent={'center'} alignItems={'center'} marginTop={'10px'} mb={'10px'}>
-                <Heading className='whatisGH'>
+                <Heading className='whatisGH' width={'60%'}>
                     What is "My Greenhouse"?
                 </Heading>
 
