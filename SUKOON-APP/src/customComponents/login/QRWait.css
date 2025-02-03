@@ -1,0 +1,75 @@
+@media (max-width: 480px) {
+
+    html, body {
+    }
+      
+
+    .QRStack {
+        transform: translateY(-20%);
+        justify-content: center;
+        align-items: center;
+        align-content: center;
+        width: 60%;
+        margin: 0 auto; 
+        background-color: transparent;
+        margin-top: 60px;
+        
+
+    }
+
+    .QRHeader {
+        background-color: #6cce58;
+        height: 70px;
+        position: relative;
+
+    }
+
+    .QRIcon {
+        background-color: transparent;
+        color: lightgray;
+        width: 80%;
+        height: 80%;
+        margin-bottom: -50%;
+        
+    }
+
+    .QRIconContainer {
+        display: inline-flex;
+        flex-direction: column; 
+        justify-content: center;
+        align-items: center;
+        background-color: transparent;
+        height: 70vh; 
+        margin: 0;
+        padding: 0;
+    }
+
+    .QRHeading {
+        color: lightgray;
+        font-size: 20px;
+        text-align: center;
+        margin-bottom: 70px;
+    }
+
+    .scanButton {
+        background-color: #6cce58;
+        border-radius: 20px;
+        color: black;
+        width: 40%;
+        height: 50px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-left: auto;
+        margin-right: auto;
+        color: white;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        transform: translateY(-170%);
+    }
+
+    .QRCamera {
+        background-color: transparent;
+    }
+    
+    
+}

@@ -14,8 +14,12 @@ const Auth = () => {
           Your browser does not support mp4s.
         </video>
 
-        <Heading className="loginStart-Heading" lineHeight={1.3}>
-          Smarter choices for a better tomorrow
+        <Heading className='Sukoon-logo'>
+          SUKOON
+        </Heading>
+
+        <Heading className="loginStart-Heading">
+          Smarter choices for a better tomorrow!
         </Heading>
 
         {/* Get Started Button */}

@@ -5,17 +5,100 @@ import { CiLock } from "react-icons/ci";
 import TopBorderImage from '@/images/pngegg (1).png';
 import { useNavigate } from 'react-router-dom'; // Import useNavigate hook
 import './Register.css';
+import { getAuth, fetchSignInMethodsForEmail, createUserWithEmailAndPassword } from 'firebase/auth';
+import { useState } from 'react'
+import { FiEye } from "react-icons/fi";
+import { FiEyeOff } from "react-icons/fi";
+import { FormControl } from '@chakra-ui/form-control'
+import { IoChevronBack } from "react-icons/io5";
+
 
 const Register = () => {
+  
   const navigate = useNavigate(); // Initialize navigate function
 
   const goToAuth = () => {
     navigate('/'); // Navigate to Auth page
   };
 
+  const [username, setUsername] = useState(''); // State for username
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [emailError, setEmailError] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  const [usernameError, setUsernameError] = useState(''); // State for username error
+  const [showPassword, setShowPassword] = useState(false); // State for toggling password visibility
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false); // State for toggling confirm password visibility
+
+  const checkIfEmailExists = async (email: string) => {
+    try {
+      const methods = await fetchSignInMethodsForEmail(getAuth(), email);
+      return methods.length > 0;
+    } catch (error) {
+      console.error("Error checking email:", error);
+      return false;
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Reset all error states
+    setEmailError('');
+    setPasswordError('');
+    setUsernameError('');
+    
+    let isValid = true;
+  
+    // Check if username is empty
+    if (!username) {
+      setUsernameError('Username is required.');
+      isValid = false;
+    }
+  
+    // Check if email is empty
+    if (!email) {
+      setEmailError('Email is required.');
+      isValid = false;
+    }
+  
+    // Validate password match
+    if (!password || !confirmPassword) {
+      setPasswordError('Both password fields are required.');
+      isValid = false;
+    } else if (password !== confirmPassword) {
+      setPasswordError('Passwords do not match.');
+      isValid = false;
+    }
+  
+    // Stop execution if validation fails
+    if (!isValid) {
+      return;
+    }
+  
+    // Check if email already exists
+    try {
+      const emailInUse = await checkIfEmailExists(email);
+      if (emailInUse) {
+        setEmailError('Email is already registered.');
+        return;
+      }
+  
+      // Create the account
+      await createUserWithEmailAndPassword(getAuth(), email, password);
+      sessionStorage.setItem('userEmail', email);
+      navigate('/QRwait'); // Redirect to home page
+    } catch (error) {
+      console.error('Registration Error:', error);
+      setEmailError('An error occurred during registration.');
+    }
+  };
+  
+
   return (
-    <div style={{ overflowX: 'hidden' }}> {/* Prevent horizontal scrolling */}
-      <Flex className='registerTop' overflow="hidden" position="relative" width="100%">
+    <div style={{overflow: 'auto'}}> 
+      <Flex className='registerTop' position="relative" width="100%">
         <img
           src={TopBorderImage}
           alt="border image"
@@ -28,69 +111,124 @@ const Register = () => {
         />
       </Flex>
 
-      <Stack className='signUpDataInputStack' spaceY={3}>
-        <Flex alignItems="center" width="100%" display={'flex'}>
-          {/* Back Button */}
-          <Button
-            borderRadius={200}
-            width="30px"
-            height="40px"
-            display={'flex'}
-            bg={'#43eb7f'}
-            position="absolute"
-            left="-15%"
-            boxShadow='0 4px 8px rgba(0, 0, 0, 0.2)'
-            onClick={goToAuth} // Add onClick to navigate back
-          >
-            <Text color={'white'}>&lt;</Text>
-          </Button>
+      {/* Back Button */}
+      <Button
+        borderRadius={200}
+        width="30px"
+        height="40px"
+        display={'flex'}
+        bg={'#43eb7f'}
+        position="absolute"
+        boxShadow='0 4px 8px rgba(0, 0, 0, 0.2)'
+        onClick={goToAuth} 
+        top={'10%'}
+        left={'10%'}
+      >
+            <Text color={'white'} bg={'transparent'}>&lt;</Text>
+      </Button>
 
-          <Heading textAlign="center" width="100%" color={'black'}>
+      <Stack className='signUpDataInputStack' spaceY={3} bg={'transparent'}>
+        <Flex alignItems="center" width="100%" display={'flex'} bg={'transparent'}>
+
+          <Heading textAlign="center" width="100%" color={'black'} bg={'transparent'}>
             Sign Up
           </Heading>
         </Flex>
 
-        <Box className='OuterInputBox'>
-          <Input
-            placeholder="Username"
-            className='InputData'
-          />
-          <Box className='InnerInputBox'>
-            <LuUser />
-          </Box>
-        </Box>
+        <Box width="130%" display="flex" flexDirection="column" p={0} m={0}>
+          <FormControl isInvalid={!!usernameError} width={'100%'}>
 
-        <Box className='OuterInputBox'>
-          <Input
-            placeholder="Email"
-            className='InputData'
-          />
-          <Box className='InnerInputBox'>
-            <MdOutlineEmail />
-          </Box>
+            <Box className='OuterInputBox'>
+              <Input
+                placeholder="Username"
+                className='InputData'
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+              />
+              <Box className='InnerInputBox'>
+                <LuUser />
+              </Box>
+            </Box>
+            {usernameError && <Text color={'red.500'}>{usernameError}</Text>}
+          </FormControl>     
         </Box>
+        
+        
+        <Box width="130%" display="flex" flexDirection="column" p={0} m={0}>
+          <FormControl isInvalid={!!emailError} width={'100%'}>
+            <Box className='OuterInputBox'>
+              <Input
+                placeholder="Email"
+                className='InputData'
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+              <Box className='InnerInputBox'>
+                <MdOutlineEmail />
+              </Box>
+            </Box>
+            {emailError && <Text color={'red.500'}> {emailError} </Text>}
 
-        <Box className='OuterInputBox'>
-          <Input
-            placeholder="Password"
-            className='InputData'
-          />
-          <Box className='InnerInputBox'>
-            <CiLock />
-          </Box>
+          </FormControl>
         </Box>
+        
+        <Box width="130%" display="flex" flexDirection="column" p={0} m={0}>
+          <FormControl isInvalid={!!passwordError} width={'100%'}>
 
-        <Box className='OuterInputBox'>
-          <Input
-            placeholder="Confirm Password"
-            className='InputData'
-          />
-          <Box className='InnerInputBox'>
-            <CiLock />
-          </Box>
+            <Box className='OuterInputBox'>
+              <Input
+                placeholder="Password"
+                className='InputData'
+                type={showPassword ? 'text' : 'password'} // Toggle password visibility
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+              <Box className='InnerInputBox'>
+                <CiLock />
+              </Box>
+              <HStack position="absolute" right="10px" top="50%" transform="translateY(-50%)">
+                <Button 
+                  size="sm" 
+                  onClick={() => setShowPassword(prev => !prev)}
+                >
+                  {showPassword ? <FiEyeOff /> : <FiEye />}
+                </Button>
+              </HStack>
+            </Box>
+
+          </FormControl>
         </Box>
+        
+        <Box width="130%" display="flex" flexDirection="column" p={0} m={0}>
+          <FormControl isInvalid={!!passwordError} width={'100%'}>
 
-        <Button className='next-Button' backgroundColor={'#6cce58'} color={'#f6f6f6'}>
+            <Box className='OuterInputBox'>
+              <Input
+                placeholder="Confirm Password"
+                className='InputData'
+                type={showConfirmPassword ? 'text' : 'password'} // Toggle confirm password visibility
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+              />
+              <Box className='InnerInputBox'>
+                <CiLock />
+              </Box>
+              <HStack position="absolute" right="10px" top="50%" transform="translateY(-50%)">
+                <Button 
+                  size="sm" 
+                  onClick={() => setShowConfirmPassword(prev => !prev)}
+                >
+                  {showConfirmPassword ? <FiEyeOff /> : <FiEye />}
+                </Button>
+              </HStack>
+            </Box>
+            {passwordError && <Text color="red.500">{passwordError}</Text>}
+
+          </FormControl>
+        </Box>
+        
+
+        <Button className='next-Button' backgroundColor={'#6cce58'} color={'#f6f6f6'} onClick={handleSubmit}>
           Next
         </Button>
 
@@ -101,9 +239,9 @@ const Register = () => {
 
         <HStack>
           <Box className='regBox' />
-          <Text color={'black'}>
-            or
-          </Text>
+            <Text color={'black'}>
+              or
+            </Text>
           <Box className='regBox' />
         </HStack>
 
@@ -112,7 +250,7 @@ const Register = () => {
             <svg stroke="currentColor" fill="currentColor" strokeWidth="0" className="apple-icon" viewBox="0 0 1024 1024" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg">
               <path d="M747.4 535.7c-.4-68.2 30.5-119.6 92.9-157.5-34.9-50-87.7-77.5-157.3-82.8-65.9-5.2-138 38.4-164.4 38.4-27.9 0-91.7-36.6-141.9-36.6C273.1 298.8 163 379.8 163 544.6c0 48.7 8.9 99 26.7 150.8 23.8 68.2 109.6 235.3 199.1 232.6 46.8-1.1 79.9-33.2 140.8-33.2 59.1 0 89.7 33.2 141.9 33.2 90.3-1.3 167.9-153.2 190.5-221.6-121.1-57.1-114.6-167.2-114.6-170.7zm-105.1-305c50.7-60.2 46.1-115 44.6-134.7-44.8 2.6-96.6 30.5-126.1 64.8-32.5 36.8-51.6 82.3-47.5 133.6 48.4 3.7 92.6-21.2 129-63.7z"></path>
             </svg>
-            <span>Continue with Apple</span>
+            <span style={{backgroundColor: 'transparent'}}>Continue with Apple</span>
           </div>
           <div className="google-login-button">
             <svg stroke="currentColor" fill="currentColor" strokeWidth="0" version="1.1" x="0px" y="0px" className="google-icon" viewBox="0 0 48 48" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg">
@@ -127,6 +265,6 @@ const Register = () => {
       </Stack>
     </div>
   );
-};
+}
 
 export default Register;

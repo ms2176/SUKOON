@@ -1,0 +1,85 @@
+/* login.css */
+@media (max-width: 480px) {
+    body {
+        overflow: auto;
+    }
+
+   
+
+    .homepageContainer {
+        display: flex;
+        background: white;
+        columns: '#454545';
+        z-index: 1;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+
+        
+    }
+
+    .homepageHeader {
+        background: #6cce58;
+        height: 25vw;
+        align-items: center;
+        justify-content: center;
+        align-content: center;
+    }
+
+
+    .pulseBoxContainer {
+        align-content: center; 
+        align-items: center;
+        justify-content: center; 
+        height: 70vw;
+        display: flex;
+        position: relative;
+    }
+
+    .pulseAnimation {
+        position: absolute; 
+        width: 500px; 
+        height: 500px;
+        z-index: 0; 
+        background-color: transparent;
+    }
+
+    .pulseBox {
+        background-color: #05FF02;
+        border-radius: 100px;
+        height: 150px;
+        width: 150px;
+        position: relative;
+        z-index: 1;
+        justify-content: center;
+        align-items: center;
+        align-content: center;
+        display: flex;
+
+
+    }
+
+    .introHomepage {
+        font-size: 210%;
+        margin-bottom: 10px;
+    }
+
+    .guestIntro, .totalConsShow, .totConsHeading {
+        font-family: 'SpotifyFont', sans-serif;
+        background: transparent;
+
+    }
+
+    .pinnedHeader, .editHeader {
+        font-family: 'SpotifyFont', sans-serif;
+        color: #21334a;
+    }
+
+    
+
+    
+        
+    
+
+  
+    
+  }
+  

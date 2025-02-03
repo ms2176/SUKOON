@@ -1,3 +1,4 @@
+
 @media (max-width: 480px) {
 
     * {
@@ -31,15 +32,17 @@
         justify-content: center;
         align-items: center;
         margin-top: 70%;
+        color: gray;
         
         
     }
 
     .OuterInputBox {
         position: relative;
-        width: 130%;
+        width: 100%;
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
         border-radius: 15px;
+        
     }
 
     .InnerInputBox {
@@ -56,6 +59,7 @@
         padding-left: 30px;
         border: none;
         height: 50px;
+        border-radius: 20px;
     }
 
     .next-Button {
@@ -133,6 +137,14 @@
         margin-bottom: 1px;
     }
 
+    .apple-icon {
+        background-color: #000;
+    }
+    
+    .apple-icon:first-child {
+        background-color: #000;
+    }
+
     .backButton, .backButtonText {
         border-radius: 200;
         background-color: #43eb7f; 
@@ -140,6 +152,11 @@
         color: white;
     }
 
+    .InputData:invalid, .chakra-form-control[data-invalid] .InputData {
+         border: 2px solid red;
+         border-radius: 15px;
+
+    }
     
 
 

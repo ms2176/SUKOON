@@ -1,22 +1,41 @@
 body {
-    background-color: white;
-    font-family: 'SpotifyFont', sans-serif;
+  background-color: white;
+  font-family: 'spotifyFontLight', sans-serif;
+  font-weight: bold;
+}
+
+* {
+  background-color: white;
+  font-family: 'spotifyFontLight', sans-serif;
+  font-weight: bold;
+}
+
+.Sukoon-logo {
+  font-family: 'BrooklynFont', sans-serif;
 }
 
 @font-face {
-    font-family: 'SpotifyFont';
-    src: url('react-website/src/assets/Spotify-Font/Gotham-Black.otf') format('opentype');
-    font-weight: 400;
-    font-style: normal;
-    color: black;
+  font-family: 'SpotifyFont';
+  src: url('./Gotham-Black.otf') format('opentype');
+  font-weight: 400;  
+  font-style: normal;
+  color: black;
 }
 
 @font-face {
-    font-family: 'specialFont';
-    src: url('react-website\src\assets\Spotify-Font\GothamBook.ttf') format('truetype');
-    font-weight: 400;
-    font-style: normal;
-    color: black;
+  font-family: 'BrooklynFont';
+  src: url('./Brooklyn_Normal_1.otf') format('opentype');
+  font-weight: 100;
+  font-style: normal;
+  color: black;
+}
+
+@font-face {
+  font-family: 'spotifyFontLight';
+  src: url('./Spotify-Font/GothamBook.ttf') format('truetype'); 
+  font-weight: bold;
+  font-style: normal;
+  color: black;
 }
 
 *,
@@ -27,13 +46,18 @@ body {
   box-sizing: border-box;
 }
 
-
 html, body {
-    height: 100%;
-  }
-  
-  #root {
-    min-height: 100%;
-    display: flex;
-    flex-direction: column;
-  }
+  height: 100%;
+}
+
+#root {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.introGuest,
+.totalConsShow,
+.totConsHeading {
+  font-family: 'SpotifyFont', sans-serif;
+}

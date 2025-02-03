@@ -1,11 +1,105 @@
-import { Box, Button, Flex, Heading, Input, Stack, Text } from '@chakra-ui/react';
+import { Box, Button, Flex, Heading, HStack, Input, Stack, Text } from '@chakra-ui/react';
 import TopBorderImage from '@/images/pngegg (1).png';
 import './Register.css';
 import { CiLock } from 'react-icons/ci';
 import { MdOutlineEmail } from 'react-icons/md';
 import { useNavigate } from 'react-router-dom'; // Import useNavigate
+import React, { useState } from 'react'
+import { getAuth, signInWithEmailAndPassword, AuthError, fetchSignInMethodsForEmail } from 'firebase/auth'
+import { FormControl } from '@chakra-ui/form-control';
+import { FiEye, FiEyeOff } from 'react-icons/fi';
+import { getFirestore, doc, getDoc } from "firebase/firestore";
+import { IoChevronBack } from "react-icons/io5";
+
 
 const Login = () => {
+
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [, setError] = useState('');
+  const [emailError, setEmailError] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  const [showPassword, setShowPassword] = useState(false); // State for toggling password visibility
+
+
+  const handleEmailChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setEmail(event.target.value); // Update the email state when the user types
+  };
+  
+  const handlePasswordChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setPassword(event.target.value); // Update the password state when the user types
+  };
+
+
+  const handleLogin = async(e: React.FormEvent<HTMLFormElement>) => {
+
+    e.preventDefault();
+    setEmailError('');
+    setPasswordError('');
+    let isValid = true;
+
+    if (!email) {
+      setEmailError('Invalid Email or Password.');
+      isValid = false;
+    }
+
+    if (!password) {
+      setPasswordError('Invalid Email or Password.');
+      isValid = false;
+    }
+
+    try {
+      const methods = await fetchSignInMethodsForEmail(getAuth(), email);
+      if (!(methods.length > 0)) {
+        setEmailError('Invalid Email or Password')
+        setPasswordError('Invalid Email or Password')
+        isValid = false;
+      }
+    } 
+    catch (error) {
+      console.error("Error checking email:", error);
+      return false;
+    }
+
+    if (!isValid) {
+      return;
+    }
+
+    try {
+      await signInWithEmailAndPassword(getAuth(), email, password);
+      console.log("Logged in successfully");
+      sessionStorage.setItem('userEmail', email);
+
+      const db = getFirestore();
+      const userDocRef = doc(db, "users", email);
+
+      const docSnapshot = await getDoc(userDocRef);
+
+      if (docSnapshot.exists()) {
+        const userData = docSnapshot.data();
+        if (userData.qrCodeData || userData.hubLink) {
+
+          navigate('/home');
+        } else {
+
+          navigate('/QRWait');
+        }
+      } 
+      
+      else {
+
+        navigate('/QRWait');
+      }
+    } catch (err) {
+      const errorMessage = (err as AuthError).message;
+      setError(errorMessage);
+      setEmailError(errorMessage.includes("email") ? errorMessage : ''); 
+      setPasswordError(errorMessage.includes("password") ? errorMessage : '');
+    }
+
+  };
+
+
   const navigate = useNavigate(); // Initialize navigate function
 
   // Function to navigate back to Auth page
@@ -13,8 +107,23 @@ const Login = () => {
     navigate('/'); // Navigate to the root Auth page
   };
 
+  const goToQR = () => {
+    navigate('/QRWait'); // Navigate to the root Auth page
+  };
+
+  const goToResetPassword = () => {
+    navigate('/ResetPassword')
+  }
+
+  const goToHome = () => {
+    navigate('/Home')
+  }
+
+  
+
   return (
     <div style={{ overflowX: 'hidden' }}>
+
       <Flex className='registerTop' overflow="hidden" position="relative" width="100%">
         {/* Image */}
         <img
@@ -29,8 +138,8 @@ const Login = () => {
         />
       </Flex>
 
-      <Stack className='signUpDataInputStack' spaceY={3} transform={'translate(-50%, -80%)'}>
-        <Flex alignItems="center" width="100%" display={'flex'} position="relative">
+      <Stack className='signUpDataInputStack' spaceY={3} transform={'translate(-50%, -80%)'} bg={'transparent'} mt={'90%'}>
+        <Flex alignItems="center" width="100%" display={'flex'} position="relative" bg={'transparent'}>
           {/* Back Button */}
           <Button
             borderRadius={200}
@@ -42,33 +151,105 @@ const Login = () => {
             left="-15%"
             boxShadow="0 4px 8px rgba(0, 0, 0, 0.2)"
             onClick={goToAuth} // Navigate to Auth when clicked
+            top={'-120%'}
           >
-            <Text color={'white'}>&lt;</Text>
+            <Text color={'white'} bg={'transparent'}>&lt;</Text>
           </Button>
 
           {/* Log In Heading */}
-          <Heading textAlign="center" width="100%" color={'black'}>
+          <Heading textAlign="center" width="100%" color={'black'} bg={'transparent'}>
             Log In
           </Heading>
         </Flex>
 
-        <Box className='OuterInputBox'>
-          <Input placeholder="Email" className='InputData' />
-          <Box className='InnerInputBox'>
-            <MdOutlineEmail />
-          </Box>
+        <Box width="130%" display="flex" flexDirection="column" p={0} m={0}>
+          <FormControl isInvalid={!!emailError} width={'100%'}>
+            <Box className='OuterInputBox'>
+              <Input
+                placeholder="Email"
+                className='InputData'
+                value={email}
+                onChange={handleEmailChange}
+              />
+              <Box className='InnerInputBox'>
+                <MdOutlineEmail />
+              </Box>
+            </Box>
+
+          </FormControl>
         </Box>
 
-        <Box className='OuterInputBox'>
-          <Input placeholder="Password" className='InputData' />
-          <Box className='InnerInputBox'>
-            <CiLock />
-          </Box>
+        <Box width="130%" display="flex" flexDirection="column" p={0} m={0}>
+          <FormControl isInvalid={!!passwordError} width={'100%'}>
+        
+            <Box className='OuterInputBox'>
+                <Input
+                  placeholder="Password"
+                  className='InputData'
+                  type={showPassword ? 'text' : 'password'} // Toggle password visibility
+                  value={password}
+                  onChange={handlePasswordChange}
+                />
+                <Box className='InnerInputBox'>
+                  <CiLock />
+                </Box>
+                <HStack position="absolute" right="10px" top="50%" transform="translateY(-50%)">
+                  <Button 
+                    size="sm" 
+                    onClick={() => setShowPassword(prev => !prev)}
+                  >
+                    {showPassword ? <FiEyeOff /> : <FiEye />}
+                  </Button>
+                </HStack>
+            </Box>
+        
+          </FormControl>
         </Box>
+        
+        <Flex 
+        width={'100%'} 
+        display={'flex'} 
+        flexDir={'column'} 
+        justifyContent={'center'} 
+        alignItems={'center'}
+      >
+          <Button 
+            className='next-Button' 
+            backgroundColor={'#6cce58'} 
+            color={'#f6f6f6'} 
+            onClick={
+              // (e) => {
+              // e.preventDefault(); 
+              // handleLogin(e as unknown as React.FormEvent<HTMLFormElement>);
+              goToHome
+            }
+          //}
+          >
+            Next
+          </Button>
 
-        <Button className='next-Button' backgroundColor={'#6cce58'} color={'#f6f6f6'}>
-          Next
-        </Button>
+          {/* Reserve space to prevent layout shifting */}
+          <Text 
+            color={'red.500'} 
+            fontSize={'sm'} 
+            minH="20px" 
+            visibility={emailError || passwordError ? 'visible' : 'hidden'} 
+          >
+            Invalid Email or Password
+          </Text>
+        </Flex>
+
+        <Stack display={'flex'} justifyContent={'center'} alignItems={'center'} alignContent={'center'} spaceY={-3}>
+          <Text className='registeryText'>
+            Don't have an account? <span style={{ color: "#6cce58", textDecoration: 'underline'}} onClick={goToQR}> Sign Up!</span>
+          </Text>
+          <Text className='registeryText' style={{ color: "#6cce58", textDecoration: 'underline'}} onClick={goToResetPassword}>
+            Forgot password?
+          </Text>
+
+        </Stack>
+        
+
 
         <div className="buttons-container">
           <div className="apple-login-button">
@@ -84,7 +265,7 @@ const Login = () => {
             >
               <path d="M747.4 535.7c-.4-68.2 30.5-119.6 92.9-157.5-34.9-50-87.7-77.5-157.3-82.8-65.9-5.2-138 38.4-164.4 38.4-27.9 0-91.7-36.6-141.9-36.6C273.1 298.8 163 379.8 163 544.6c0 48.7 8.9 99 26.7 150.8 23.8 68.2 109.6 235.3 199.1 232.6 46.8-1.1 79.9-33.2 140.8-33.2 59.1 0 89.7 33.2 141.9 33.2 90.3-1.3 167.9-153.2 190.5-221.6-121.1-57.1-114.6-167.2-114.6-170.7zm-105.1-305c50.7-60.2 46.1-115 44.6-134.7-44.8 2.6-96.6 30.5-126.1 64.8-32.5 36.8-51.6 82.3-47.5 133.6 48.4 3.7 92.6-21.2 129-63.7z"></path>
             </svg>
-            <span>Continue with Apple</span>
+            <span style={{backgroundColor: 'transparent'}}>Sign in with Apple</span>
           </div>
           <div className="google-login-button">
             <svg
@@ -122,7 +303,7 @@ const Login = () => {
                         c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z"
               ></path>
             </svg>
-            <span>Continue with Google</span>
+            <span>Sign in with Google</span>
           </div>
         </div>
       </Stack>
@@ -131,3 +312,5 @@ const Login = () => {
 };
 
 export default Login;
+
+

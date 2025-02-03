@@ -1,5 +1,6 @@
 /* login.css */
 @media (max-width: 480px) {
+ 
   .loginStartStack {
     display: flex;
     flex-direction: column; /* Stack elements vertically */
@@ -8,7 +9,7 @@
     height: 100vh; /* Full viewport height */
     padding: 0 20px; /* Add side padding */
     position: relative; /* Ensure positioning context for video */
-    overflow: hidden; /* Prevent any video overflow */
+    overflow: auto;
   }
 
   .loginAnimation {
@@ -29,19 +30,22 @@
     margin: 10px 0; /* Space out elements */
     color: black;
     z-index: 1; /* Ensure text appears above the video */
-    font-size: 190%;
+    font-size: 170%;
+    line-height: 110%;
   }
 
   .loginStart-text {
     font-weight: bold;
     font-size: 110%;
+    
   }
 
   .loginStart-Heading {
     color: #3B8A2B;
     margin-bottom: 20px;
     margin-top: 10px;
-    width: 80%;
+    width: 90%;
+    letter-spacing: normal;
   }
 
   .loginStart-Button {
@@ -53,5 +57,11 @@
     border-radius: 10px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     font-weight: bold;
+  }
+
+  .Sukoon-logo {
+    font-family: 'BrooklynFont', sans-serif;
+    color: #3B8A2B;
+    font-size: 300%;
   }
 }
