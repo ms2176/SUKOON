@@ -1,6 +1,4 @@
 
-@media (max-width: 480px) {
-
     * {
         letter-spacing: 1.5px;
     }
@@ -8,6 +6,9 @@
         position: relative;
         display: flex;
         justify-content: center;
+        margin-bottom: -20px;
+        z-index: 0;
+        background: transparent;
     }
 
     .signUpHeading {
@@ -26,16 +27,15 @@
         width: 60%;
         position: absolute; 
         left: 50%; 
-        transform: translate(-50%, -50%); 
+        transform: translateX(-50%); 
         display: flex;
         flex-direction: column; 
         justify-content: center;
         align-items: center;
-        margin-top: 70%;
+        margin-top: 70%; /* Default for mobile */
         color: gray;
-        
-        
-    }
+      }
+      
 
     .OuterInputBox {
         position: relative;
@@ -157,13 +157,38 @@
          border-radius: 15px;
 
     }
+
+    .resetContainer {
+        width: 100%;
+    }
+
     
+    @media (min-width: 481px) {
+        .signUpDataInputStack {
+            gap: 40px; 
+            width: 60%;
+            position: absolute; 
+            left: 50%; 
+            transform: translateX(-50%); 
+            top: 70%; /* Adjust this value to move the stack higher */
+            margin-top: 0; /* Remove margin-top */
+            display: flex;
+            flex-direction: column; 
+            justify-content: center;
+            align-items: center;
+            color: gray;
+        }
+
+        .resetContainer {
+            transform: translate(0%, -50%);
+            width: 100%;
+            background: #000;
+        }
+
+        
+    }
+     
 
 
 
-    
-  
 
-      
-      
-}

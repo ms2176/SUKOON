@@ -1,0 +1,195 @@
+/* Main Container */
+.ac-control-container {
+  font-family: Arial, sans-serif;
+  background-color: #f8f8f8;
+  color: #333;
+  height: 100vh;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Header */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.back-button {
+  font-size: 20px;
+  background: none;
+  border: none;
+  color: #6cce58;
+  cursor: pointer;
+}
+
+h1 {
+  font-size: 20px;
+  color: #333;
+}
+
+.power-toggle {
+  display: flex;
+  align-items: center;
+}
+
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 34px;
+  height: 20px;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  border-radius: 10px;
+  transition: 0.4s;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 14px;
+  width: 14px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: 0.4s;
+  border-radius: 50%;
+}
+
+input:checked + .slider {
+  background-color: #6cce58;
+}
+
+input:checked + .slider:before {
+  transform: translateX(14px);
+}
+
+/* Temperature Control */
+.temperature-control {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.temperature-circle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  width: 200px;
+  height: 200px;
+  border: 5px solid #6cce58;
+  border-radius: 50%;
+  background-color: white;
+}
+
+.temperature-display {
+  text-align: center;
+}
+
+.temperature-value {
+  font-size: 48px;
+  font-weight: bold;
+}
+
+.temperature-unit {
+  font-size: 14px;
+  color: gray;
+}
+
+.temp-adjust {
+  font-size: 24px;
+  background: none;
+  border: none;
+  color: #6cce58;
+  cursor: pointer;
+  font-weight: bold;
+  position: absolute;
+}
+
+.temp-minus {
+  left: 10px;
+}
+
+.temp-plus {
+  right: 10px;
+}
+
+/* Modes */
+.modes {
+  display: flex;
+  justify-content: space-around;
+}
+
+.mode-button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: none;
+  border: none;
+  color: gray;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.mode-button.active {
+  color: #6cce58;
+}
+
+.mode-button span {
+  font-size: 24px;
+}
+
+/* Settings */
+.settings {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 0 20px;
+}
+
+.setting-item {
+  flex: 1;
+  text-align: center;
+  font-size: 14px;
+  padding: 10px;
+  border-radius: 10px;
+  background-color: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+}
+
+.setting-item.eco-active {
+  background-color: #e0f5e0; /* Slight green shade */
+  color: #6cce58;
+}
+
+.setting-name {
+  font-size: 16px;
+  font-weight: bold;
+}
+
+
+
+
+
+
+  
+  
+  

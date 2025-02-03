@@ -1,5 +1,5 @@
 /* login.css */
-@media (max-width: 480px) {
+/* @media (max-width: 480px) { */
  
   .loginStartStack {
     display: flex;
@@ -64,4 +64,4 @@
     color: #3B8A2B;
     font-size: 300%;
   }
-}
+/* } */

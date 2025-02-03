@@ -1,0 +1,16 @@
+.QRTop {
+    background: #6cc358;
+    height: 10vh; /* Use vh for consistent height across different screen sizes */
+}
+
+.QRDataInputStack {
+    background: transparent;
+    width: 100%;
+    max-width: 600px; /* Optional: to limit the width of the stack */
+    padding: 20px;
+}
+
+.QRHead {
+    color: lightgray;
+    text-align: center;
+}

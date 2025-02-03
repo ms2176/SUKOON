@@ -1,4 +1,4 @@
-@media (max-width: 480px) {
+
 
     .otp-Form {
       width: 90%; /* Increase the width to 90% */
@@ -109,5 +109,12 @@
       font-size: 1.2em; /* Increase font size */
       font-weight: 700;
     }
-  }
+
   
+  @media (min-width: 481px) {
+    .otpContainer {
+      transform: translateY(-100%);
+      overflow-y: hidden;
+
+    }
+  }
