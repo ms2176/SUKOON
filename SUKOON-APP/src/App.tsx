@@ -7,6 +7,7 @@ import QRWait from '@/customComponents/login/QRWait.tsx';
 import ResetPassword from '@/customComponents/login/ResetPassword.tsx';
 import OTP from '@/customComponents/login/OTP.tsx';
 import NewPass from '@/customComponents/login/NewPass.tsx';
+<<<<<<< HEAD
 import Statistics from '@/customComponents/stats/stats_mainpage'; // Ensure the correct path to your Statistics component
 import Homepage from './customComponents/homepage/Homepage';
 import Navbar from '../../src/customComponents/navBar/Navbar';
@@ -25,6 +26,37 @@ const AuthenticatedLayout = ({ children }: { children: React.ReactNode }) => {
       <Navbar />
       {children}
     </>
+=======
+import AccInfo from '@/customComponents/account/AccInfo.tsx';
+import AccountsPage from '@/customComponents/account/AccountsPage.tsx';
+import Rate from '@/customComponents/account/Rate.tsx';
+import SupportCenter from '@/customComponents/account/SupportCenter.tsx';
+import ThirdPartyServices from '@/customComponents/account/ThirdPartyServices.tsx';
+import MoreTools from '@/customComponents/account/MoreTools.tsx';
+import SettingsPage from '@/customComponents/settings/SettingsPage.tsx';
+import Security from '@/customComponents/settings/Security.tsx';
+import Notifications from '@/customComponents/settings/Notifications.tsx';
+const App = () => {
+  return (
+    <Routes>
+      <Route path="/" element={<Auth />} />         {/* Home or Auth page */}
+      <Route path="/login" element={<Login />} />   {/* Login page */}
+      <Route path="/register" element={<Register />} /> {/* Register page */}
+      <Route path="/QRWait" element={<QRWait />} /> {/* QR Wait page */}
+      <Route path="/ResetPassword" element={<ResetPassword />} /> {/* Reset Password page */}
+      <Route path="/OTP" element={<OTP />} /> {/* OTP page */}
+      <Route path="/NewPass" element={<NewPass />} /> {/* New Password page */}
+      <Route path="/accinfo" element={<AccInfo />} /> {/* Account Info page */}
+      <Route path="/accountspage" element={<AccountsPage />} /> {/* Accounts Page */}
+      <Route path="/rate" element={<Rate />} /> {/* Rate page */}
+      <Route path="/support" element={<SupportCenter />} /> {/* SupportCenter page */}
+      <Route path="/services" element={<ThirdPartyServices />} /> {/* ThirdPartyServices page */}
+      <Route path="/tools" element={<MoreTools />} /> {/* MoreTools page */}
+      <Route path="/settings" element={<SettingsPage />} /> {/* Settings page */}
+      <Route path="/security" element={<Security />} /> {/* Security page */}
+      <Route path="/notifications" element={<Notifications />} /> {/* Notifications page */}
+    </Routes>
+>>>>>>> a56150524eaf56aa2e65d67962aefce39064d7f0
   );
 };
 
