@@ -19,38 +19,37 @@ const AccountsPage = () => {
       as="header" 
       bgImage={`url(${HeaderBg})`}
       bgSize="cover"
-     // bgPosition="center"
       p={4}
       textAlign="center"
       position="relative"
       height="50vh">
       
       
-        <HStack justify="space-between">
-          <Icon boxSize={6} >
+        <HStack justify="space-between" bg={'transparent'}>
+          <Icon boxSize={6} bg={'transparent'} >
                 <FiArrowLeft />
             </Icon>
-          <Heading size="lg" flex="1">
+          <Heading size="lg" flex="1"  bg={'transparent'}>
             Accounts
           </Heading>
-          <Icon boxSize={6} >
+          <Icon boxSize={6}  bg={'transparent'}>
                 <FiSettings />
             </Icon>          
         </HStack>
 
         {/* Profile Section */}
-      <Flex align="center" direction="column" mt={6}>
+      <Flex align="center" direction="column" mt={6}  bg={'transparent'}>
         <Avatar
           p={9}
           size="2xl"
           src="https://via.placeholder.com/150" // Replace with your image URL
           name="Profile"
-
+          bg={'transparent'}
         />
-        <Text fontSize="lg" fontWeight="bold" mt={2}>
+        <Text fontSize="lg" fontWeight="bold" mt={2} bg={'transparent'}>
           Kaywan
         </Text>
-        <Text fontSize="sm" color="white.400">
+        <Text fontSize="sm" color="white.400" bg={'transparent'}>
           kk2024@kaywan.co.uk
         </Text>
       </Flex>
@@ -196,6 +195,8 @@ const AccountsPage = () => {
           justify="space-between"
           align="center"
           width="100%"
+          onClick={() => navigate('/services')}
+          cursor="pointer"
         >
             
 
@@ -227,6 +228,8 @@ const AccountsPage = () => {
           justify="space-between"
           align="center"
           width="100%"
+          onClick={() => navigate('/tools')}
+          cursor="pointer"
         >
             
 
@@ -269,6 +272,8 @@ const AccountsPage = () => {
           justify="space-between"
           align="center"
           width="100%"
+          onClick={() => navigate('/support')}
+          cursor="pointer"
         >
             
         <HStack align="center" gap={5}>
@@ -300,7 +305,7 @@ const AccountsPage = () => {
           justify="space-between"
           align="center"
           width="100%"
-          onClick={() => navigate('/rating')}
+          onClick={() => navigate('/rate')}
           cursor="pointer"
         >
             
