@@ -52,10 +52,10 @@ const Devices = () => {
         textAlign="center"
         mb={6}
       >
-        <Text fontSize="2xl" fontWeight="bold" color="white">
+        <Text fontSize="2xl" fontWeight="bold" color="white" bg={'transparent'}>
           Living Room
         </Text>
-        <Text fontSize="sm" color="whiteAlpha.800" mt={1}>
+        <Text fontSize="sm" color="whiteAlpha.800" mt={1} bg={'transparent'}>
           Manage your devices seamlessly
         </Text>
       </Box>
