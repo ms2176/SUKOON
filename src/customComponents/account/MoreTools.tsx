@@ -26,37 +26,37 @@ const MoreTools = () => {
   const tools = [
     {
       name: "Virtual Home Tour",
-      icon: <FiBox size={40} color="#4A90E2" />,
+      icon: <FiBox size={40} color="#4A90E2" style={{background: 'transparent'}}/>,
       description: "Explore your home in 3D with our interactive virtual tour",
       link: "/virtual-tour"
     },
     {
       name: "Energy Usage Analyzer",
-      icon: <FiActivity size={40} color="#7ED321" />,
+      icon: <FiActivity size={40} color="#7ED321" style={{background: 'transparent'}}/>,
       description: "Track and optimize your home's energy consumption patterns",
       link: "/energy-analysis"
     },
     {
       name: "Device Compatibility Checker",
-      icon: <IoHardwareChipOutline size={40} color="#FF6B6B" />,
+      icon: <IoHardwareChipOutline size={40} color="#FF6B6B" style={{background: 'transparent'}}/>,
       description: "Verify device compatibility before adding to your network",
       link: "/compatibility-check"
     },
     {
       name: "Smart Schedule Planner",
-      icon: <FiClock size={40} color="#F5A623" />,
+      icon: <FiClock size={40} color="#F5A623" style={{background: 'transparent'}}/>,
       description: "Create automated routines for all connected devices",
       link: "/schedule-planner"
     },
     {
       name: "Security Monitor",
-      icon: <IoShieldCheckmark size={40} color="#9013FE" />,
+      icon: <IoShieldCheckmark size={40} color="#9013FE" style={{background: 'transparent'}}/>,
       description: "Real-time security status of all connected devices",
       link: "/security-monitor"
     },
     {
       name: "Maintenance Predictor",
-      icon: <FiCheckSquare size={40} color="#50E3C2" />,
+      icon: <FiCheckSquare size={40} color="#50E3C2" style={{background: 'transparent'}}/>,
       description: "AI-powered predictions for device maintenance needs",
       link: "/maintenance-predictor"
     }
@@ -76,7 +76,7 @@ const MoreTools = () => {
           {/* Header with Glowing Back Button */}
           <HStack justify="space-between" px={2}>
             <Button
-              borderRadius="full"
+              borderRadius="full" 
               width="30px"
               height="40px"
               bg="#43eb7f"
@@ -85,7 +85,7 @@ const MoreTools = () => {
               aria-label="Back"
               onClick={() => navigate('/accountspage')}
             >
-              <IoChevronBack color="white" />
+              <IoChevronBack color="white" style={{background: 'transparent'}}/>
             </Button>
             <Heading size="lg" flex="1" color="black" letterSpacing="tight">
               Advanced Tools

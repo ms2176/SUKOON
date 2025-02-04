@@ -153,12 +153,12 @@ const AccInfo = () => {
               aria-label="Back"
               onClick={() => navigate('/accountspage')}
             >
-              <IoChevronBack color="white" />
+              <IoChevronBack color="white" style={{background: 'transparent'}}/>
             </Button>
             <Heading size="lg" flex="1" color="black">
               Profile Edit
             </Heading>
-            <Icon boxSize={6} as={FiSettings} />
+            <Icon boxSize={6} as={FiSettings} style={{background: 'transparent'}}/>
           </HStack>
 
           <Flex align="center" direction="column" mt={6} pt={9}>

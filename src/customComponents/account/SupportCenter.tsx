@@ -69,7 +69,7 @@ const SupportCenter = () => {
               aria-label="Back"
               onClick={() => navigate('/accountspage')}
             >
-              <IoChevronBack color="balck" />
+              <IoChevronBack color="balck" style={{background: 'transparent'}}/>
             </Button>
             <Heading size="lg" flex="1" color="black">
               Support Center

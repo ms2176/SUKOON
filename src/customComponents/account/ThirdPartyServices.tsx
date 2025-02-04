@@ -66,7 +66,7 @@ const ThirdPartyServices = () => {
               aria-label="Back"
               onClick={() => navigate('/accountspage')}
             >
-              <IoChevronBack color="white" />
+              <IoChevronBack color="white" style={{background: 'transparent'}}/>
             </Button>
             <Heading size="lg" flex="1" color="black">
               Third Party Services

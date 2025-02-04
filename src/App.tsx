@@ -17,6 +17,9 @@ import AccInfo from './customComponents/account/AccInfo';
 import DeviceControlPage from './customComponents/rooms/DeviceControlPage';
 import BeatiMain from './customComponents/beati/beatiMain';
 import MyGreenhouse from './customComponents/beati/myGreenhouse';
+import Rate from './customComponents/account/Rate'
+import MoreTools from './customComponents/account/MoreTools';
+import ThirdPartyServices from './customComponents/account/ThirdPartyServices';
 
 // Layout component that includes the Navbar
 const AuthenticatedLayout = ({ children }: { children: React.ReactNode }) => {
@@ -80,7 +83,7 @@ const App = () => {
           </AuthenticatedLayout>
         } /> {/* Statistics page */}
 
-      <Route path="/Account" element={
+      <Route path="/accountspage" element={
           <AuthenticatedLayout>
             <AccountsPage />
           </AuthenticatedLayout>
@@ -98,14 +101,31 @@ const App = () => {
           </AuthenticatedLayout>
         } /> {/* beati page */}
 
-        <Route path="/myGreenhouse" element={
+<Route path="/myGreenhouse" element={
           <AuthenticatedLayout>
             <MyGreenhouse />
           </AuthenticatedLayout>
         } /> {/* greenhouse page */}
+
+<Route path="/rate" element={
+          <AuthenticatedLayout>
+            <Rate />
+          </AuthenticatedLayout>
+        } /> {/* rate page */}
+      
+      <Route path="/tools" element={
+          <AuthenticatedLayout>
+            <MoreTools />
+          </AuthenticatedLayout>
+        } /> {/* tools page */}
+
+<Route path="/services" element={
+          <AuthenticatedLayout>
+            <ThirdPartyServices />
+          </AuthenticatedLayout>
+        } /> {/* TPS page */}
       
       </Routes>
-
       
 
       

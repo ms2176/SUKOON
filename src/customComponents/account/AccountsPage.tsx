@@ -13,7 +13,7 @@ const AccountsPage = () => {
   const navigate = useNavigate();
 
   return (
-    <Box minH="100vh" bg="gray.100">
+    <Box minH="100vh" bg="gray.100" overflowY={'auto'} height={'120vh'}>
     <Box p={0} m={0}>
       <Box 
       as="header" 
@@ -77,7 +77,7 @@ const AccountsPage = () => {
         bg="white.500" 
         p={0} 
         shadow="md"
-        borderRadius="3xl"
+        borderRadius="20px"
         width="90%"
         mx="auto">
 
@@ -92,14 +92,15 @@ const AccountsPage = () => {
           width="100%"
           onClick={() => navigate('/accinfo')}
           cursor="pointer"
+          
         >
             
-        <HStack align="center" gap={5}>
-        <Icon boxSize={6} color="green.600">
+        <HStack align="center" gap={5} bg={'transparent'}>
+        <Icon boxSize={6} color="green.600" bg={'transparent'}>
             <FiUser />
         </Icon>
         
-        <VStack gap={0} align="flex-start">
+        <VStack gap={0} align="flex-start" bg={'transparent'} >
             <Text fontSize="md" color="black" fontWeight="bold">
                 Account Information
             </Text>
@@ -109,7 +110,7 @@ const AccountsPage = () => {
             </VStack>
 
         </HStack>
-        <Icon boxSize={6} color="green.600">
+        <Icon boxSize={6} color="green.600" bg={'transparent'}>
             <FiChevronRight />
         </Icon>
         </HStack>
@@ -127,7 +128,7 @@ const AccountsPage = () => {
             
 
         <HStack align="center" gap={5}>
-        <Icon boxSize={6} color="green.600">
+        <Icon boxSize={6} color="green.600" bg={'transparent'}>
             <FiSun />
         </Icon>
         <VStack gap={0} align="flex-start">
@@ -167,7 +168,7 @@ const AccountsPage = () => {
         >
             
         <HStack align="center" gap={5}>
-        <Icon boxSize={6} color="green.600">
+        <Icon boxSize={6} color="green.600" bg={'transparent'}>
             <FiHome />
         </Icon>
         
@@ -181,7 +182,7 @@ const AccountsPage = () => {
             </VStack>
 
         </HStack>
-        <Icon boxSize={6} color="green.600">
+        <Icon boxSize={6} color="green.600" bg={'transparent'}>
             <FiChevronRight />
         </Icon>
         </HStack>
@@ -201,7 +202,7 @@ const AccountsPage = () => {
             
 
         <HStack align="center" gap={5}>
-        <Icon boxSize={6} color="green.600">
+        <Icon boxSize={6} color="green.600" bg={'transparent'}>
             <FaUsers />
         </Icon>
         <VStack gap={0} align="flex-start">
@@ -214,7 +215,7 @@ const AccountsPage = () => {
             </VStack>
 
         </HStack>
-        <Icon boxSize={6} color="green.600">
+        <Icon boxSize={6} color="green.600" bg={'transparent'}>
             <FiChevronRight />
         </Icon>        
         </HStack>
@@ -234,7 +235,7 @@ const AccountsPage = () => {
             
 
         <HStack align="center" gap={5}>
-        <Icon boxSize={6} color="green.600">
+        <Icon boxSize={6} color="green.600" bg={'transparent'}>
             <FiTool />
         </Icon>
         <VStack gap={0} align="flex-start">
@@ -247,7 +248,7 @@ const AccountsPage = () => {
             </VStack>
 
         </HStack>
-        <Icon boxSize={6} color="green.600">
+        <Icon boxSize={6} color="green.600" bg={'transparent'}>
             <FiChevronRight />
         </Icon>        
         </HStack>
@@ -277,7 +278,7 @@ const AccountsPage = () => {
         >
             
         <HStack align="center" gap={5}>
-        <Icon boxSize={6} color="green.600">
+        <Icon boxSize={6} color="green.600" bg={'transparent'}>
             <FiHelpCircle />
         </Icon>
         
@@ -291,7 +292,7 @@ const AccountsPage = () => {
             </VStack>
 
         </HStack>
-        <Icon boxSize={6} color="green.600">
+        <Icon boxSize={6} color="green.600" bg={'transparent'}>
             <FiChevronRight />
         </Icon>
         </HStack>
@@ -311,7 +312,7 @@ const AccountsPage = () => {
             
 
         <HStack align="center" gap={5}>
-        <Icon boxSize={6} color="green.600">
+        <Icon boxSize={6} color="green.600" bg={'transparent'}>
             <FiStar />
         </Icon>
         <VStack gap={0} align="flex-start">
@@ -324,7 +325,7 @@ const AccountsPage = () => {
             </VStack>
 
         </HStack>
-        <Icon boxSize={6} color="green.600">
+        <Icon boxSize={6} color="green.600" bg={'transparent'}>
             <FiChevronRight />
         </Icon>        
         </HStack>

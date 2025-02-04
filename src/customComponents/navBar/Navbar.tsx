@@ -28,7 +28,7 @@ const Navbar = () => {
     }
 
     const goToAccount = () => {
-        navigate('/Account')
+        navigate('/accountspage')
     }
 
   return (
