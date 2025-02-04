@@ -40,6 +40,7 @@ const Navbar = () => {
       color="white"
       p="4"
       className="navContainer"
+      zIndex={1000}
       
     >
         <HStack bg={'transparent'} display={'flex'} justifyContent={'center'} alignItems={'center'} alignContent={'center'} spaceX={'05%'} mb={2}>

@@ -17,15 +17,16 @@ const pinnedMenu = ({ isVisible, onClose, onPinItem}) => {
   return (
     <div style={{overflow: 'hidden'}}>
 
-        <Flex position="absolute" width="100vw" height="100vh" justifyContent="center" alignItems="center" zIndex={10} display={'flex'}>
+        <Flex position="fixed" width="100vw" height="100vh" justifyContent="center" alignItems="center" zIndex={10} display={'flex'}>
             <Box 
                 width="95%" 
                 height="50vh" 
                 borderColor="#21334a" 
                 borderRadius={20} 
-                position="absolute" 
+                position="fixed" 
                 left="50%" 
-                transform="translate(-50%, -180%)"
+                top="50%"
+                transform={'translate(-50%, -50%)'}
                 className='pinBox'
                 zIndex={10}
             >
