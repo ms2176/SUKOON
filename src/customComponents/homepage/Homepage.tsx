@@ -153,6 +153,7 @@ const Homepage = () => {
                 transform="translateX(-50%)" y
                 zIndex={1001} 
                 textAlign="center" 
+                overflowY={'scroll'}
               >
                 <Heading fontSize="2xl" color="#21334a" bg={'transparent'}>
                   Pinned Items
