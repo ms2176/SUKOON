@@ -71,6 +71,7 @@ const Homepage = () => {
             Homes:
           </Heading>
           <Dropdown initialShow='Choose Home...'></Dropdown>
+          <TbCirclePlusFilled color='#21334a' size={'10%'} onClick={() => setPinnedMenuVisible(true)} />
         </HStack>
 
         <Flex display={'flex'} justifyContent={'center'} alignItems={'center'} alignContent={'center'} mt={'25px'} zIndex={1} bg={'transparent'}>

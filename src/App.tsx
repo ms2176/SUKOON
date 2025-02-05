@@ -20,6 +20,7 @@ import MyGreenhouse from './customComponents/beati/myGreenhouse';
 import Rate from './customComponents/account/Rate'
 import MoreTools from './customComponents/account/MoreTools';
 import ThirdPartyServices from './customComponents/account/ThirdPartyServices';
+import InitialView from './customComponents/homepage/InitialView';
 
 // Layout component that includes the Navbar
 const AuthenticatedLayout = ({ children }: { children: React.ReactNode }) => {
@@ -55,7 +56,7 @@ const App = () => {
         {/* Actual App */}
         <Route path="/Home" element={
           <AuthenticatedLayout>
-            <Homepage />
+            <InitialView />
           </AuthenticatedLayout>
         } /> {/* Homepage */}
 
