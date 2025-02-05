@@ -30,6 +30,11 @@ const InitialView = () => {
   const [isRemoveRoomVisibile, setRemoveRoomVisible] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false); // State for expanded mode
+  const [isAddHomeVisible, setIsAddHomeVisible] = useState(false);
+
+  const toggleAddHome = () => {
+    setIsAddHomeVisible(!isAddHomeVisible); // Toggle the info card visibility
+};
 
   const handlePinItem = (item: string) => {
     setPinnedItems((prev) => [...prev, item]); // Add item to pinned list
@@ -64,7 +69,7 @@ const InitialView = () => {
   return (
     <div>
 
-        <AddHome />
+        {isAddHomeVisible && <AddHome closeAddHome={toggleAddHome}/> }
       <Stack className='homepageContainer' position={'relative'} display={'flex'} height={'auto'}>
         <Box className='homepageHeader'>
           <Heading bg={'transparent'} ml={'20px'} mt={'20px'} mb={'20px'} fontWeight={'extrabold'} className='introHomepage'>
@@ -77,7 +82,7 @@ const InitialView = () => {
                 Get started by adding your first home!
             </Heading>
 
-            <Button bg={'#6cce58'} width={'40%'} color={'white'} borderRadius={'20px'}>
+            <Button bg={'#6cce58'} width={'40%'} color={'white'} borderRadius={'20px'} onClick={toggleAddHome}>
                 Add Home
                 
             </Button>

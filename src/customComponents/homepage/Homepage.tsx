@@ -1,4 +1,4 @@
-import { Box, Flex, Heading, HStack, Stack } from '@chakra-ui/react'
+import { Box, Button, Flex, Heading, HStack, Stack } from '@chakra-ui/react'
 import React, { useState } from 'react'
 import './Homepage.css'
 import { MdArrowDropDown } from "react-icons/md";
@@ -18,6 +18,8 @@ import { BsGraphUpArrow } from "react-icons/bs";
 import { MdOutlineBatterySaver } from "react-icons/md";
 import { FaExpandAlt } from "react-icons/fa";
 import { AiOutlineShrink } from "react-icons/ai";
+import AddHome from './AddHome.tsx';
+import EditHomes from './EditHomes.tsx'
 
 const Homepage = () => {
   const username = sessionStorage.getItem('username');
@@ -26,9 +28,19 @@ const Homepage = () => {
   const [isRemoveRoomVisibile, setRemoveRoomVisible] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false); // State for expanded mode
+  const [isAddHomeVisible, setIsAddHomeVisible] = useState(false);
+  const [isEditHomesVisible, setIsEditHomesVisible] = useState(false);
 
   const handlePinItem = (item: string) => {
     setPinnedItems((prev) => [...prev, item]); // Add item to pinned list
+  };
+
+  const toggleAddHome = () => {
+    setIsAddHomeVisible(!isAddHomeVisible); // Toggle the info card visibility
+  }; 
+  
+  const toggleEditHomes = () => {
+    setIsEditHomesVisible(!isEditHomesVisible); // Toggle the info card visibility
   };
 
   // Disable editing mode if there are no pinned items
@@ -59,6 +71,8 @@ const Homepage = () => {
 
   return (
     <div style={{ overflow: 'hidden' }}>
+      {isAddHomeVisible && <AddHome closeAddHome={toggleAddHome}/>}
+      {isEditHomesVisible && <EditHomes closeEditHomes={toggleEditHomes}/>}
       <Stack className='homepageContainer' position={'relative'} display={'flex'} overflow={'hidden'}>
         <Box className='homepageHeader'>
           <Heading bg={'transparent'} ml={'20px'} mt={'20px'} mb={'20px'} fontWeight={'extrabold'} className='introHomepage'>
@@ -66,12 +80,20 @@ const Homepage = () => {
           </Heading>
         </Box>
 
-        <HStack align="center" ml="20px" mt={'10px'} zIndex={1} bg={'transparent'}>
+        <HStack align="center" ml="20px" mt={'10px'} zIndex={1} bg={'transparent'} width={'90%'}>
           <Heading color={'#454545'} bg={'transparent'}>
             Homes:
           </Heading>
           <Dropdown initialShow='Choose Home...'></Dropdown>
-          <TbCirclePlusFilled color='#21334a' size={'10%'} onClick={() => setPinnedMenuVisible(true)} />
+          <Button bg={'transparent'} width={'auto'} height={'auto'} onClick={toggleAddHome}>
+            <TbCirclePlusFilled color='#21334a' size={'50%'} />  
+          </Button>
+          
+          <Box bg={'#E4E4E7'} width={'50%'} height={'25px'} justifyContent={'center'} alignItems={'center'} alignContent={'center'} display={'flex'} borderRadius={20} onClick={toggleEditHomes}>
+            <Heading className='editHeader' fontSize={'80%'} bg={'transparent'} justifyContent={'center'} alignItems={'center'} alignContent={'center'} mt={'2px'}>
+              Edit
+            </Heading>
+          </Box>
         </HStack>
 
         <Flex display={'flex'} justifyContent={'center'} alignItems={'center'} alignContent={'center'} mt={'25px'} zIndex={1} bg={'transparent'}>
@@ -117,6 +139,7 @@ const Homepage = () => {
                 style={{ cursor: 'pointer' }}
               />
               <TbCirclePlusFilled color='#21334a' size={'20%'} onClick={() => setPinnedMenuVisible(true)} />
+
             </HStack>
           </HStack>
         </Flex>
@@ -131,6 +154,7 @@ const Homepage = () => {
             top={isExpanded ? '0' : 'auto'}
             left={isExpanded ? '0' : 'auto'}
             zIndex={isExpanded ? 1000 : 'auto'} 
+            mb={'20%'}
           >
             {isExpanded && (
               <Box

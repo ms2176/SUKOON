@@ -13,8 +13,14 @@ interface DropdownProps {
   initialShow: string;
 }
 
-
-
+const Homes = {
+  Home1: 'Myhome1',
+  Home2: 'Myhome2',
+  Home3: 'Myhome3',
+  Home4: 'Myhome4',
+  Home5: 'Myhome5',
+  Home6: 'Myhome6',
+};
 
 const Dropdown: React.FC<DropdownProps> = ({ initialShow }) => {
   const [selectedItem, setSelectedItem] = useState<string>(initialShow);
@@ -28,11 +34,11 @@ const Dropdown: React.FC<DropdownProps> = ({ initialShow }) => {
             size="xs"
             color={'gray.300'}
             borderRadius={20}
-            minWidth="120px"  // Set minimum width to prevent shrinking
-            maxWidth="200px"  // Limit maximum width
-            px={3}  // Add horizontal padding to prevent a squeezed look
+            minWidth="120px"  
+            maxWidth="200px"  
+            px={3}  
           >
-            <HStack >
+            <HStack>
               <Heading fontSize="sm" whiteSpace="nowrap">
                 {selectedItem}
               </Heading>
@@ -42,21 +48,16 @@ const Dropdown: React.FC<DropdownProps> = ({ initialShow }) => {
         </MenuTrigger>
 
         <MenuContent color={'#454545'}>
-          <MenuItem value="new-txt" color={'inherit'} onClick={() => setSelectedItem("New Text File")}>
-            New Text File
-          </MenuItem>
-          <MenuItem value="new-file" color={'inherit'} onClick={() => setSelectedItem("New File...")}>
-            New File...
-          </MenuItem>
-          <MenuItem value="new-win" color={'inherit'} onClick={() => setSelectedItem("New Window")}>
-            New Window
-          </MenuItem>
-          <MenuItem value="open-file" color={'inherit'} onClick={() => setSelectedItem("Open File...")}>
-            Open File...
-          </MenuItem>
-          <MenuItem value="export" color={'inherit'} onClick={() => setSelectedItem("Export")}>
-            Export
-          </MenuItem>
+          {Object.entries(Homes).map(([key, value]) => (
+            <MenuItem
+              key={key}
+              value={key}
+              color={'inherit'}
+              onClick={() => setSelectedItem(value)}
+            >
+              {value}
+            </MenuItem>
+          ))}
         </MenuContent>
       </MenuRoot>
     </div>
