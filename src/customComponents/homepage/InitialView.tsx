@@ -21,6 +21,7 @@ import { AiOutlineShrink } from "react-icons/ai";
 import { LuQrCode } from "react-icons/lu";
 import { FaCamera } from "react-icons/fa";
 import AddHome from './AddHome.tsx';
+import '@/customComponents/login/register.css'
 
 const InitialView = () => {
   const username = sessionStorage.getItem('username');
