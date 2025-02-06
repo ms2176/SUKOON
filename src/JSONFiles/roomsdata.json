@@ -1,0 +1,22 @@
+[
+    {
+      "roomName": "Kitchen",
+      "roomImage": "src/images/roomImages/Kitchen-PNG-File.png",
+      "numDevices": 8
+    },
+    {
+      "roomName": "Living room",
+      "roomImage": "src/images/roomImages/livingroom.png",
+      "numDevices": 9
+    },
+    {
+      "roomName": "Bedroom",
+      "roomImage": "src/images/roomImages/bedroom.png",
+      "numDevices": 10
+    },
+    {
+      "roomName": "Laundry room",
+      "roomImage": "src/images/roomImages/laundry.png",
+      "numDevices": 2
+    }
+  ]

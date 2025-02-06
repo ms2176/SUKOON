@@ -1,0 +1,22 @@
+[
+    {
+      "deviceName": "Lamp",
+      "deviceImage": "src/images/deviceImages/lamp.png"
+ 
+    },
+    {
+      "deviceName": "Light",
+      "deviceImage": "src/images/deviceImages/light.png"
+
+    },
+    {
+      "deviceName": "Washing Machine",
+      "deviceImage": "src/images/deviceImages/laundrymachine.png"
+
+    },
+    {
+      "deviceName": "AC",
+      "deviceImage": "src/images/deviceImages/ac.png"
+
+    }
+  ]

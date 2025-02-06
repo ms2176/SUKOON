@@ -20,19 +20,37 @@ import { FaExpandAlt } from "react-icons/fa";
 import { AiOutlineShrink } from "react-icons/ai";
 import AddHome from './AddHome.tsx';
 import EditHomes from './EditHomes.tsx'
+import MockDevice from './MockDevice.tsx';
 
 const Homepage = () => {
   const username = sessionStorage.getItem('username');
   const [isPinnedMenuVisible, setPinnedMenuVisible] = useState(false);
-  const [pinnedItems, setPinnedItems] = useState<string[]>([]);
+  const [pinnedItems, setPinnedItems] = useState<PinnedItem[]>([]); // Store both rooms and devices
   const [isRemoveRoomVisibile, setRemoveRoomVisible] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false); // State for expanded mode
   const [isAddHomeVisible, setIsAddHomeVisible] = useState(false);
   const [isEditHomesVisible, setIsEditHomesVisible] = useState(false);
 
-  const handlePinItem = (item: string) => {
-    setPinnedItems((prev) => [...prev, item]); // Add item to pinned list
+  interface Room {
+    type: 'room';
+    roomName: string;
+    numDevices: number;
+    roomImage: string;
+  }
+
+  interface Device {
+    type: 'device'; // Add a type discriminator
+    deviceName: string;
+    deviceImage: string;
+  }
+
+  type PinnedItem = Room | Device; // Union type for pinned items
+
+
+  
+  const handlePinItem = (item: Room | Device) => {
+    setPinnedItems((prev) => [...prev, item]); // Add the room object to the pinned list
   };
 
   const toggleAddHome = () => {
@@ -188,7 +206,7 @@ const Homepage = () => {
 
             <Flex
               wrap="wrap"
-              spaceX={'10px'}
+              gap={'10px'}
               display={'flex'}
               alignItems={'center'}
               alignContent={'center'}
@@ -197,14 +215,30 @@ const Homepage = () => {
             >
               {pinnedItems.map((item, index) => (
                 <Box width={'calc(45%)'} key={index}>
+                  {item.type === 'room' ? (
                   <Mockroom
                     style={{ width: 'calc(100%)' }}
-                    roomNum={item}
+                    roomNum={`${index + 1}`} // Optional: You can pass the index or room ID
+                    roomName={item.roomName} // Use `item` instead of `room`
+                    numDevices={item.numDevices} // Use `item` instead of `room`
+                    image={item.roomImage} // Use `item` instead of `room`
                     isEditing={isEditing && pinnedItems.length > 0}
                     onRemove={() => {
-                      setPinnedItems(prev => prev.filter((_, i) => i !== index));
+                      setPinnedItems((prev) => prev.filter((_, i) => i !== index));
                     }}
                   />
+                  ) : (
+
+                    <MockDevice
+                      style={{ width: 'calc(100%)' }}
+                      deviceName={item.deviceName}
+                      deviceImage={item.deviceImage}
+                      isEditing={isEditing && pinnedItems.length > 0}
+                      onRemove={() => {
+                        setPinnedItems((prev) => prev.filter((_, i) => i !== index));
+                      }}
+                    />
+                  )}
                 </Box>
               ))}
             </Flex>

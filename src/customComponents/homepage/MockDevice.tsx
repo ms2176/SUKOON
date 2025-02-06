@@ -4,18 +4,18 @@ import './pinnedMenu.css';
 import './MockRoom.css';
 import { FaCircleMinus } from 'react-icons/fa6';
 
-interface MockroomProps {
-  roomNum?: string;
+interface MockDeviceProps {
+    deviceNum?: string;
   onClick?: () => void; // Optional click handler
   isEditing?: boolean;
   onRemove?: () => void; // Function to remove room
   style?: React.CSSProperties; // Optional style object
-  roomName?: string;
+  deviceName?: string;
   numDevices?: number;
-  image?: string | React.ReactElement;
+  deviceImage?: string | React.ReactElement;
 }
 
-const Mockroom: React.FC<MockroomProps> = ({roomNum, onClick, style, onRemove, isEditing = false, roomName, numDevices, image}) => {
+const MockDevice: React.FC<MockDeviceProps> = ({deviceNum, onClick, style, onRemove, isEditing = false, deviceName, deviceImage}) => {
   return (
     <Box
       className="mockRoomComp"
@@ -75,9 +75,9 @@ const Mockroom: React.FC<MockroomProps> = ({roomNum, onClick, style, onRemove, i
             alignItems="center"
             className='imageboxpin'
           >
-            {typeof image === 'string' ? (
+            {typeof deviceImage === 'string' ? (
               <img
-                src={image}
+                src={deviceImage}
                 style={{
                   width: '100%',
                   height: '100%',
@@ -86,29 +86,18 @@ const Mockroom: React.FC<MockroomProps> = ({roomNum, onClick, style, onRemove, i
                 }}
               />
             ) : (
-              image
+                deviceImage
             )}
           </Box>
         </Box>
 
-        <Stack
-          bg="transparent"
-          spaceY={'-10%'}
-          justifyContent="center"
-          alignItems="center"
-          textAlign="center"
-          width="100%" 
-        >
-          <Heading bg="transparent" whiteSpace="nowrap" fontSize="md" color={'#6cce58'}>
-            {roomName}
-          </Heading>
-          <Heading bg="transparent" whiteSpace="nowrap" fontSize="sm" color={'gray.400'}>
-            {numDevices} devices
-          </Heading>
-        </Stack>
+        <Heading bg={'transparent'} textAlign={'center'} color={'#6cce58'}>
+            {deviceName}
+
+        </Heading>
       </Stack>
     </Box>
   );
 };
 
-export default Mockroom;
+export default MockDevice;

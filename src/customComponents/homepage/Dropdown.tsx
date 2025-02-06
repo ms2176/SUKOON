@@ -26,7 +26,7 @@ const Dropdown: React.FC<DropdownProps> = ({ initialShow }) => {
   const [selectedItem, setSelectedItem] = useState<string>(initialShow);
 
   return (
-    <div style={{ background: 'transparent' }}>
+    <div style={{ background: 'transparent', width: '100%' }}>
       <MenuRoot>
         <MenuTrigger asChild>
           <Button
@@ -34,12 +34,12 @@ const Dropdown: React.FC<DropdownProps> = ({ initialShow }) => {
             size="xs"
             color={'gray.300'}
             borderRadius={20}
-            minWidth="120px"  
-            maxWidth="200px"  
-            px={3}  
+            width="80%" // Full width of the parent container
+            px={3} // Padding for better spacing
+            style={{ overflow: 'hidden', textOverflow: 'ellipsis' }} // Prevent text overflow
           >
-            <HStack>
-              <Heading fontSize="sm" whiteSpace="nowrap">
+            <HStack width="100%" spaceX={2}>
+              <Heading fontSize={{ base: '80%', sm: '90%', md: '100%' }} whiteSpace="nowrap" overflow="hidden" textOverflow="ellipsis">
                 {selectedItem}
               </Heading>
               <MdArrowDropDown />
@@ -47,13 +47,14 @@ const Dropdown: React.FC<DropdownProps> = ({ initialShow }) => {
           </Button>
         </MenuTrigger>
 
-        <MenuContent color={'#454545'}>
+        <MenuContent color={'#454545'} width="100%" maxWidth="200px">
           {Object.entries(Homes).map(([key, value]) => (
             <MenuItem
               key={key}
               value={key}
               color={'inherit'}
               onClick={() => setSelectedItem(value)}
+              style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} // Prevent text overflow
             >
               {value}
             </MenuItem>
