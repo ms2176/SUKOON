@@ -1,5 +1,4 @@
 import { Box, Button, Heading, HStack, Stack } from "@chakra-ui/react";
-import './Navbar.css'
 import { FaHome } from "react-icons/fa";
 import { GiCircleForest } from "react-icons/gi";
 import { SlGraph } from "react-icons/sl";
@@ -7,7 +6,7 @@ import { MdAccountCircle } from "react-icons/md";
 import { BsDoorClosed } from "react-icons/bs";
 import { useNavigate } from 'react-router-dom'; // Import useNavigate
 
-const Navbar = () => {
+const NavbarTenant = () => {
 
     const navigate = useNavigate();
 
@@ -98,4 +97,4 @@ const Navbar = () => {
   );
 };
 
-export default Navbar;
+export default NavbarTenant;

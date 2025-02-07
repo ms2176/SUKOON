@@ -9,20 +9,18 @@ import {
 } from "@/components/ui/menu";
 import { MdArrowDropDown } from "react-icons/md";
 
-interface DropdownProps {
-  initialShow: string;
+interface Home {
+  homeName: string;
+  homeType: string;
 }
 
-const Homes = {
-  Home1: 'Myhome1',
-  Home2: 'Myhome2',
-  Home3: 'Myhome3',
-  Home4: 'Myhome4',
-  Home5: 'Myhome5',
-  Home6: 'Myhome6',
-};
+interface DropdownProps {
+  initialShow: string;
+  homes: Home[];
+  onSelect: (home: Home) => void; // Add an onSelect prop
+}
 
-const Dropdown: React.FC<DropdownProps> = ({ initialShow }) => {
+const Dropdown: React.FC<DropdownProps> = ({ initialShow, homes, onSelect }) => {
   const [selectedItem, setSelectedItem] = useState<string>(initialShow);
 
   return (
@@ -34,9 +32,9 @@ const Dropdown: React.FC<DropdownProps> = ({ initialShow }) => {
             size="xs"
             color={'gray.300'}
             borderRadius={20}
-            width="80%" // Full width of the parent container
-            px={3} // Padding for better spacing
-            style={{ overflow: 'hidden', textOverflow: 'ellipsis' }} // Prevent text overflow
+            width="80%"
+            px={3}
+            style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}
           >
             <HStack width="100%" spaceX={2}>
               <Heading fontSize={{ base: '80%', sm: '90%', md: '100%' }} whiteSpace="nowrap" overflow="hidden" textOverflow="ellipsis">
@@ -48,15 +46,18 @@ const Dropdown: React.FC<DropdownProps> = ({ initialShow }) => {
         </MenuTrigger>
 
         <MenuContent color={'#454545'} width="100%" maxWidth="200px">
-          {Object.entries(Homes).map(([key, value]) => (
+          {homes.map((home) => (
             <MenuItem
-              key={key}
-              value={key}
+              key={home.homeName}
+              value={home.homeName}
               color={'inherit'}
-              onClick={() => setSelectedItem(value)}
-              style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} // Prevent text overflow
+              onClick={() => {
+                setSelectedItem(home.homeName);
+                onSelect(home); // Call onSelect with the selected home
+              }}
+              style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
             >
-              {value}
+              {home.homeName}
             </MenuItem>
           ))}
         </MenuContent>

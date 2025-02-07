@@ -1,22 +1,23 @@
 [
     {
       "deviceName": "Lamp",
-      "deviceImage": "src/images/deviceImages/lamp.png"
+      "deviceImage": "src/images/deviceImages/lamp.png",
+      "deviceNumber": 1
  
     },
     {
       "deviceName": "Light",
-      "deviceImage": "src/images/deviceImages/light.png"
-
+      "deviceImage": "src/images/deviceImages/light.png",
+      "deviceNumber": 2
     },
     {
       "deviceName": "Washing Machine",
-      "deviceImage": "src/images/deviceImages/laundrymachine.png"
-
+      "deviceImage": "src/images/deviceImages/laundrymachine.png",
+      "deviceNumber": 3
     },
     {
       "deviceName": "AC",
-      "deviceImage": "src/images/deviceImages/ac.png"
-
+      "deviceImage": "src/images/deviceImages/ac.png",
+      "deviceNumber": 4
     }
   ]

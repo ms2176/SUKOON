@@ -1,0 +1,23 @@
+[
+    {
+      "homeName": "zaidHome",
+      "homeType": "tenant"
+      
+      
+    },
+    {
+      "homeName": "myHome42",
+      "homeType": "admin"
+      
+    },
+    {
+      "homeName": "home8",
+      "homeType": "admin"
+   
+    },
+    {
+      "homeName": "homie",
+      "homeType": "tenant"
+
+    }
+  ]

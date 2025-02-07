@@ -2,21 +2,25 @@
     {
       "roomName": "Kitchen",
       "roomImage": "src/images/roomImages/Kitchen-PNG-File.png",
-      "numDevices": 8
+      "numDevices": 8,
+      "roomNumber": 1
     },
     {
       "roomName": "Living room",
       "roomImage": "src/images/roomImages/livingroom.png",
-      "numDevices": 9
+      "numDevices": 9,
+      "roomNumber": 2
     },
     {
       "roomName": "Bedroom",
       "roomImage": "src/images/roomImages/bedroom.png",
-      "numDevices": 10
+      "numDevices": 10,
+      "roomNumber": 3
     },
     {
       "roomName": "Laundry room",
       "roomImage": "src/images/roomImages/laundry.png",
-      "numDevices": 2
+      "numDevices": 2,
+      "roomNumber": 4
     }
   ]

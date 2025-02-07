@@ -9,7 +9,8 @@ import OTP from '@/customComponents/login/OTP.tsx';
 import NewPass from '@/customComponents/login/NewPass.tsx';
 import Statistics from '@/customComponents/stats/stats_mainpage'; // Ensure the correct path to your Statistics component
 import Homepage from './customComponents/homepage/Homepage';
-import Navbar from './customComponents/navBar/Navbar';
+import NavbarTenant from './customComponents/navBar/NavbarTenant';
+import NavbarAdmin from './customComponents/navBar/NavbarAdmin';
 import RoomList from './customComponents/rooms/roomsList';
 import Devices from './customComponents/rooms/devices';
 import AccountsPage from './customComponents/account/AccountsPage';
@@ -21,13 +22,24 @@ import Rate from './customComponents/account/Rate'
 import MoreTools from './customComponents/account/MoreTools';
 import ThirdPartyServices from './customComponents/account/ThirdPartyServices';
 import InitialView from './customComponents/homepage/InitialView';
-import './index.css'
+import './index.css';
+import homesdata from '@/JSONFiles/homesdata.json';
+import { useState } from 'react';
 
+interface Home {
+  homeName: string;
+  homeType: string;
+}
+
+interface AuthenticatedLayoutProps {
+  children: React.ReactNode;
+  selectedHome?: Home | null; // Add selectedHome as an optional prop
+}
 // Layout component that includes the Navbar
-const AuthenticatedLayout = ({ children }: { children: React.ReactNode }) => {
+const AuthenticatedLayout = ({ children, selectedHome }: AuthenticatedLayoutProps) => {
   return (
     <>
-      <Navbar />
+      {selectedHome?.homeType === 'admin' ? <NavbarAdmin /> : <NavbarTenant />}
       {children}
     </>
   );
@@ -38,14 +50,19 @@ const App = () => {
 
   // Define the routes that require authentication
   const authenticatedRoutes = ['/Home', '/stats'];
+  const [selectedHome, setSelectedHome] = useState<Home | null>(null); // State for selected home
 
   // Check if the current route is an authenticated route
   const isAuthenticatedRoute = authenticatedRoutes.includes(location.pathname);
+  const handleSelectHome = (home: Home) => {
+    setSelectedHome(home);
+  };
 
   return (
     <>
-      {isAuthenticatedRoute && <Navbar />}
-      <Routes>
+        {isAuthenticatedRoute && (
+                selectedHome?.homeType === 'admin' ? <NavbarAdmin /> : <NavbarTenant />
+              )}      <Routes>
         <Route path="/" element={<Auth />} />         {/* Home or Auth page */}
         <Route path="/login" element={<Login />} />   {/* Login page */}
         <Route path="/register" element={<Register />} /> {/* Register page */}
@@ -56,73 +73,73 @@ const App = () => {
 
         {/* Actual App */}
         <Route path="/Home" element={
-          <AuthenticatedLayout>
-            <Homepage />
+          <AuthenticatedLayout selectedHome={selectedHome}>
+            <Homepage onSelectHome={handleSelectHome} selectedHome={selectedHome}/>
           </AuthenticatedLayout>
         } /> {/* Homepage */}
 
         <Route path="/Rooms" element={
-          <AuthenticatedLayout>
+          <AuthenticatedLayout selectedHome={selectedHome}>
             <RoomList />
           </AuthenticatedLayout>
         } /> {/* Rooms */}
 
         <Route path="/devices/:roomId" element={
-          <AuthenticatedLayout>
+          <AuthenticatedLayout selectedHome={selectedHome}>
             <Devices />
           </AuthenticatedLayout>
         } /> {/* Room page */}
 
         <Route path="/devices/:roomId/:deviceId" element={
-          <AuthenticatedLayout>
+          <AuthenticatedLayout selectedHome={selectedHome}>
             <DeviceControlPage />
           </AuthenticatedLayout>
         } />
 
         <Route path="/stats" element={
-          <AuthenticatedLayout>
+          <AuthenticatedLayout selectedHome={selectedHome}>
             <Statistics />
           </AuthenticatedLayout>
         } /> {/* Statistics page */}
 
       <Route path="/accountspage" element={
-          <AuthenticatedLayout>
+          <AuthenticatedLayout selectedHome={selectedHome}>
             <AccountsPage />
           </AuthenticatedLayout>
         } /> {/* Account page */}
 
         <Route path="/accinfo" element={
-          <AuthenticatedLayout>
+          <AuthenticatedLayout selectedHome={selectedHome}>
             <AccInfo />
           </AuthenticatedLayout>
         } /> {/* AccountInfo page */}
 
         <Route path="/beati" element={
-          <AuthenticatedLayout>
+          <AuthenticatedLayout selectedHome={selectedHome}>
             <BeatiMain />
           </AuthenticatedLayout>
         } /> {/* beati page */}
 
 <Route path="/myGreenhouse" element={
-          <AuthenticatedLayout>
+          <AuthenticatedLayout selectedHome={selectedHome}>
             <MyGreenhouse />
           </AuthenticatedLayout>
         } /> {/* greenhouse page */}
 
 <Route path="/rate" element={
-          <AuthenticatedLayout>
+          <AuthenticatedLayout selectedHome={selectedHome}>
             <Rate />
           </AuthenticatedLayout>
         } /> {/* rate page */}
       
       <Route path="/tools" element={
-          <AuthenticatedLayout>
+          <AuthenticatedLayout selectedHome={selectedHome}>
             <MoreTools />
           </AuthenticatedLayout>
         } /> {/* tools page */}
 
 <Route path="/services" element={
-          <AuthenticatedLayout>
+          <AuthenticatedLayout selectedHome={selectedHome}>
             <ThirdPartyServices />
           </AuthenticatedLayout>
         } /> {/* TPS page */}
