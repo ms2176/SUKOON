@@ -1,0 +1,84 @@
+.energy-container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1rem;
+  background-color: white;
+  min-height: 100vh;
+  transition: background-color 0.3s;
+}
+
+.energy-header {
+  margin: 2rem 0 1.5rem;
+  text-align: center;
+}
+
+.energy-real-time-monitoring,
+.energy-live-power-output-widget,
+.energy-battery-charge-level-indicator {
+  margin-bottom: 1.5rem;
+  background: #f9fafb;
+  border-radius: 12px;
+  padding: 1rem;
+  border: 1px solid #e2e8f0;
+  transition: transform 0.2s;
+}
+
+.energy-real-time-monitoring:hover,
+.energy-live-power-output-widget:hover,
+.energy-battery-charge-level-indicator:hover {
+  transform: scale(1.02);
+}
+
+.energy-historical-usage-graphs,
+.energy-efficiency-and-yield-graphs,
+.energy-charge-discharge-graph {
+  margin-bottom: 1.5rem;
+  background: white;
+  border-radius: 12px;
+  padding: 1rem;
+  border: 1px solid #e2e8f0;
+}
+
+.energy-consumption-breakdown-table,
+.energy-source-status-table,
+.energy-smart-storage-management-panel {
+  margin-bottom: 1.5rem;
+  background: #f9fafb;
+  border-radius: 12px;
+  padding: 1rem;
+  border: 1px solid #e2e8f0;
+}
+
+.energy-tips-and-recommendations,
+.energy-maintenance-and-repair,
+.energy-battery-maintenance-and-replacement {
+  margin-bottom: 1.5rem;
+  background: #f9fafb;
+  border-radius: 12px;
+  padding: 1rem;
+  border: 1px solid #e2e8f0;
+}
+
+h1, h2, h3 {
+  color: #333;
+}
+
+p {
+  color: #555;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th, td {
+  padding: 8px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+
+th {
+  background-color: #f2f2f2;
+}
