@@ -1,39 +1,446 @@
-@media (max-width: 480px) {
-
-  * {
-    letter-spacing: 1.5px;
-}
-    .statisticsTop {
-  background-color: #f5f5f5;
-  padding: 20px;
+/* Reset and base styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
-.statisticsDataStack {
-  margin-top: 20px;
+body {
+  background-color: #f8fafc;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
-.statisticsBox {
-  border-radius: 8px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  padding: 20px;
-  background-color: #6EC207 ;
-  -webkit-text-fill-color: black;
+/* Container styles */
+.statistics-container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1rem;
+  background-color: white;
+  min-height: 100vh;
 }
 
-.backButton, .backButtonText {
-  border-radius: 200;
-  background-color: #43eb7f; 
-  font-weight: bold;
+/* Welcome section */
+.welcome-section {
+  margin: 2rem 0 1.5rem;
+  text-align: center;
+}
+
+.welcome-section h1 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #000;
+}
+
+.user-name {
+  color: #064e3b;
+}
+
+/* Chart section */
+.chart-section {
+  margin-bottom: 1.5rem;
+  background: white;
+  border-radius: 12px;
+  padding: 1rem;
+  border: 1px solid #e2e8f0;
+}
+
+/* Chart controls */
+.chart-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.time-range {
+  display: flex;
+  gap: 0.375rem;
+  margin-right: auto;
+}
+
+.time-button {
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+  border: 1px solid #064e3b;
+  background: transparent;
+  color: #000;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.time-button:hover {
+  background: rgba(6, 78, 59, 0.05);
+}
+
+.time-button.active {
+  background: #064e3b;
   color: white;
 }
 
-.usagePerRoomBox {
-  border-radius: 40px;
+.download-button {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  background-color: transparent;
+  color: #064e3b;
+  border: 1px solid currentColor;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
   height: fit-content;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  padding: 20px;
-  background-color: #6EC207 ;
-  -webkit-text-fill-color: black;
 }
 
+.download-button svg {
+  width: 0.875rem;
+  height: 0.875rem;
+}
+
+.download-button:hover {
+  opacity: 0.8;
+}
+
+/* Chart container */
+.chart-container {
+  width: 100%;
+  aspect-ratio: 16/9;
+  min-height: 150px;
+  max-height: 250px;
+  margin: 0 auto;
+  background: white;
+  border-radius: 12px;
+  padding: 0.5rem;
+  border: 1px solid #e2e8f0;
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+  .chart-controls {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .time-range {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .download-button {
+    width: 100%;
+  }
+
+  .chart-container {
+    height: 250px;
+  }
+}
+
+/* Larger screens */
+@media (min-width: 640px) {
+  .welcome-section h1 {
+    font-size: 1.25rem;
+  }
+
+  .time-button {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+  }
+
+  .download-button {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+  }
+
+  .chart-container {
+    min-height: 250px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .welcome-section {
+    margin: 2.5rem 0 2rem;
+  }
+
+  .welcome-section h1 {
+    font-size: 1.5rem;
+  }
+
+  .chart-container {
+    min-height: 300px;
+  }
+}
+
+/* Energy Cards - Flexible Layout */
+.energy-cards {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.energy-card {
+  min-width: 0;
+  background: white;
+  border-radius: 16px;
+  padding: 0.75rem;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+.energy-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.card-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.card-header h3 {
+  font-size: 0.875rem;
+  color: #000;
+  margin-bottom: 0.25rem;
+}
+
+.card-subtitle {
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+.card-icon {
+  width: 1rem;
+  height: 1rem;
+  color: #064e3b;
+}
+
+.card-footer {
+  margin-top: auto;
+}
+
+.card-value {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #000;
+  margin-bottom: 0.25rem;
+}
+
+.card-trend {
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.trend-up { color: #064e3b; }
+.trend-down { color: #dc2626; }
+
+/* Rooms section */
+.rooms-section {
+  background: white;
+  border-radius: 16px;
+  padding: 1rem;
+  border: 1px solid #e2e8f0;
+  margin-bottom: 4rem;
+}
+
+.rooms-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.rooms-header h2 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #000;
+}
+
+.sort-select {
+  padding: 0.375rem 0.75rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: white;
+  color: #000;
+  min-width: 150px;
+  outline: none;
+  cursor: pointer;
+}
+
+.sort-select:focus {
+  border-color: #064e3b;
+}
+
+.rooms-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.room-usage {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem;
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  transition: all 0.2s;
+}
+
+.room-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.room-icon {
+  font-size: 1.25rem;
+}
+
+.room-info h3 {
+  font-size: 1rem;
+  color: #000;
+  margin-bottom: 0.25rem;
+}
+
+.room-info p {
+  font-size: 0.875rem;
+  color: #64748b;
+}
+
+.usage-info {
+  text-align: right;
+}
+
+.usage-value {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #000;
+  margin-bottom: 0.25rem;
+}
+
+.usage-trend {
+  font-size: 0.875rem;
+}
+
+/* Bottom nav placeholder */
+.bottom-nav-placeholder {
+  height: 3.5rem;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: white;
+  border-top: 1px solid #e2e8f0;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+  .energy-cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .statistics-container {
+    padding: 1rem;
+  }
+
+  .chart-section {
+    height: 350px;
+  }
+
+  .chart-controls {
+    flex-wrap: wrap;
+  }
+
+  .time-range {
+    flex: 1;
+    justify-content: flex-start;
+  }
+
+  .download-button {
+    margin-left: auto;
+  }
+
+  .energy-cards {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+  }
+
+  .rooms-header {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .sort-select {
+    width: 100%;
+  }
+
+  .room-usage {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .usage-info {
+    width: 100%;
+    text-align: left;
+  }
+}
+
+@media (max-width: 480px) {
+  .statistics-container {
+    padding: 0.75rem;
+  }
+
+  .chart-section {
+    height: 250px;
+  }
+
+  .energy-cards {
+    gap: 0.5rem;
+  }
+
+  .energy-card {
+    padding: 0.75rem;
+  }
+
+  .card-icon {
+    width: 1rem;
+    height: 1rem;
+  }
+
+  .room-usage {
+    padding: 0.75rem;
+  }
+
+  .room-icon {
+    font-size: 1.25rem;
+  }
+
+  .usage-value {
+    font-size: 1rem;
+  }
+
+  .sort-select {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.813rem;
+  }
+
+  .bottom-nav-placeholder {
+    height: 3.5rem;
+  }
 }

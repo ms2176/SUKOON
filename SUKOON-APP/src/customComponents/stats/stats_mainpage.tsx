@@ -1,133 +1,254 @@
-import { useState, useEffect } from 'react';
-import { Text, Flex, HStack, Heading, SimpleGrid, Box, Button,  } from "@chakra-ui/react";
-import { toaster } from "@/components/ui/toaster"
-import {
-  StatHelpText,
-  StatLabel,
-  StatRoot,
-  StatUpTrend,
-  StatValueText,
-} from "@/components/ui/stat";
-import { useNavigate } from 'react-router-dom'; // Import useNavigate hook
-import './stats_mainpage.css'; // Import the CSS file
+import { useState, useEffect, useMemo } from 'react';
+import { ArrowLeftIcon, ChartBarIcon, BoltIcon, SunIcon, CurrencyDollarIcon, ArrowDownTrayIcon } from '@heroicons/react/24/outline';
+import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
+import { useNavigate } from 'react-router-dom';
+import './stats_mainpage.css';
 
-
-interface DemoProps {
-  label: string;
-  value: number;
-  trend: string;
-  helpText: string;
+interface RoomData {
+  room: string;
+  devices: number;
+  usage: number;
+  trend: number;
+  icon: string;
 }
 
-const Demo = ({ label, value, trend, helpText }: DemoProps) => {
-  return (
-    <StatRoot>
-      <StatLabel>{label}</StatLabel>
-      <HStack>
-        <StatValueText
-          value={value}
-          formatOptions={{ style: "currency", currency: "USD" }}
-        />
-        <StatUpTrend>{trend}</StatUpTrend>
-      </HStack>
-      <StatHelpText>{helpText}</StatHelpText>
-    </StatRoot>
-  );
-};
-
 const Statistics = () => {
-  const navigate = useNavigate(); // Initialize navigate function
-  const [value, setValue] = useState(8456.4); // Initial value
+  const navigate = useNavigate();
+  const [timeRange, setTimeRange] = useState('Daily');
+  const [sortOption, setSortOption] = useState('Highest Usage');
+  const [liveData, setLiveData] = useState(0);
 
+  // Simulate live data updates
   useEffect(() => {
     const interval = setInterval(() => {
-      // Update the value here. For example, incrementing by a random number.
-      setValue(prevValue => prevValue + Math.random() * 10000);}, 120000); // 120000 milliseconds = 2 minutes
-    return () => clearInterval(interval); // Cleanup interval on component unmount
+      setLiveData(prev => prev + Math.random() * 10 - 5);
+    }, 5000);
+    return () => clearInterval(interval);
   }, []);
 
-  const goToAuth = () => {
-    navigate('/'); // Navigate to Auth page
+  // Generate chart data based on timeRange
+  const chartData = useMemo(() => {
+    switch (timeRange) {
+      case 'Daily':
+        return Array.from({ length: 24 }, (_, i) => ({
+          name: `${i}:00`,
+          value: Math.random() * 100 + 50
+        }));
+      case 'Monthly':
+        return Array.from({ length: 30 }, (_, i) => ({
+          name: `Day ${i + 1}`,
+          value: Math.random() * 100 + 50
+        }));
+      case 'Yearly':
+        return Array.from({ length: 12 }, (_, i) => ({
+          name: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][i],
+          value: Math.random() * 100 + 50
+        }));
+      default:
+        return [];
+    }
+  }, [timeRange]);
+
+  const rooms: RoomData[] = useMemo(() => [
+    { room: 'Living Room', devices: 5, usage: 985, trend: 2.3, icon: '🛋️' },
+    { room: 'Kitchen', devices: 10, usage: 875, trend: -1.5, icon: '🍳' },
+    { room: 'Master Bedroom', devices: 12, usage: 742, trend: 0.8, icon: '🛏️' },
+    { room: 'Kids Bedroom', devices: 4, usage: 589, trend: -2.1, icon: '🎮' },
+    { room: 'Bathroom', devices: 7, usage: 500, trend: 1.4, icon: '🚿' },
+  ], []);
+
+  // Sort rooms based on selection
+  const sortedRooms = useMemo(() => {
+    return [...rooms].sort((a, b) => {
+      switch (sortOption) {
+        case 'Highest Usage':
+          return b.usage - a.usage;
+        case 'Lowest Usage':
+          return a.usage - b.usage;
+        case 'Most Devices':
+          return b.devices - a.devices;
+        default:
+          return 0;
+      }
+    });
+  }, [rooms, sortOption]);
+
+  const userName = "John"; // This would come from your auth context/state
+
+  const energyCards = [
+    {
+      title: 'Energy Generated',
+      subtitle: 'Total power from renewable sources',
+      value: 2345 + Math.round(liveData),
+      trend: 12.3,
+      icon: SunIcon,
+      path: '/stats/energy-generated'
+    },
+    {
+      title: 'Energy Consumed',
+      subtitle: 'Total power consumption',
+      value: 1890 + Math.round(liveData),
+      trend: -5.2,
+      icon: ChartBarIcon,
+      path: '/stats/energy-consumed'
+    },
+    {
+      title: 'Energy Stored',
+      subtitle: 'Available battery power',
+      value: 1234 + Math.round(liveData),
+      trend: 8.7,
+      icon: BoltIcon,
+      path: '/stats/energy-stored'
+    },
+    {
+      title: 'Total Cost',
+      subtitle: 'Monthly estimated cost',
+      value: ((1890 + Math.round(liveData)) * 0.12).toFixed(2),
+      trend: 3.4,
+      icon: CurrencyDollarIcon,
+      unit: '$'
+    }
+  ];
+
+  const costRate = 0.12; // Example rate per kWh
+  
+  const calculateCost = (usage: number, rate: number) => {
+    return (usage * rate).toFixed(2); // Returns cost in string format
+  };
+
+  const totalCost = calculateCost(energyCards.reduce((acc, card) => acc + card.value, 0), costRate);
+
+  const handleDownload = () => {
+    // You can integrate Typst here
+    // Example: Generate a report with Typst
+    const data = {
+      timeRange,
+      timestamp: new Date().toISOString(),
+      chartData,
+      rooms: sortedRooms
+    };
+    
+    // For now, just download as JSON
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `energy-report-${timeRange.toLowerCase()}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   return (
-    <div style={{ overflowX: 'hidden' }}> {/* Prevent horizontal scrolling */}      
-      <Button
-            borderRadius={200}
-            width="30px"
-            height="40px"
-            display={'flex'}
-            bg={'#43eb7f'}
-            position="relative"
-            left="-15%"
-            boxShadow='0 4px 8px rgba(0, 0, 0, 0.2)'
-            onClick={goToAuth} // Add onClick to navigate back
+    <div className="statistics-container">
+      <div className="welcome-section">
+        <h1>Your Stats, <span className="user-name">{userName}</span></h1>
+      </div>
+
+      <div className="chart-section">
+        <div className="chart-controls">
+          <div className="time-range">
+            {['Daily', 'Monthly', 'Yearly'].map((range) => (
+              <button
+                key={range}
+                onClick={() => setTimeRange(range)}
+                className={`time-button ${timeRange === range ? 'active' : ''}`}
+              >
+                {range}
+              </button>
+            ))}
+          </div>
+          <button className="download-button" onClick={handleDownload}>
+            <ArrowDownTrayIcon className="w-4 h-4" />
+            Download
+          </button>
+        </div>
+        <div className="chart-container">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+              <defs>
+                <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#064e3b" stopOpacity={0.8}/>
+                  <stop offset="95%" stopColor="#064e3b" stopOpacity={0}/>
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} />
+              <XAxis dataKey="name" tick={{ fontSize: 12 }} />
+              <YAxis tick={{ fontSize: 12 }} />
+              <Tooltip />
+              <Area 
+                type="monotone" 
+                dataKey="value" 
+                stroke="#064e3b" 
+                fill="url(#colorValue)" 
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
+      <div className="energy-cards">
+        {energyCards.map((card) => (
+          <div key={card.title} onClick={() => navigate(card.path)} className="energy-card">
+            <div className="card-content">
+              <div className="card-header">
+                <div>
+                  <h3>{card.title}</h3>
+                  <p className="card-subtitle">{card.subtitle}</p>
+                </div>
+                <card.icon className="card-icon" />
+              </div>
+              <div className="card-footer">
+                <p className="card-value">
+                  {card.unit || ''}{card.value} {!card.unit && 'kWh'}
+                </p>
+                <span className={`card-trend ${card.trend > 0 ? 'trend-up' : 'trend-down'}`}>
+                  {card.trend > 0 ? '↑' : '↓'} {Math.abs(card.trend)}%
+                </span>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      
+
+      <div className="rooms-section">
+        <div className="rooms-header">
+          <h2>Usage Per Room</h2>
+          <select 
+            className="sort-select" 
+            value={sortOption} 
+            onChange={(e) => setSortOption(e.target.value)}
           >
-            <Text color={'black'}>&lt;</Text>
+            <option>Highest Usage</option>
+            <option>Lowest Usage</option>
+            <option>Most Devices</option>
+          </select>
+        </div>
+        <div className="rooms-list">
+          {sortedRooms.map((room) => (
+            <div key={room.room} className="room-usage">
+              <div className="room-info">
+                <span className="room-icon">{room.icon}</span>
+                <div>
+                  <h3>{room.room}</h3>
+                  <p>{room.devices} Devices</p>
+                </div>
+              </div>
+              <div className="usage-info">
+                <p className="usage-value">{room.usage} kWh</p>
+                <span className={`usage-trend ${room.trend > 0 ? 'trend-up' : 'trend-down'}`}>
+                  {room.trend > 0 ? '↑' : '↓'} {Math.abs(room.trend)}%
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
 
-          </Button>
-          
-          <Flex justifyContent="space-between" alignItems="center" padding={5}>
-        <Heading textAlign="left" color={'black'}>
-          Your Usage
-        </Heading>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() =>
-            toaster.create({
-              description: "File saved successfully",
-              type: "info",
-            })
-          }
-        >
-          Download Report
-        </Button>
-      </Flex>
-
-      <SimpleGrid columns={2} gap={4} padding={5}>
-        <Box className="statisticsBox">
-          <Demo label="Unique Users" value={value} trend="12%" helpText="since last month" />
-        </Box>
-        <Box className="statisticsBox">
-          <Demo label="Page Views" value={value} trend="-5%" helpText="since last month" />
-        </Box>
-        <Box className="statisticsBox">
-          <Demo label="New Signups" value={value} trend="12.45%" helpText="since last month" />
-        </Box>
-        <Box className="statisticsBox">
-          <Demo label="Revenue" value={value} trend="8.99%" helpText="since last month" />
-        </Box>
-      </SimpleGrid>
-
-      <Flex> 
-          <Heading textAlign="center" width="100%" color={'black'}>
-            Device By Room
-          </Heading>
-        </Flex>
-
-      <SimpleGrid columns={1} gap={1} padding={5}>
-        <Box className="usagePerRoomBox">
-        <Text textStyle="md">Living Room</Text>
-        <Text textStyle="xs">5 devices</Text>
-        </Box>
-        <Box className="usagePerRoomBox">
-        <Text textStyle="md">Kitchen</Text>
-        <Text textStyle="xs">10 devices</Text>
-        </Box>
-        <Box className="usagePerRoomBox">
-        <Text textStyle="md">Master Bedroom</Text>
-        <Text textStyle="xs">5 devices</Text>
-        </Box>
-        <Box className="usagePerRoomBox">
-        <Text textStyle="md">Kids Bathroom</Text>
-        <Text textStyle="xs">5 devices</Text>
-        </Box>
-        <Box className="usagePerRoomBox">
-        <Text textStyle="md">Kids Bedroom</Text>
-        <Text textStyle="xs">9 devices</Text>
-        </Box>
-      </SimpleGrid>
+      {/* Placeholder for bottom nav */}
+      <div className="bottom-nav-placeholder" />
     </div>
   );
 };
