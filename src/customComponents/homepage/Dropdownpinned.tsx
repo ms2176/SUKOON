@@ -30,7 +30,7 @@ const Dropdownpinned: React.FC<DropdownpinnedProps> = ({ initialShow, onChange }
             px={3} // Padding for better spacing
             style={{ overflow: 'hidden', textOverflow: 'ellipsis' }} // Prevent text overflow
           >
-            <HStack width="100%" spacing={2}>
+            <HStack width="100%">
               <Heading fontSize={{ base: '80%', sm: '90%', md: '100%' }} whiteSpace="nowrap" overflow="hidden" textOverflow="ellipsis">
                 {selectedItem}
               </Heading>
@@ -39,7 +39,7 @@ const Dropdownpinned: React.FC<DropdownpinnedProps> = ({ initialShow, onChange }
           </Button>
         </MenuTrigger>
 
-        <MenuContent color={'#454545'} width="100%" maxWidth="200px">
+        <MenuContent color={'#454545'} width="100%" maxWidth="200px" p={3} borderRadius={'20px'} spaceY={2}>
           {/* Static options: All, Rooms, and Devices */}
           <MenuItem
             value="All"

@@ -45,7 +45,7 @@ const Dropdown: React.FC<DropdownProps> = ({ initialShow, homes, onSelect }) => 
           </Button>
         </MenuTrigger>
 
-        <MenuContent color={'#454545'} width="100%" maxWidth="200px">
+        <MenuContent color={'#454545'} width="100%" maxWidth="200px" p={3} borderRadius={'20px'} spaceY={2}>
           {homes.map((home) => (
             <MenuItem
               key={home.homeName}

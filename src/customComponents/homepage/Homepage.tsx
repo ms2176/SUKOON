@@ -25,6 +25,7 @@ import MockDevice from './MockDevice.tsx';
 import homesdata from '@/JSONFiles/homesdata.json'
 import PinnedMenuAdmin from './pinnedMenuAdmin.tsx';
 import MockUnits from './MockUnits.tsx';
+import { MdOutlineEdit } from "react-icons/md";
 
 interface Home {
   homeName: string;
@@ -139,10 +140,8 @@ const Homepage: React.FC<HomepageProps> = ({ selectedHomePass, onSelectHome }) =
             <TbCirclePlusFilled color='#21334a' size={'50%'} />  
           </Button>
           
-          <Box bg={'#E4E4E7'} width={'50%'} height={'25px'} justifyContent={'center'} alignItems={'center'} alignContent={'center'} display={'flex'} borderRadius={20} onClick={toggleEditHomes}>
-            <Heading className='editHeader' fontSize={'80%'} bg={'transparent'} justifyContent={'center'} alignItems={'center'} alignContent={'center'} mt={'2px'}>
-              Edit
-            </Heading>
+          <Box bg={'white'} width={'50%'} height={'25px'} justifyContent={'center'} alignItems={'center'} alignContent={'center'} display={'flex'} borderRadius={20} onClick={toggleEditHomes}>
+            <MdOutlineEdit color='#21334a' size={'100%'} style={{background:'transparent'}}/>
           </Box>
         </HStack>
 
