@@ -22,6 +22,7 @@ import Rate from './customComponents/account/Rate'
 import MoreTools from './customComponents/account/MoreTools';
 import ThirdPartyServices from './customComponents/account/ThirdPartyServices';
 import InitialView from './customComponents/homepage/InitialView';
+import SupportCenter from './customComponents/account/SupportCenter';
 import './index.css';
 import homesdata from '@/JSONFiles/homesdata.json';
 import { useState } from 'react';
@@ -143,6 +144,7 @@ const App = () => {
             <ThirdPartyServices />
           </AuthenticatedLayout>
         } /> {/* TPS page */}
+
       
       </Routes>
       
