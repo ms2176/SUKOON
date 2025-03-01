@@ -1,123 +1,142 @@
 /* login.css */
 
-    body {
-        overflow: auto;
-        overflow-y: auto;
-        z-index: 20;
-    }
+body {
+    overflow: auto;
+    overflow-y: auto;
+    z-index: 20;
+}
 
-   
+/* Main container setup */
+.homepageContainer {
+    min-height: 100vh;
+    overflow-y: auto;
+    padding: 20px;
+    background-color: #fff !important;
+    box-shadow: none;
+}
 
-    .homepageContainer {
-        display: flex;
-        background: white;
-        columns: '#454545';
-        z-index: 1;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+/* Header Styling */
+.homepageHeader {
+    background: #6cce58;
+    height: auto;
+    align-items: center;
+    justify-content: center;
+    align-content: center;
+    z-index: 1;
+}
 
-        
-    }
+/* Pulse Box Container and Animation */
+.pulseBoxContainer {
+    align-content: center; 
+    align-items: center;
+    justify-content: center; 
+    height: clamp(300px, 20vw, 600px);         
+    display: flex;
+    position: relative;
+}
 
-    .homepageHeader {
-        background: #6cce58;
-        height: auto;
-        align-items: center;
-        justify-content: center;
-        align-content: center;
-        z-index: 1;
-    }
+.pulseAnimation {
+    position: absolute; 
+    width: 500px; 
+    height: 500px;
+    z-index: 0; 
+    background-color: transparent;
+}
 
+.pulseBox {
+    background-color: #05FF02;
+    border-radius: 100px;
+    height: 150px;
+    width: 150px;
+    position: relative;
+    z-index: 1;
+    justify-content: center;
+    align-items: center;
+    align-content: center;
+    display: flex;
+}
 
-    .pulseBoxContainer {
-        align-content: center; 
-        align-items: center;
-        justify-content: center; 
-        height: clamp(300px, 20vw, 600px);         
-        display: flex;
-        position: relative;
-    }
+/* Intro Homepage Font Size */
+.introHomepage {
+    font-size: 210%;
+    margin-bottom: 10px;
+}
 
+/* Font color and size changes to match room list page design */
+.guestIntro, .totalConsShow, .totConsHeading {
+    font-family: 'SpotifyFont', sans-serif;
+    background: transparent;
+    color: #000; /* Black font color */
+    font-size: 1.2rem; /* Adjusted font size to match room list design */
+}
+
+.pinnedHeader, .editHeader {
+    font-family: 'SpotifyFont', sans-serif;
+    color: #6cce58; /* Green color to match room name font color */
+    font-size: 1.4rem; /* Adjusted font size */
+}
+
+.shadowPinned {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+/* Active Device Text */
+.active-device {
+    font-size: 1rem; /* Font size for active device text */
+    color: #6cce58; /* Green color to match the room name */
+    font-weight: bold;
+}
+
+/* Home Status Text */
+.home-status {
+    font-size: 1rem; /* Font size for home status text */
+    color: #6cce58; /* Green color for home status */
+    font-weight: normal;
+}
+
+/* Energy Generation Text */
+.energy-generation {
+    font-size: 1rem; /* Font size for energy generation text */
+    color: #6cce58; /* Green color for energy generation */
+    font-weight: normal;
+}
+
+/* Responsive adjustments */
+@media (min-width: 481px) {
     .pulseAnimation {
         position: absolute; 
-        width: 500px; 
-        height: 500px;
+        width: 600px; 
+        height: 600px;
         z-index: 0; 
         background-color: transparent;
     }
 
     .pulseBox {
         background-color: #05FF02;
-        border-radius: 100px;
-        height: 150px;
-        width: 150px;
+        border-radius: 200px;
+        height: 200px;
+        width: 200px;
         position: relative;
         z-index: 1;
         justify-content: center;
         align-items: center;
         align-content: center;
         display: flex;
-
-
     }
 
-    .introHomepage {
-        font-size: 210%;
-        margin-bottom: 10px;
+    .pulseBoxContainer {
+        margin-top: 20px;
     }
 
-    .guestIntro, .totalConsShow, .totConsHeading {
-        font-family: 'SpotifyFont', sans-serif;
-        background: transparent;
-
+    .pinnedinfoContainer {
+        gap: 200px;
     }
-
-    .pinnedHeader, .editHeader {
-        font-family: 'SpotifyFont', sans-serif;
-        color: #21334a;
-    }
-
-    .shadowPinned {
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
+}
 
 
-    }
-
-    @media (min-width: 481px) {
-
-        .pulseAnimation {
-            position: absolute; 
-            width: 600px; 
-            height: 600px;
-            z-index: 0; 
-            background-color: transparent;
-        }
-
-        .pulseBox {
-            background-color: #05FF02;
-            border-radius: 200px;
-            height: 200px;
-            width: 200px;
-            position: relative;
-            z-index: 1;
-            justify-content: center;
-            align-items: center;
-            align-content: center;
-            display: flex;
-    
-    
-        }
-
-        .pulseBoxContainer {
-            margin-top: 20px;
-        }
-
-        .pinnedinfoContainer {
-            gap: 200px;
-        }
-    }
         
     
 
