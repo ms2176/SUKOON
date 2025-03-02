@@ -26,6 +26,8 @@ import SupportCenter from './customComponents/account/SupportCenter';
 import './index.css';
 import homesdata from '@/JSONFiles/homesdata.json';
 import { useState } from 'react';
+import LightsControlPage from './customComponents/rooms/deviceconfigurations/LightsControlPage'
+import Washingmachine from './customComponents/rooms/deviceconfigurations/Washingmachine'
 
 interface Home {
   homeName: string;
@@ -91,9 +93,21 @@ const App = () => {
           </AuthenticatedLayout>
         } /> {/* Room page */}
 
-        <Route path="/devices/:roomId/:deviceId" element={
+<Route path="/devices/:roomId/:deviceId" element={
           <AuthenticatedLayout selectedHome={selectedHome}>
             <DeviceControlPage />
+          </AuthenticatedLayout>
+        } />
+
+<Route path="/lights" element={
+          <AuthenticatedLayout selectedHome={selectedHome}>
+            <LightsControlPage />
+          </AuthenticatedLayout>
+        } />
+
+        <Route path="/washing" element={
+          <AuthenticatedLayout selectedHome={selectedHome}>
+            <Washingmachine />
           </AuthenticatedLayout>
         } />
 
