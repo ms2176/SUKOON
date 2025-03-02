@@ -28,6 +28,13 @@ import homesdata from '@/JSONFiles/homesdata.json';
 import { useState } from 'react';
 import LightsControlPage from './customComponents/rooms/deviceconfigurations/LightsControlPage'
 import Washingmachine from './customComponents/rooms/deviceconfigurations/Washingmachine'
+import Dishwasher from './customComponents/rooms/deviceconfigurations/Dishwasher';
+import Heatconvector from './customComponents/rooms/deviceconfigurations/Heatconvector';
+import Smartdoor from './customComponents/rooms/deviceconfigurations/Smartdoor';
+import Fan from './customComponents/rooms/deviceconfigurations/Fan';
+import TV from './customComponents/rooms/deviceconfigurations/TV';
+import Thermo from './customComponents/rooms/deviceconfigurations/Thermo';
+import Speaker from './customComponents/rooms/deviceconfigurations/Speaker';
 
 interface Home {
   homeName: string;
@@ -105,9 +112,53 @@ const App = () => {
           </AuthenticatedLayout>
         } />
 
-        <Route path="/washing" element={
+<Route path="/tv" element={
+          <AuthenticatedLayout selectedHome={selectedHome}>
+            <TV />
+          </AuthenticatedLayout>
+        } />
+
+<Route path="/thermo" element={
+          <AuthenticatedLayout selectedHome={selectedHome}>
+            <Thermo />
+          </AuthenticatedLayout>
+        } />
+
+<Route path="/speaker" element={
+          <AuthenticatedLayout selectedHome={selectedHome}>
+            <Speaker />
+          </AuthenticatedLayout>
+        } />
+
+<Route path="/heat" element={
+          <AuthenticatedLayout selectedHome={selectedHome}>
+            <Heatconvector />
+          </AuthenticatedLayout>
+        } />
+
+<Route path="/door" element={
+          <AuthenticatedLayout selectedHome={selectedHome}>
+            <Smartdoor />
+          </AuthenticatedLayout>
+        } />
+
+        
+
+<Route path="/washing" element={
           <AuthenticatedLayout selectedHome={selectedHome}>
             <Washingmachine />
+          </AuthenticatedLayout>
+        } />
+
+<Route path="/dish" element={
+          <AuthenticatedLayout selectedHome={selectedHome}>
+            <Dishwasher />
+          </AuthenticatedLayout>
+        } />
+        
+<Route path="/fan" element={
+          <AuthenticatedLayout selectedHome={selectedHome}>
+            <Fan />
           </AuthenticatedLayout>
         } />
 
