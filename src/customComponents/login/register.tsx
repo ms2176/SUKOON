@@ -19,7 +19,7 @@ import { FiEye } from "react-icons/fi";
 import { FiEyeOff } from "react-icons/fi";
 import { FormControl } from "@chakra-ui/form-control";
 import { IoChevronBack } from "react-icons/io5";
-
+import { getFirestore, doc, setDoc } from "firebase/firestore"; // Import Firestore functions
 import { registerWithEmail } from "@/utilities/firebase_auth_functions";
 
 const Register = () => {
@@ -38,16 +38,6 @@ const Register = () => {
   const [usernameError, setUsernameError] = useState(""); // State for username error
   const [showPassword, setShowPassword] = useState(false); // State for toggling password visibility
   const [showConfirmPassword, setShowConfirmPassword] = useState(false); // State for toggling confirm password visibility
-
-  // const checkIfEmailExists = async (email: string) => {
-  //   try {
-  //     const methods = await fetchSignInMethodsForEmail(getAuth(), email);
-  //     return methods.length > 0;
-  //   } catch (error) {
-  //     console.error("Error checking email:", error);
-  //     return false;
-  //   }
-  // };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -78,12 +68,33 @@ const Register = () => {
     const result = await registerWithEmail(email, password);
     if (result.success) {
       sessionStorage.setItem("userEmail", email);
-      // Instead of going to QRwait, go to verification page
-      navigate("/verification_hold");
-    } else {
-      setEmailError(result.error);
-    }
-};
+       // Get the user ID from the result
+       const userId = result.user?.uid;
+      
+       if (userId) {
+        sessionStorage.setItem("userId", userId);
+      }
+
+       if (userId) {
+         // Initialize Firestore
+         const db = getFirestore();
+ 
+         // Create a new document in the 'users' collection with the user ID as the document ID
+         await setDoc(doc(db, "users", userId), {
+           email: email,
+           username: username,
+           userId: userId,
+         });
+ 
+         // Navigate to the verification hold page
+         navigate("/verification_hold");
+       } else {
+         setEmailError("User ID not found.");
+       }
+     } else {
+       setEmailError(result.error);
+     }
+   };
 
   return (
     <div style={{ overflow: "auto" }}>

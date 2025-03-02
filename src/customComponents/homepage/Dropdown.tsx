@@ -17,7 +17,7 @@ interface Home {
 interface DropdownProps {
   initialShow: string;
   homes: Home[];
-  onSelect: (home: Home) => void; // Add an onSelect prop
+  onSelect: (home: Home) => void; // Callback for when a hub is selected
 }
 
 const Dropdown: React.FC<DropdownProps> = ({ initialShow, homes, onSelect }) => {
@@ -53,7 +53,7 @@ const Dropdown: React.FC<DropdownProps> = ({ initialShow, homes, onSelect }) => 
               color={'inherit'}
               onClick={() => {
                 setSelectedItem(home.homeName);
-                onSelect(home); // Call onSelect with the selected home
+                onSelect(home); // Call the onSelect callback with the selected home
               }}
               style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
             >

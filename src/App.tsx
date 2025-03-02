@@ -35,6 +35,7 @@ import Fan from './customComponents/rooms/deviceconfigurations/Fan';
 import TV from './customComponents/rooms/deviceconfigurations/TV';
 import Thermo from './customComponents/rooms/deviceconfigurations/Thermo';
 import Speaker from './customComponents/rooms/deviceconfigurations/Speaker';
+import Verification_hold from './customComponents/login/verification_hold'
 
 interface Home {
   homeName: string;
@@ -94,9 +95,15 @@ const App = () => {
           </AuthenticatedLayout>
         } /> {/* Rooms */}
 
-        <Route path="/devices/:roomId" element={
+<Route path="/devices/:roomId" element={
           <AuthenticatedLayout selectedHome={selectedHome}>
             <Devices />
+          </AuthenticatedLayout>
+        } /> {/* Room page */}
+
+<Route path="verification_hold" element={
+          <AuthenticatedLayout selectedHome={selectedHome}>
+            <Verification_hold />
           </AuthenticatedLayout>
         } /> {/* Room page */}
 

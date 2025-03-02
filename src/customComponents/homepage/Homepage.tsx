@@ -1,12 +1,9 @@
 import { Box, Button, Flex, Heading, HStack, Stack } from '@chakra-ui/react'
 import React, { useState } from 'react'
 import './Homepage.css'
-import { MdArrowDropDown } from "react-icons/md";
 import Dropdown from './Dropdown.tsx'
 import MiniDisplays from './miniDisplays.tsx';
-import { FcTwoSmartphones } from "react-icons/fc";
-import { FcPositiveDynamic } from "react-icons/fc";
-import { FcChargeBattery } from "react-icons/fc";
+
 import Lottie from 'react-lottie-player';
 import PulseAnimationGreen from '@/images/animatedIcons/Animation - 1737092091343.json'
 import PulseAnimationBlue from '@/images/animatedIcons/Animation - 1738960096286.json'
@@ -26,6 +23,8 @@ import homesdata from '@/JSONFiles/homesdata.json'
 import PinnedMenuAdmin from './pinnedMenuAdmin.tsx';
 import MockUnits from './MockUnits.tsx';
 import { MdOutlineEdit } from "react-icons/md";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
+import { getFirestore, collection, query, where, getDocs } from "firebase/firestore";
 
 interface Home {
   homeName: string;
@@ -47,7 +46,53 @@ const Homepage: React.FC<HomepageProps> = ({ selectedHomePass, onSelectHome }) =
   const [isAddHomeVisible, setIsAddHomeVisible] = useState(false);
   const [isEditHomesVisible, setIsEditHomesVisible] = useState(false);
   const [selectedHome, setSelectedHome] = useState<Home | null>(null); // Track the selected home
+  const [homes, setHomes] = useState<Home[]>([]); // State to store the list of hubs
+  const [loading, setLoading] = useState(true); // State to track loading status
+  
+  useEffect(() => {
+    const auth = getAuth();
+    const db = getFirestore();
 
+    // Listen for authentication state changes
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        const userId = user.uid;
+
+        // Query the `userHubs` collection for hubs associated with the user
+        const userHubsRef = collection(db, "userHubs");
+        const q = query(userHubsRef, where("userId", "==", userId));
+
+        try {
+          const querySnapshot = await getDocs(q);
+          const hubs: Home[] = [];
+          querySnapshot.forEach((doc) => {
+            const data = doc.data();
+            hubs.push({
+              homeName: data.homeName,
+              homeType: data.homeType,
+            });
+          });
+
+          setHomes(hubs); // Update the state with the fetched hubs
+        } catch (error) {
+          console.error("Error fetching user hubs:", error);
+        } finally {
+          setLoading(false); // Set loading to false
+        }
+      } else {
+        console.log("No user is signed in.");
+        setLoading(false);
+      }
+    });
+
+    return () => unsubscribe(); // Cleanup the listener
+  }, []);
+
+  // Handle hub selection
+  const handleHubSelect = (home: Home) => {
+    console.log("Selected hub:", home);
+    // You can perform additional actions here, like updating the UI or fetching more data
+  };
   const handleSelectHome = (home: Home) => {
     setSelectedHome(home); // Update the selected home
     setPinnedItems([]); // Clear the pinned items when a new home is selected
@@ -130,9 +175,10 @@ const Homepage: React.FC<HomepageProps> = ({ selectedHomePass, onSelectHome }) =
           <Heading color={'#454545'} bg={'transparent'}>
             Homes:
           </Heading>
-          <Dropdown homes={homesdata} onSelect={(home) => {
+          <Dropdown homes={homes} onSelect={(home) => {
               onSelectHome(home);
               handleSelectHome(home); 
+              handleHubSelect(home);
             }} initialShow='Choose Home...'>
 
           </Dropdown>
