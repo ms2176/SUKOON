@@ -12,9 +12,12 @@ interface PinnedMenuProps {
 }
 
 interface Unit {
-  type: 'unit'; // Add a type discriminator
+  type: 'unit';
+  id?: string; // Optional, for Firestore document ID
   unitName: string;
-  unitImage: string;
+  unitId: string;
+  hubCode: string;
+  pinned: boolean;
 }
 
 const PinnedMenuAdmin: React.FC<PinnedMenuProps> = ({ isVisible, onClose, onPinItem }) => {

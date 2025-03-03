@@ -19,16 +19,16 @@ import { AiOutlineShrink } from "react-icons/ai";
 import AddHome from './AddHome.tsx';
 import EditHomes from './EditHomes.tsx'
 import MockDevice from './MockDevice.tsx';
-import homesdata from '@/JSONFiles/homesdata.json'
 import PinnedMenuAdmin from './pinnedMenuAdmin.tsx';
 import MockUnits from './MockUnits.tsx';
 import { MdOutlineEdit } from "react-icons/md";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
-import { getFirestore, collection, query, where, getDocs } from "firebase/firestore";
+import { getFirestore, collection, query, where, getDocs, QueryDocumentSnapshot, doc, updateDoc } from "firebase/firestore";
 
 interface Home {
   homeName: string;
   homeType: string;
+  hubCode: string;
 }
 
 interface HomepageProps {
@@ -48,20 +48,18 @@ const Homepage: React.FC<HomepageProps> = ({ selectedHomePass, onSelectHome }) =
   const [selectedHome, setSelectedHome] = useState<Home | null>(null); // Track the selected home
   const [homes, setHomes] = useState<Home[]>([]); // State to store the list of hubs
   const [loading, setLoading] = useState(true); // State to track loading status
-  
+
   useEffect(() => {
     const auth = getAuth();
     const db = getFirestore();
-
-    // Listen for authentication state changes
+  
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         const userId = user.uid;
-
-        // Query the `userHubs` collection for hubs associated with the user
+  
         const userHubsRef = collection(db, "userHubs");
         const q = query(userHubsRef, where("userId", "==", userId));
-
+  
         try {
           const querySnapshot = await getDocs(q);
           const hubs: Home[] = [];
@@ -70,22 +68,23 @@ const Homepage: React.FC<HomepageProps> = ({ selectedHomePass, onSelectHome }) =
             hubs.push({
               homeName: data.homeName,
               homeType: data.homeType,
+              hubCode: data.hubCode, // Ensure hubCode is included
             });
           });
-
+  
           setHomes(hubs); // Update the state with the fetched hubs
         } catch (error) {
           console.error("Error fetching user hubs:", error);
         } finally {
-          setLoading(false); // Set loading to false
+          setLoading(false);
         }
       } else {
         console.log("No user is signed in.");
         setLoading(false);
       }
     });
-
-    return () => unsubscribe(); // Cleanup the listener
+  
+    return () => unsubscribe();
   }, []);
 
   // Handle hub selection
@@ -101,29 +100,63 @@ const Homepage: React.FC<HomepageProps> = ({ selectedHomePass, onSelectHome }) =
 
   interface Room {
     type: 'room';
+    id: string; // Map to roomId
     roomName: string;
-    numDevices: number;
-    roomImage: string;
+    hubCode: string;
+    pinned: boolean;
+    devices: string[]; // Array of device IDs
   }
-
+  
   interface Device {
-    type: 'device'; // Add a type discriminator
+    type: 'device';
+    id: string; // Map to deviceId
     deviceName: string;
-    deviceImage: string;
+    deviceId: string; // Keep this if needed for other purposes
+    deviceType: string;
+    hubCode: string;
+    pinned: boolean;
   }
-
+  
   interface Unit {
     type: 'unit';
+    id: string; // Map to unitId
     unitName: string;
-    unitImage: string;
+    unitId: string; // Keep this if needed for other purposes
+    hubCode: string;
+    pinned: boolean;
   }
 
   type PinnedItem = Room | Device | Unit; // Union type for pinned items
 
 
   
-  const handlePinItem = (item: Room | Device | Unit) => {
-    setPinnedItems((prev) => [...prev, item]); // Add the room object to the pinned list
+  const handlePinItem = (item: Room | Device) => {
+    setPinnedItems((prev) => [...prev, item]);
+  };
+  
+  const handleUnpinItem = async (item: Room | Device) => {
+    const db = getFirestore();
+  
+    try {
+      // Ensure item.id is defined
+      if (!item.id) {
+        throw new Error("Item ID is missing.");
+      }
+  
+      // Determine the collection based on the item type
+      const collectionName = item.type === 'room' ? 'rooms' : 'devices';
+  
+      // Reference the document in Firestore using the correct ID
+      const itemRef = doc(db, collectionName, item.id); // Use item.id (roomId or deviceId)
+  
+      // Update the `pinned` field to false
+      await updateDoc(itemRef, { pinned: false });
+  
+      // Remove the item from the pinnedItems state
+      setPinnedItems((prev) => prev.filter((i) => i.id !== item.id));
+    } catch (error) {
+      console.error("Error unpinning item:", error);
+    }
   };
 
   const toggleAddHome = () => {
@@ -152,6 +185,60 @@ const Homepage: React.FC<HomepageProps> = ({ selectedHomePass, onSelectHome }) =
   }, []);
 
   useEffect(() => {
+    const fetchPinnedItems = async () => {
+      const db = getFirestore();
+  
+      if (selectedHome) {
+        try {
+          // Fetch pinned rooms
+          const roomsRef = collection(db, "rooms");
+          const roomsQuery = query(
+            roomsRef,
+            where("hubCode", "==", selectedHome.hubCode),
+            where("pinned", "==", true)
+          );
+          const roomsSnapshot = await getDocs(roomsQuery);
+          const pinnedRooms: Room[] = roomsSnapshot.docs.map((doc) => ({
+            type: 'room',
+            id: doc.data().roomId, // Use roomId
+            roomId: doc.data().roomId, // Include roomId
+            roomName: doc.data().roomName,
+            hubCode: doc.data().hubCode,
+            pinned: doc.data().pinned,
+            devices: doc.data().devices || [], // Array of device IDs
+          }));
+  
+          // Fetch pinned devices
+          const devicesRef = collection(db, "devices");
+          const devicesQuery = query(
+            devicesRef,
+            where("hubCode", "==", selectedHome.hubCode),
+            where("pinned", "==", true)
+          );
+          const devicesSnapshot = await getDocs(devicesQuery);
+          const pinnedDevices: Device[] = devicesSnapshot.docs.map((doc) => ({
+            type: 'device',
+            id: doc.data().deviceId, // Use deviceId
+            deviceId: doc.data().deviceId, // Include deviceId
+            deviceName: doc.data().deviceName,
+            deviceType: doc.data().deviceType,
+            hubCode: doc.data().hubCode,
+            pinned: doc.data().pinned,
+          }));
+  
+          // Combine all pinned items
+          const pinnedItems = [...pinnedRooms, ...pinnedDevices];
+          setPinnedItems(pinnedItems);
+        } catch (error) {
+          console.error("Error fetching pinned items:", error);
+        }
+      }
+    };
+  
+    fetchPinnedItems();
+  }, [selectedHome]); // Re-fetch when selectedHome changes
+
+  useEffect(() => {
     // Disable scrolling when pinnedMenu is open
     if (isPinnedMenuVisible) {
       document.body.style.overflow = 'hidden';
@@ -160,10 +247,87 @@ const Homepage: React.FC<HomepageProps> = ({ selectedHomePass, onSelectHome }) =
     }
   }, [isPinnedMenuVisible]);
 
+  const handleHomeAdded = () => {
+    // Refetch the user's homes to update the dropdown
+    const auth = getAuth();
+    const db = getFirestore();
+
+    const user = auth.currentUser;
+    if (user) {
+      const userId = user.uid;
+
+      const userHubsRef = collection(db, "userHubs");
+      const q = query(userHubsRef, where("userId", "==", userId));
+
+      getDocs(q).then((querySnapshot) => {
+        const hubs: Home[] = [];
+        querySnapshot.forEach((doc) => {
+          const data = doc.data();
+          hubs.push({
+            homeName: data.homeName,
+            homeType: data.homeType,
+            hubCode: data.hubCode
+          });
+        });
+
+        setHomes(hubs); // Update the state with the fetched hubs
+      });
+    }
+  };
+
+  const fetchHomes = async () => {
+    const auth = getAuth();
+    const db = getFirestore();
+
+    const user = auth.currentUser;
+    if (user) {
+      const userId = user.uid;
+
+      const hubsRef = collection(db, "userHubs");
+      const q = query(hubsRef, where("userId", "==", userId));
+
+      try {
+        const querySnapshot = await getDocs(q);
+        const homesData: Home[] = [];
+
+        querySnapshot.forEach((doc: QueryDocumentSnapshot) => {
+          const data = doc.data();
+          homesData.push({
+            homeName: data.homeName,
+            homeType: data.homeType,
+            hubCode: data.hubCode,
+          });
+        });
+
+        setHomes(homesData); // Update the state with the fetched hubs
+      } catch (error) {
+        console.error("Error fetching user hubs:", error);
+      }
+    }
+  };
+
+  useEffect(() => {
+    fetchHomes();
+  }, []);
+
+  const handleHomeDeleted = () => {
+    fetchHomes(); // Refetch the list of homes
+  };
+
   return (
     <div style={{ overflow: 'hidden' }}>
-      {isAddHomeVisible && <AddHome closeAddHome={toggleAddHome}/>}
-      {isEditHomesVisible && <EditHomes closeEditHomes={toggleEditHomes}/>}
+      {isAddHomeVisible && (
+        <AddHome
+          closeAddHome={() => setIsAddHomeVisible(false)}
+          onHomeAdded={handleHomeAdded} // Pass the callback to update the dropdown
+        />
+      )}
+
+      {isEditHomesVisible && (
+        <EditHomes
+          closeEditHomes={toggleEditHomes}
+          onHomeDeleted={handleHomeDeleted} />)}
+
       <Stack className='homepageContainer' position={'relative'} display={'flex'} overflow={'hidden'}>
         <Box className='homepageHeader' bg={selectedHome?.homeType === 'admin' ? '#0b13b0' : '#6cce58'}>
           <Heading bg={'transparent'} ml={'20px'} mt={'20px'} mb={'20px'} fontWeight={'extrabold'} className='introHomepage'>
@@ -295,36 +459,27 @@ const Homepage: React.FC<HomepageProps> = ({ selectedHomePass, onSelectHome }) =
                 {item.type === 'room' ? (
                   <Mockroom
                     style={{ width: 'calc(100%)' }}
-                    roomNum={`${index + 1}`} // Optional: You can pass the index or room ID
-                    roomName={item.roomName} // Use `item` instead of `room`
-                    numDevices={item.numDevices} // Use `item` instead of `room`
-                    image={item.roomImage} // Use `item` instead of `room`
+                    roomNum={`${index + 1}`}
+                    roomName={item.roomName}
+                    numDevices={item.devices.length} // Use the length of the devices array
                     isEditing={isEditing && pinnedItems.length > 0}
-                    onRemove={() => {
-                      setPinnedItems((prev) => prev.filter((_, i) => i !== index));
-                    }}
+                    onRemove={() => handleUnpinItem(item)}
                   />
                 ) : item.type === 'device' ? (
                   <MockDevice
                     style={{ width: 'calc(100%)' }}
                     deviceName={item.deviceName}
-                    deviceImage={item.deviceImage}
                     isEditing={isEditing && pinnedItems.length > 0}
-                    onRemove={() => {
-                      setPinnedItems((prev) => prev.filter((_, i) => i !== index));
-                    }}
+                    onRemove={() => handleUnpinItem(item)}
                   />
                 ) : item.type === 'unit' ? (
                   <MockUnits
                     style={{ width: 'calc(100%)' }}
                     unitName={item.unitName}
-                    image={item.unitImage}
                     isEditing={isEditing && pinnedItems.length > 0}
-                    onRemove={() => {
-                      setPinnedItems((prev) => prev.filter((_, i) => i !== index));
-                    }}
+                    onRemove={() => handleUnpinItem(item)}
                   />
-                ) : null} {/* Add a fallback (null) for unexpected types */}
+                ) : null}
               </Box>
             ))}
             </Flex>
@@ -343,8 +498,11 @@ const Homepage: React.FC<HomepageProps> = ({ selectedHomePass, onSelectHome }) =
           isVisible={isPinnedMenuVisible}
           onClose={() => setPinnedMenuVisible(false)}
           onPinItem={handlePinItem}
+          selectedHubCode={selectedHome?.hubCode || ''} // Pass the selected hub's hubCode
         />
-      )}    </div>
+      )}    
+      
+    </div>
   );
 };
 

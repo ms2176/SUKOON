@@ -1,47 +1,140 @@
 import { Box, Flex, Heading, HStack, Stack } from '@chakra-ui/react';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './pinnedMenu.css';
-import Dropdown from './Dropdown';
 import { VscClose } from 'react-icons/vsc';
 import Mockroom from './Mockroom';
-import roomsData from '@/JSONFiles/roomsdata.json'; // Import the JSON file
 import Dropdownpinned from './Dropdownpinned.tsx';
-import deviceData from '@/JSONFiles/devicesdata.json';
 import MockDevice from './MockDevice.tsx';
+import { getAuth } from "firebase/auth";
+import { getFirestore, collection, query, where, getDocs, doc, updateDoc  } from "firebase/firestore";
 
 interface PinnedMenuProps {
   isVisible: boolean;
   onClose: () => void;
-  onPinItem: (item: Room | Device) => void; }
+  onPinItem: (item: Room | Device) => void;
+  selectedHubCode: string; // Pass the selected hub's hubCode
+}
 
 interface Room {
-    type: 'room';
-    roomName: string;
-    roomImage: string;
-    numDevices: number;
-  }
+  type: 'room';
+  id: string; // Map to roomId
+  roomName: string;
+  hubCode: string;
+  roomId: string;
+  pinned: boolean;
+  devices: string[]; // Array of device IDs
+}
 
-  interface Device {
-    type: 'device';
-    deviceName: string;
-    deviceImage: string;
-  }
+interface Device {
+  type: 'device';
+  id: string; // Map to deviceId
+  deviceName: string;
+  deviceId: string; // Keep this if needed for other purposes
+  deviceType: string;
+  hubCode: string;
+  pinned: boolean;
+}
 
-const PinnedMenu: React.FC<PinnedMenuProps> = ({ isVisible, onClose, onPinItem }) => {
-    const [selectedFilter, setSelectedFilter] = useState<'All' | 'Rooms' | 'Devices'>('All'); // Move this up
+const PinnedMenu: React.FC<PinnedMenuProps> = ({ isVisible, onClose, onPinItem, selectedHubCode }) => {
+  const [selectedFilter, setSelectedFilter] = useState<'All' | 'Rooms' | 'Devices'>('All');
+  const [rooms, setRooms] = useState<Room[]>([]); // State to store rooms
+  const [devices, setDevices] = useState<Device[]>([]); // State to store devices
 
-  if (!isVisible) return null;
+  // Fetch rooms and devices when the component mounts or the selected hub changes
+  useEffect(() => {
+    const fetchRoomsAndDevices = async () => {
+      const auth = getAuth();
+      const db = getFirestore();
+  
+      const user = auth.currentUser;
+      if (user && selectedHubCode) {
+        try {
+          // Fetch rooms associated with the selected hub
+          const roomsRef = collection(db, "rooms");
+          const roomsQuery = query(
+            roomsRef,
+            where("hubCode", "==", selectedHubCode),
+            where("pinned", "==", false) // Only fetch unpinned items
+          );
+          const roomsSnapshot = await getDocs(roomsQuery);
+  
+          const roomsData: Room[] = [];
+          roomsSnapshot.forEach((doc) => {
+            const data = doc.data();
+            roomsData.push({
+              type: 'room',
+              id: data.roomId, // Use roomId
+              roomId: data.roomId, // Include roomId
+              roomName: data.roomName,
+              hubCode: data.hubCode,
+              pinned: data.pinned,
+              devices: data.devices || [], // Array of device IDs
+            });
+          });
+          setRooms(roomsData);
+  
+          // Fetch devices associated with the selected hub
+          const devicesRef = collection(db, "devices");
+          const devicesQuery = query(
+            devicesRef,
+            where("hubCode", "==", selectedHubCode),
+            where("pinned", "==", false) // Only fetch unpinned items
+          );
+          const devicesSnapshot = await getDocs(devicesQuery);
+  
+          const devicesData: Device[] = [];
+          devicesSnapshot.forEach((doc) => {
+            const data = doc.data();
+            devicesData.push({
+              type: 'device',
+              id: data.deviceId, // Use deviceId
+              deviceId: data.deviceId, // Include deviceId
+              deviceName: data.deviceName,
+              deviceType: data.deviceType,
+              hubCode: data.hubCode,
+              pinned: data.pinned,
+            });
+          });
+          setDevices(devicesData);
+        } catch (error) {
+          console.error("Error fetching rooms and devices:", error);
+        }
+      }
+    };
+  
+    fetchRoomsAndDevices();
+  }, [selectedHubCode]);
 
+  const handleItemClick = async (item: Room | Device) => {
 
-  const handleItemClick = (index: number, type: 'room' | 'device') => {
-    if (type === 'room') {
-      const room = roomsData[index]; // Get the full room object
-      onPinItem({ type: 'room', ...room }); // Pass the room object to the Homepage
-    } else {
-      const device = deviceData[index]; // Get the full device object
-      onPinItem({ type: 'device', ...device }); // Pass the device object to the Homepage
+    const db = getFirestore();
+
+    try {
+      // Ensure item.id is defined
+      if (!item.id) {
+        throw new Error("Item ID is missing.");
+      }
+  
+      // Determine the collection based on the item type
+      const collectionName = item.type === 'room' ? 'rooms' : 'devices';
+  
+      // Reference the document in Firestore using the correct ID
+      const itemRef = doc(db, collectionName, item.id); // Use item.id (roomId or deviceId)
+  
+      // Update the `pinned` field to true
+      await updateDoc(itemRef, { pinned: true });
+  
+      // Pass the item to the parent component
+      onPinItem({
+        ...item,
+        id: item.type === 'room' ? item.roomId : item.deviceId, // Ensure the correct ID is passed
+      });
+    } catch (error) {
+      console.error("Error pinning item:", error);
     }
   };
+
+  if (!isVisible) return null;
 
   return (
     <div style={{ overflow: 'hidden' }}>
@@ -79,8 +172,10 @@ const PinnedMenu: React.FC<PinnedMenuProps> = ({ isVisible, onClose, onPinItem }
                 <Heading bg={'transparent'} className="pinType" whiteSpace={'nowrap'}>
                   Pin type:
                 </Heading>
-                <Dropdownpinned initialShow="All"
-                    onChange={(value) => setSelectedFilter(value as 'All' | 'Rooms' | 'Devices')}/>
+                <Dropdownpinned
+                  initialShow="All"
+                  onChange={(value) => setSelectedFilter(value as 'All' | 'Rooms' | 'Devices')}
+                />
               </HStack>
             </Stack>
 
@@ -99,29 +194,27 @@ const PinnedMenu: React.FC<PinnedMenuProps> = ({ isVisible, onClose, onPinItem }
             >
               <Box width={'100%'} height={'100%'} overflow={'scroll'}>
                 <Flex wrap="wrap" justify="start" display={'flex'} alignItems={'center'} alignContent={'center'} justifyContent={'center'} gapX={'10px'}>
-                {(selectedFilter === 'All' || selectedFilter === 'Rooms') &&
-                    roomsData.map((room, index) => (
+                  {/* Render rooms if "All" or "Rooms" is selected */}
+                  {(selectedFilter === 'All' || selectedFilter === 'Rooms') &&
+                    rooms.map((room, index) => (
                       <Box key={`room-${index}`} width={'calc(45%)'}>
                         <Mockroom
                           style={{ width: 'calc(100%)' }}
-                          onClick={() => handleItemClick(index, 'room')}
+                          onClick={() => handleItemClick(room)}
                           roomNum={`${index + 1}`}
-                          image={room.roomImage}
                           roomName={room.roomName}
-                          numDevices={room.numDevices}
                         />
                       </Box>
                     ))}
 
                   {/* Render devices if "All" or "Devices" is selected */}
                   {(selectedFilter === 'All' || selectedFilter === 'Devices') &&
-                    deviceData.map((device, index) => (
+                    devices.map((device, index) => (
                       <Box key={`device-${index}`} width={'calc(45%)'}>
                         <MockDevice
                           style={{ width: 'calc(100%)' }}
-                          onClick={() => handleItemClick(index, 'device')}
+                          onClick={() => handleItemClick(device)}
                           deviceName={device.deviceName}
-                          deviceImage={device.deviceImage}
                         />
                       </Box>
                     ))}

@@ -89,6 +89,12 @@ const App = () => {
           </AuthenticatedLayout>
         } /> {/* Homepage */}
 
+<Route path="/initial" element={
+          <AuthenticatedLayout selectedHome={selectedHome}>
+            <InitialView />
+          </AuthenticatedLayout>
+        } /> {/* Homepage */}
+
         <Route path="/Rooms" element={
           <AuthenticatedLayout selectedHome={selectedHome}>
             <RoomList />

@@ -43,7 +43,7 @@ const VerifyEmail = () => {
           // Make sure navigation happens after toast
           setTimeout(() => {
             console.log("Attempting navigation..."); // Debug log
-            navigate("/home", { replace: true }); // Using replace to prevent back navigation
+            navigate("/initial", { replace: true }); // Using replace to prevent back navigation
           }, 2500); // Slightly longer than toast duration
         } catch (error) {
           console.error("Error during verification process:", error);

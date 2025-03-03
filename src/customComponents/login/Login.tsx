@@ -24,6 +24,7 @@ import {
   signInWithGoogle,
   signInWithApple,
 } from "@/utilities/firebase_auth_functions";
+import { getFirestore, collection, query, where, getDocs } from "firebase/firestore";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -40,6 +41,21 @@ const Login = () => {
   const handlePasswordChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setPassword(event.target.value); // Update the password state when the user types
   };
+
+  const checkUserHubs = async (userId: string) => {
+    const db = getFirestore();
+    const userHubsRef = collection(db, "userHubs");
+    const q = query(userHubsRef, where("userId", "==", userId));
+
+    try {
+      const querySnapshot = await getDocs(q);
+      return !querySnapshot.empty; // Return true if hubs exist, false otherwise
+    } catch (error) {
+      console.error("Error checking user hubs:", error);
+      return false;
+    }
+  };
+
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -58,8 +74,12 @@ const Login = () => {
         // If email isn't verified, send to verification page
         navigate("/verification_hold");
       } else {
-        // If verified, proceed to home
-        navigate("/home");
+        const hasHubs = await checkUserHubs(result.user.uid);
+        if (hasHubs) {
+          navigate("/home"); // Navigate to home if hubs exist
+        } else {
+          navigate("/initial"); // Navigate to initial setup if no hubs exist
+        }
       }
     } else {
       setEmailError("Invalid email or password");

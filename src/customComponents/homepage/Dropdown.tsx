@@ -12,6 +12,7 @@ import { MdArrowDropDown } from "react-icons/md";
 interface Home {
   homeName: string;
   homeType: string;
+  hubCode: string;
 }
 
 interface DropdownProps {
