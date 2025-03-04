@@ -1,5 +1,5 @@
 import { Box, Button, Flex, Heading, HStack, Stack } from '@chakra-ui/react'
-import React, { useState } from 'react'
+import React, { useState, useRef } from 'react'
 import './Homepage.css'
 import Dropdown from './Dropdown.tsx'
 import MiniDisplays from './miniDisplays.tsx';
@@ -48,6 +48,7 @@ const Homepage: React.FC<HomepageProps> = ({ selectedHomePass, onSelectHome }) =
   const [selectedHome, setSelectedHome] = useState<Home | null>(null); // Track the selected home
   const [homes, setHomes] = useState<Home[]>([]); // State to store the list of hubs
   const [loading, setLoading] = useState(true); // State to track loading status
+  const pinnedMenuRef = useRef<{ refreshPinnedMenu: () => void }>(null);
 
   useEffect(() => {
     const auth = getAuth();
@@ -133,27 +134,83 @@ const Homepage: React.FC<HomepageProps> = ({ selectedHomePass, onSelectHome }) =
   const handlePinItem = (item: Room | Device) => {
     setPinnedItems((prev) => [...prev, item]);
   };
+
+  const fetchPinnedItems = async () => {
+    const db = getFirestore();
+  
+    if (selectedHome) {
+      try {
+        // Fetch pinned rooms
+        const roomsRef = collection(db, "rooms");
+        const roomsQuery = query(
+          roomsRef,
+          where("hubCode", "==", selectedHome.hubCode),
+          where("pinned", "==", true)
+        );
+        const roomsSnapshot = await getDocs(roomsQuery);
+        const pinnedRooms: Room[] = roomsSnapshot.docs.map((doc) => ({
+          type: 'room',
+          id: doc.data().roomId, // Use roomId
+          roomId: doc.data().roomId, // Include roomId
+          roomName: doc.data().roomName,
+          hubCode: doc.data().hubCode,
+          pinned: doc.data().pinned,
+          devices: doc.data().devices || [], // Array of device IDs
+        }));
+  
+        // Fetch pinned devices
+        const devicesRef = collection(db, "devices");
+        const devicesQuery = query(
+          devicesRef,
+          where("hubCode", "==", selectedHome.hubCode),
+          where("pinned", "==", true)
+        );
+        const devicesSnapshot = await getDocs(devicesQuery);
+        const pinnedDevices: Device[] = devicesSnapshot.docs.map((doc) => ({
+          type: 'device',
+          id: doc.data().deviceId, // Use deviceId
+          deviceId: doc.data().deviceId, // Include deviceId
+          deviceName: doc.data().deviceName,
+          deviceType: doc.data().deviceType,
+          hubCode: doc.data().hubCode,
+          pinned: doc.data().pinned,
+        }));
+  
+        // Combine all pinned items
+        const pinnedItems = [...pinnedRooms, ...pinnedDevices];
+        setPinnedItems(pinnedItems);
+      } catch (error) {
+        console.error("Error fetching pinned items:", error);
+      }
+    }
+  };
+
+  const refreshPinnedMenu = () => {
+    // Re-fetch pinned items logic here
+    fetchPinnedItems();
+  };
+
+  useEffect(() => {
+    fetchPinnedItems(); // Fetch pinned items when selectedHome changes
+  }, [selectedHome]);
   
   const handleUnpinItem = async (item: Room | Device) => {
     const db = getFirestore();
   
     try {
-      // Ensure item.id is defined
       if (!item.id) {
         throw new Error("Item ID is missing.");
       }
   
-      // Determine the collection based on the item type
       const collectionName = item.type === 'room' ? 'rooms' : 'devices';
+      const itemRef = doc(db, collectionName, item.id);
   
-      // Reference the document in Firestore using the correct ID
-      const itemRef = doc(db, collectionName, item.id); // Use item.id (roomId or deviceId)
-  
-      // Update the `pinned` field to false
       await updateDoc(itemRef, { pinned: false });
   
-      // Remove the item from the pinnedItems state
       setPinnedItems((prev) => prev.filter((i) => i.id !== item.id));
+  
+      // Refresh the pinned menu after unpinning an item
+      refreshPinnedMenu(); // Call this to re-fetch pinned items
     } catch (error) {
       console.error("Error unpinning item:", error);
     }
@@ -183,60 +240,6 @@ const Homepage: React.FC<HomepageProps> = ({ selectedHomePass, onSelectHome }) =
       document.body.style.overflow = 'auto';
     };
   }, []);
-
-  useEffect(() => {
-    const fetchPinnedItems = async () => {
-      const db = getFirestore();
-  
-      if (selectedHome) {
-        try {
-          // Fetch pinned rooms
-          const roomsRef = collection(db, "rooms");
-          const roomsQuery = query(
-            roomsRef,
-            where("hubCode", "==", selectedHome.hubCode),
-            where("pinned", "==", true)
-          );
-          const roomsSnapshot = await getDocs(roomsQuery);
-          const pinnedRooms: Room[] = roomsSnapshot.docs.map((doc) => ({
-            type: 'room',
-            id: doc.data().roomId, // Use roomId
-            roomId: doc.data().roomId, // Include roomId
-            roomName: doc.data().roomName,
-            hubCode: doc.data().hubCode,
-            pinned: doc.data().pinned,
-            devices: doc.data().devices || [], // Array of device IDs
-          }));
-  
-          // Fetch pinned devices
-          const devicesRef = collection(db, "devices");
-          const devicesQuery = query(
-            devicesRef,
-            where("hubCode", "==", selectedHome.hubCode),
-            where("pinned", "==", true)
-          );
-          const devicesSnapshot = await getDocs(devicesQuery);
-          const pinnedDevices: Device[] = devicesSnapshot.docs.map((doc) => ({
-            type: 'device',
-            id: doc.data().deviceId, // Use deviceId
-            deviceId: doc.data().deviceId, // Include deviceId
-            deviceName: doc.data().deviceName,
-            deviceType: doc.data().deviceType,
-            hubCode: doc.data().hubCode,
-            pinned: doc.data().pinned,
-          }));
-  
-          // Combine all pinned items
-          const pinnedItems = [...pinnedRooms, ...pinnedDevices];
-          setPinnedItems(pinnedItems);
-        } catch (error) {
-          console.error("Error fetching pinned items:", error);
-        }
-      }
-    };
-  
-    fetchPinnedItems();
-  }, [selectedHome]); // Re-fetch when selectedHome changes
 
   useEffect(() => {
     // Disable scrolling when pinnedMenu is open
@@ -499,6 +502,7 @@ const Homepage: React.FC<HomepageProps> = ({ selectedHomePass, onSelectHome }) =
           onClose={() => setPinnedMenuVisible(false)}
           onPinItem={handlePinItem}
           selectedHubCode={selectedHome?.hubCode || ''} // Pass the selected hub's hubCode
+          refreshPinnedMenu={refreshPinnedMenu}
         />
       )}    
       

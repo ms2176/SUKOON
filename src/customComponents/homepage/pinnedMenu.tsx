@@ -1,5 +1,5 @@
 import { Box, Flex, Heading, HStack, Stack } from '@chakra-ui/react';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect} from 'react';
 import './pinnedMenu.css';
 import { VscClose } from 'react-icons/vsc';
 import Mockroom from './Mockroom';
@@ -12,7 +12,8 @@ interface PinnedMenuProps {
   isVisible: boolean;
   onClose: () => void;
   onPinItem: (item: Room | Device) => void;
-  selectedHubCode: string; // Pass the selected hub's hubCode
+  selectedHubCode: string;
+  refreshPinnedMenu: () => void; // Add this prop
 }
 
 interface Room {
@@ -35,104 +36,108 @@ interface Device {
   pinned: boolean;
 }
 
-const PinnedMenu: React.FC<PinnedMenuProps> = ({ isVisible, onClose, onPinItem, selectedHubCode }) => {
+const PinnedMenu: React.FC<PinnedMenuProps> = ({ isVisible, onClose, onPinItem, selectedHubCode, refreshPinnedMenu }) => {
   const [selectedFilter, setSelectedFilter] = useState<'All' | 'Rooms' | 'Devices'>('All');
   const [rooms, setRooms] = useState<Room[]>([]); // State to store rooms
   const [devices, setDevices] = useState<Device[]>([]); // State to store devices
 
-  // Fetch rooms and devices when the component mounts or the selected hub changes
-  useEffect(() => {
-    const fetchRoomsAndDevices = async () => {
-      const auth = getAuth();
-      const db = getFirestore();
+  const fetchRoomsAndDevices = async () => {
+    const auth = getAuth();
+    const db = getFirestore();
   
-      const user = auth.currentUser;
-      if (user && selectedHubCode) {
-        try {
-          // Fetch rooms associated with the selected hub
-          const roomsRef = collection(db, "rooms");
-          const roomsQuery = query(
-            roomsRef,
-            where("hubCode", "==", selectedHubCode),
-            where("pinned", "==", false) // Only fetch unpinned items
-          );
-          const roomsSnapshot = await getDocs(roomsQuery);
+    const user = auth.currentUser;
+    if (user && selectedHubCode) {
+      try {
+        // Fetch rooms associated with the selected hub
+        const roomsRef = collection(db, "rooms");
+        const roomsQuery = query(
+          roomsRef,
+          where("hubCode", "==", selectedHubCode),
+          where("pinned", "==", false) // Only fetch unpinned items
+        );
+        const roomsSnapshot = await getDocs(roomsQuery);
   
-          const roomsData: Room[] = [];
-          roomsSnapshot.forEach((doc) => {
-            const data = doc.data();
-            roomsData.push({
-              type: 'room',
-              id: data.roomId, // Use roomId
-              roomId: data.roomId, // Include roomId
-              roomName: data.roomName,
-              hubCode: data.hubCode,
-              pinned: data.pinned,
-              devices: data.devices || [], // Array of device IDs
-            });
+        const roomsData: Room[] = [];
+        roomsSnapshot.forEach((doc) => {
+          const data = doc.data();
+          roomsData.push({
+            type: 'room',
+            id: data.roomId, // Use roomId
+            roomId: data.roomId, // Include roomId
+            roomName: data.roomName,
+            hubCode: data.hubCode,
+            pinned: data.pinned,
+            devices: data.devices || [], // Array of device IDs
           });
-          setRooms(roomsData);
+        });
+        setRooms(roomsData);
   
-          // Fetch devices associated with the selected hub
-          const devicesRef = collection(db, "devices");
-          const devicesQuery = query(
-            devicesRef,
-            where("hubCode", "==", selectedHubCode),
-            where("pinned", "==", false) // Only fetch unpinned items
-          );
-          const devicesSnapshot = await getDocs(devicesQuery);
+        // Fetch devices associated with the selected hub
+        const devicesRef = collection(db, "devices");
+        const devicesQuery = query(
+          devicesRef,
+          where("hubCode", "==", selectedHubCode),
+          where("pinned", "==", false) // Only fetch unpinned items
+        );
+        const devicesSnapshot = await getDocs(devicesQuery);
   
-          const devicesData: Device[] = [];
-          devicesSnapshot.forEach((doc) => {
-            const data = doc.data();
-            devicesData.push({
-              type: 'device',
-              id: data.deviceId, // Use deviceId
-              deviceId: data.deviceId, // Include deviceId
-              deviceName: data.deviceName,
-              deviceType: data.deviceType,
-              hubCode: data.hubCode,
-              pinned: data.pinned,
-            });
+        const devicesData: Device[] = [];
+        devicesSnapshot.forEach((doc) => {
+          const data = doc.data();
+          devicesData.push({
+            type: 'device',
+            id: data.deviceId, // Use deviceId
+            deviceId: data.deviceId, // Include deviceId
+            deviceName: data.deviceName,
+            deviceType: data.deviceType,
+            hubCode: data.hubCode,
+            pinned: data.pinned,
           });
-          setDevices(devicesData);
-        } catch (error) {
-          console.error("Error fetching rooms and devices:", error);
-        }
+        });
+        setDevices(devicesData);
+      } catch (error) {
+        console.error("Error fetching rooms and devices:", error);
       }
-    };
-  
-    fetchRoomsAndDevices();
+    }
+  };
+
+  useEffect(() => {
+    fetchRoomsAndDevices(); // Fetch unpinned items when the component mounts or selectedHubCode changes
   }, [selectedHubCode]);
 
+  useEffect(() => {
+    if (isVisible) {
+      fetchRoomsAndDevices(); // Re-fetch unpinned items when the menu is opened
+    }
+  }, [isVisible]);
+
   const handleItemClick = async (item: Room | Device) => {
-
     const db = getFirestore();
-
+  
     try {
-      // Ensure item.id is defined
       if (!item.id) {
         throw new Error("Item ID is missing.");
       }
   
-      // Determine the collection based on the item type
       const collectionName = item.type === 'room' ? 'rooms' : 'devices';
+      const itemId = item.type === 'room' ? item.roomId : item.deviceId;
   
-      // Reference the document in Firestore using the correct ID
-      const itemRef = doc(db, collectionName, item.id); // Use item.id (roomId or deviceId)
-  
-      // Update the `pinned` field to true
+      const itemRef = doc(db, collectionName, itemId);
       await updateDoc(itemRef, { pinned: true });
   
-      // Pass the item to the parent component
       onPinItem({
         ...item,
-        id: item.type === 'room' ? item.roomId : item.deviceId, // Ensure the correct ID is passed
+        id: itemId,
       });
+  
+      // Refresh the pinned menu after pinning an item
+      refreshPinnedMenu(); // Call the function passed from Homepage
+      fetchRoomsAndDevices(); // Re-fetch unpinned items
     } catch (error) {
       console.error("Error pinning item:", error);
     }
   };
+
 
   if (!isVisible) return null;
 
