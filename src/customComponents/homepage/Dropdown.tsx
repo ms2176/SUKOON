@@ -39,7 +39,7 @@ const Dropdown: React.FC<DropdownProps> = ({ initialShow, homes, onSelect }) => 
           >
             <HStack width="100%" spaceX={2}>
               <Heading fontSize={{ base: '80%', sm: '90%', md: '100%' }} whiteSpace="nowrap" overflow="hidden" textOverflow="ellipsis">
-                {selectedItem}
+                {initialShow}
               </Heading>
               <MdArrowDropDown />
             </HStack>

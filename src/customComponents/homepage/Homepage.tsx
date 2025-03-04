@@ -23,7 +23,7 @@ import PinnedMenuAdmin from './pinnedMenuAdmin.tsx';
 import MockUnits from './MockUnits.tsx';
 import { MdOutlineEdit } from "react-icons/md";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
-import { getFirestore, collection, query, where, getDocs, QueryDocumentSnapshot, doc, updateDoc } from "firebase/firestore";
+import { getFirestore, collection, query, where, getDocs, QueryDocumentSnapshot, doc, updateDoc, getDoc } from "firebase/firestore";
 
 interface Home {
   homeName: string;
@@ -37,7 +37,7 @@ interface HomepageProps {
 }
 
 const Homepage: React.FC<HomepageProps> = ({ selectedHomePass, onSelectHome }) => {
-  const username = sessionStorage.getItem('username');
+  const [username, setUsername] = useState<string>('guest'); // State for username
   const [isPinnedMenuVisible, setPinnedMenuVisible] = useState(false);
   const [pinnedItems, setPinnedItems] = useState<PinnedItem[]>([]); // Store both rooms and devices
   const [isRemoveRoomVisibile, setRemoveRoomVisible] = useState(false);
@@ -53,14 +53,27 @@ const Homepage: React.FC<HomepageProps> = ({ selectedHomePass, onSelectHome }) =
   useEffect(() => {
     const auth = getAuth();
     const db = getFirestore();
-  
+
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         const userId = user.uid;
-  
+
+        // Fetch the user document from Firestore
+        const userDocRef = doc(db, "users", userId);
+        const userDocSnap = await getDoc(userDocRef);
+
+        if (userDocSnap.exists()) {
+          const userData = userDocSnap.data();
+          setUsername(userData.username || 'guest'); // Set the username from Firestore
+        } else {
+          console.log("User document not found.");
+          setUsername('guest'); // Fallback to 'guest'
+        }
+
+        // Fetch user hubs
         const userHubsRef = collection(db, "userHubs");
         const q = query(userHubsRef, where("userId", "==", userId));
-  
+
         try {
           const querySnapshot = await getDocs(q);
           const hubs: Home[] = [];
@@ -69,11 +82,18 @@ const Homepage: React.FC<HomepageProps> = ({ selectedHomePass, onSelectHome }) =
             hubs.push({
               homeName: data.homeName,
               homeType: data.homeType,
-              hubCode: data.hubCode, // Ensure hubCode is included
+              hubCode: data.hubCode,
             });
           });
-  
+
           setHomes(hubs); // Update the state with the fetched hubs
+
+          // Automatically select the first home if one exists
+          if (hubs.length > 0) {
+            const firstHome = hubs[0];
+            setSelectedHome(firstHome); // Set the first home as selected
+            onSelectHome(firstHome); // Notify parent component (if needed)
+          }
         } catch (error) {
           console.error("Error fetching user hubs:", error);
         } finally {
@@ -81,17 +101,19 @@ const Homepage: React.FC<HomepageProps> = ({ selectedHomePass, onSelectHome }) =
         }
       } else {
         console.log("No user is signed in.");
+        setUsername('guest'); // Fallback to 'guest'
         setLoading(false);
       }
     });
-  
+
     return () => unsubscribe();
   }, []);
 
   // Handle hub selection
   const handleHubSelect = (home: Home) => {
     console.log("Selected hub:", home);
-    // You can perform additional actions here, like updating the UI or fetching more data
+    setSelectedHome(home); // Update the selected home
+    onSelectHome(home); // Notify parent component (if needed)
   };
   const handleSelectHome = (home: Home) => {
     setSelectedHome(home); // Update the selected home
@@ -129,9 +151,8 @@ const Homepage: React.FC<HomepageProps> = ({ selectedHomePass, onSelectHome }) =
 
   type PinnedItem = Room | Device | Unit; // Union type for pinned items
 
-
   
-  const handlePinItem = (item: Room | Device) => {
+  const handlePinItem = (item: PinnedItem) => {
     setPinnedItems((prev) => [...prev, item]);
   };
 
@@ -176,8 +197,25 @@ const Homepage: React.FC<HomepageProps> = ({ selectedHomePass, onSelectHome }) =
           pinned: doc.data().pinned,
         }));
   
+        // Fetch pinned units
+        const unitsRef = collection(db, "units");
+        const unitsQuery = query(
+          unitsRef,
+          where("hubCode", "==", selectedHome.hubCode),
+          where("pinned", "==", true)
+        );
+        const unitsSnapshot = await getDocs(unitsQuery);
+        const pinnedUnits: Unit[] = unitsSnapshot.docs.map((doc) => ({
+          type: 'unit',
+          id: doc.id, // Use Firestore document ID
+          unitId: doc.data().unitId, // Include unitId
+          unitName: doc.data().unitName,
+          hubCode: doc.data().hubCode,
+          pinned: doc.data().pinned,
+        }));
+  
         // Combine all pinned items
-        const pinnedItems = [...pinnedRooms, ...pinnedDevices];
+        const pinnedItems = [...pinnedRooms, ...pinnedDevices, ...pinnedUnits];
         setPinnedItems(pinnedItems);
       } catch (error) {
         console.error("Error fetching pinned items:", error);
@@ -194,7 +232,7 @@ const Homepage: React.FC<HomepageProps> = ({ selectedHomePass, onSelectHome }) =
     fetchPinnedItems(); // Fetch pinned items when selectedHome changes
   }, [selectedHome]);
   
-  const handleUnpinItem = async (item: Room | Device) => {
+  const handleUnpinItem = async (item: PinnedItem) => {
     const db = getFirestore();
   
     try {
@@ -202,15 +240,31 @@ const Homepage: React.FC<HomepageProps> = ({ selectedHomePass, onSelectHome }) =
         throw new Error("Item ID is missing.");
       }
   
-      const collectionName = item.type === 'room' ? 'rooms' : 'devices';
-      const itemRef = doc(db, collectionName, item.id);
+      // Determine the collection name based on the item type
+      let collectionName: string;
+      switch (item.type) {
+        case 'room':
+          collectionName = 'rooms';
+          break;
+        case 'device':
+          collectionName = 'devices';
+          break;
+        case 'unit':
+          collectionName = 'units';
+          break;
+        default:
+          throw new Error("Invalid item type.");
+      }
   
+      // Update the item's pinned status in Firestore
+      const itemRef = doc(db, collectionName, item.id);
       await updateDoc(itemRef, { pinned: false });
   
+      // Remove the item from the local pinnedItems state
       setPinnedItems((prev) => prev.filter((i) => i.id !== item.id));
   
       // Refresh the pinned menu after unpinning an item
-      refreshPinnedMenu(); // Call this to re-fetch pinned items
+      refreshPinnedMenu();
     } catch (error) {
       console.error("Error unpinning item:", error);
     }
@@ -334,7 +388,7 @@ const Homepage: React.FC<HomepageProps> = ({ selectedHomePass, onSelectHome }) =
       <Stack className='homepageContainer' position={'relative'} display={'flex'} overflow={'hidden'}>
         <Box className='homepageHeader' bg={selectedHome?.homeType === 'admin' ? '#0b13b0' : '#6cce58'}>
           <Heading bg={'transparent'} ml={'20px'} mt={'20px'} mb={'20px'} fontWeight={'extrabold'} className='introHomepage'>
-            Ya Halla, <span className='guestIntro'>{username || 'guest'}</span>
+            Ya Halla, <span className='guestIntro'>{username}</span>
           </Heading>
         </Box>
 
@@ -346,7 +400,7 @@ const Homepage: React.FC<HomepageProps> = ({ selectedHomePass, onSelectHome }) =
               onSelectHome(home);
               handleSelectHome(home); 
               handleHubSelect(home);
-            }} initialShow='Choose Home...'>
+            }} initialShow={selectedHome ? selectedHome.homeName : 'Choose Home...'}>
 
           </Dropdown>
           <Button bg={'transparent'} width={'auto'} height={'auto'} onClick={toggleAddHome}>
@@ -494,7 +548,9 @@ const Homepage: React.FC<HomepageProps> = ({ selectedHomePass, onSelectHome }) =
         <PinnedMenuAdmin
           isVisible={isPinnedMenuVisible}
           onClose={() => setPinnedMenuVisible(false)}
-          onPinItem={handlePinItem}
+          onPinItem={handlePinItem} // Pass the updated handlePinItem function
+          selectedHubCode={selectedHome?.hubCode || ''}
+          refreshPinnedMenu={refreshPinnedMenu}
         />
       ) : (
         <PinnedMenu
