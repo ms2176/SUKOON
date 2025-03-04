@@ -88,8 +88,14 @@ const Homepage: React.FC<HomepageProps> = ({ selectedHomePass, onSelectHome }) =
 
           setHomes(hubs); // Update the state with the fetched hubs
 
-          // Automatically select the first home if one exists
-          if (hubs.length > 0) {
+          // Retrieve the selected home from local storage
+          const storedSelectedHome = localStorage.getItem('selectedHome');
+          if (storedSelectedHome) {
+            const selectedHome = JSON.parse(storedSelectedHome);
+            setSelectedHome(selectedHome); // Set the stored selected home
+            onSelectHome(selectedHome); // Notify parent component (if needed)
+          } else if (hubs.length > 0) {
+            // Fallback to the first home if no home is stored in local storage
             const firstHome = hubs[0];
             setSelectedHome(firstHome); // Set the first home as selected
             onSelectHome(firstHome); // Notify parent component (if needed)
@@ -119,6 +125,8 @@ const Homepage: React.FC<HomepageProps> = ({ selectedHomePass, onSelectHome }) =
     setSelectedHome(home); // Update the selected home
     setPinnedItems([]); // Clear the pinned items when a new home is selected
 
+    // Store the selected home in local storage
+    localStorage.setItem('selectedHome', JSON.stringify(home));
   };
 
   interface Room {
