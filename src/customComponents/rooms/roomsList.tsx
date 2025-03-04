@@ -46,7 +46,6 @@ const RoomList = () => {
         <Heading as="h1" size="lg" fontWeight="bold" color="#464646" fontSize="50px">
           Hi, User
         </Heading>
-        <Image src={PlaceholderUserImage} alt="User" boxSize="50px" borderRadius="full" />
       </Flex>
 
       {/* "Your Rooms" Section */}
@@ -66,7 +65,7 @@ const RoomList = () => {
           _hover={{ bg: "#5bb046" }}
           onClick={() => setShowAddRoom(true)}
         >
-          + Add Room
+          + Create Room
         </Button>
       </Flex>
 
