@@ -1,10 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button, Box, Text, Image, Grid, Heading, Flex } from '@chakra-ui/react';
-import { useNavigate } from 'react-router-dom'; 
+import { useNavigate } from 'react-router-dom';
 import AddRoom from './addRooms';
-import { useParams } from 'react-router-dom';
+import { getFirestore, collection, query, where, getDocs } from 'firebase/firestore';
 
-// Import room images
+// Import room images (if you want to use default images for rooms)
 import LivingRoomImg from '@/images/roomsImage/livingRoom.jpeg';
 import BedroomImg from '@/images/roomsImage/bedroom.jpg';
 import KidsRoomImg from '@/images/roomsImage/kids.jpg';
@@ -17,21 +17,60 @@ import LaundryImg from '@/images/roomsImage/laundry.jpg';
 // Placeholder user image
 import PlaceholderUserImage from '@/images/roomsImage/userCircle.png';
 
-const RoomList = () => {
-  const navigate = useNavigate(); 
+// Define the Room type
+interface Room {
+  id: string;
+  roomName: string;
+  hubCode: string;
+  pinned: boolean;
+  devices: string[];
+  image?: string; // Optional field for room image
+}
 
-  const [rooms, setRooms] = useState([
-    { id: 1, name: 'Living Room', image: LivingRoomImg, devices: 5 },
-    { id: 2, name: 'Master Bedroom', image: BedroomImg, devices: 12 },
-    { id: 3, name: 'Kids Bedroom', image: KidsRoomImg, devices: 4 },
-    { id: 4, name: 'Kitchen', image: KitchenImg, devices: 10 },
-    { id: 5, name: 'Bathroom', image: BathroomImg, devices: 7 },
-    { id: 6, name: 'Office', image: OfficeImg, devices: 5 },
-    { id: 7, name: 'Dining Room', image: DiningImg, devices: 3 },
-    { id: 8, name: 'Laundry Room', image: LaundryImg, devices: 2 },
-  ]);
+interface RoomListProps {
+  selectedHome: {
+    hubCode: string;
+  } | null;
+}
 
+const RoomList: React.FC<RoomListProps> = () => {
+
+  const selectedHome = localStorage.getItem('selectedHome') ? JSON.parse(localStorage.getItem('selectedHome') as string) : null;
+  const navigate = useNavigate();
   const [showAddRoom, setShowAddRoom] = useState(false);
+  const [rooms, setRooms] = useState<Room[]>([]);
+
+  // Fetch rooms when selectedHome changes
+  useEffect(() => {
+    const fetchRooms = async () => {
+      if (selectedHome) {
+        const db = getFirestore();
+        const roomsRef = collection(db, 'rooms');
+        const roomsQuery = query(roomsRef, where('hubCode', '==', selectedHome.hubCode));
+
+        try {
+          const querySnapshot = await getDocs(roomsQuery);
+          const roomsData: Room[] = [];
+          querySnapshot.forEach((doc) => {
+            const data = doc.data();
+            roomsData.push({
+              id: doc.id,
+              roomName: data.roomName,
+              hubCode: data.hubCode,
+              pinned: data.pinned || false,
+              devices: data.devices || [],
+              image: data.image || LivingRoomImg, // Use a default image if no image is provided
+            });
+          });
+          setRooms(roomsData);
+        } catch (error) {
+          console.error('Error fetching rooms:', error);
+        }
+      }
+    };
+
+    fetchRooms();
+  }, [selectedHome]);
 
   const handleAddRoom = (newRoom: any) => {
     const newRoomId = rooms.length ? rooms[rooms.length - 1].id + 1 : 1;
@@ -43,7 +82,7 @@ const RoomList = () => {
     <Box p={6} bg="white" minHeight="100vh" pb="90px">
       {/* Header */}
       <Flex justifyContent="space-between" alignItems="center" mb={8}>
-        <Heading as="h1" size="lg" fontWeight="bold" color="#464646" fontSize="50px">
+        <Heading as="h1" size="lg" fontWeight="bold" color="#464646" fontSize="50px" className='roomshd'>
           Hi, User
         </Heading>
       </Flex>
@@ -62,7 +101,7 @@ const RoomList = () => {
           borderRadius="full"
           fontSize="md"
           boxShadow="md"
-          _hover={{ bg: "#5bb046" }}
+          _hover={{ bg: '#5bb046' }}
           onClick={() => setShowAddRoom(true)}
         >
           + Create Room
@@ -83,25 +122,25 @@ const RoomList = () => {
             boxShadow="0px 5px 10px rgba(0, 0, 0, 0.05)" // Soft elevation
             border="1px solid rgba(0, 0, 0, 0.08)" // Light border for depth
             _hover={{
-              transform: "translateY(-5px)", // Slight lift
-              boxShadow: "0px 10px 20px rgba(0, 0, 0, 0.1)", // Stronger shadow on hover
-              backgroundColor: "#f5f5f5", // Light grey highlight on hover
+              transform: 'translateY(-5px)', // Slight lift
+              boxShadow: '0px 10px 20px rgba(0, 0, 0, 0.1)', // Stronger shadow on hover
+              backgroundColor: '#f5f5f5', // Light grey highlight on hover
             }}
             onClick={() => navigate(`/devices/${room.id}`)}
           >
             <Image
-              src={room.image}
-              alt={room.name}
+              src={room.image || LivingRoomImg} // Use the room's image or a default image
+              alt={room.roomName}
               borderRadius="12px"
               objectFit="cover"
               width="100%"
               height="150px"
             />
             <Text fontWeight="bold" fontSize="lg" mt={4} color="#6cce58">
-              {room.name}
+              {room.roomName}
             </Text>
             <Text color="gray.500" fontSize="sm">
-              {room.devices} devices
+              {room.devices.length} devices
             </Text>
           </Box>
         ))}
@@ -114,5 +153,3 @@ const RoomList = () => {
 };
 
 export default RoomList;
-
-
