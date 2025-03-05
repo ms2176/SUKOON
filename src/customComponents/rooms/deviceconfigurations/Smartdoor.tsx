@@ -1,105 +1,108 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import "../DeviceControlPage.css"; // Updated styles
-import { useParams } from 'react-router-dom';
-import { Box, Button } from "@chakra-ui/react";
-import { BsLightbulbFill } from "react-icons/bs";
-import { BsLightbulb } from "react-icons/bs";
-import { BsLightbulbOff } from "react-icons/bs";
+import { Box, Button, Spinner, Stack, Text } from "@chakra-ui/react";
+import { getFirestore, doc, onSnapshot, updateDoc } from "firebase/firestore";
+import { useNavigate, useParams } from 'react-router-dom'; // Import useParams
 
-const Smartdoor = () => {
-  const [luminosity, setLuminosity] = useState(25); // Default luminosity
-  const [power, setPower] = useState(true); // Light power toggle state
-  const [activeMode, setActiveMode] = useState<string | null>(null); // Track active mode
-  const [ecoMode, setEcoMode] = useState(false); // Eco mode state
-  const [isManuallyAdjusted, setIsManuallyAdjusted] = useState(false); // Track manual adjustments
+interface SmartdoorPageProps {
+  deviceId: string;
+}
+
+const Smartdoor: React.FC<SmartdoorPageProps> = ({ deviceId }) => {
   const [isLocked, setIsLocked] = useState(true); // Lock/Unlock state
+  const [power, setPower] = useState(true); // Power state
+  const [loading, setLoading] = useState(true); // Loading state
+  const [deviceName, setDeviceName] = useState(""); // Device name state
 
-  const modes = [
-    { name: "Off", icon: <BsLightbulbOff /> },
-    { name: "Dim", icon: <BsLightbulb /> },
-    { name: "Bright", icon: <BsLightbulbFill /> },
-  ];
+  const navigate = useNavigate(); // Initialize useNavigate
+  const { roomId } = useParams<{ roomId: string }>(); // Extract roomId from the URL
 
-  const settings = [
-    { name: "8 Hours", description: "Timer" },
-    { name: "Eco On", description: "Scenes" },
-  ];
+  // Fetch device data from Firestore in real time
+  useEffect(() => {
+    if (deviceId) {
+      const db = getFirestore();
+      const deviceDocRef = doc(db, "devices", deviceId);
 
-  // Ref to store the interval ID
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
-
-  const startChangingLuminosity = (change: number) => {
-    if (intervalRef.current) return; // Prevent multiple intervals
-
-    intervalRef.current = setInterval(() => {
-      setLuminosity((prev) => {
-        const newValue = prev + change;
-        return Math.min(100, Math.max(0, newValue)); // Clamp between 0 and 100
+      // Set up a real-time listener for the device document
+      const unsubscribe = onSnapshot(deviceDocRef, (deviceDocSnap) => {
+        if (deviceDocSnap.exists()) {
+          const deviceData = deviceDocSnap.data();
+          setIsLocked(deviceData.locked || false); // Default to false if not set
+          setPower(deviceData.on || false); // Default to false if not set
+          setDeviceName(deviceData.deviceName || "Unnamed Device"); // Set device name
+        } else {
+          console.error("Device not found");
+        }
+        setLoading(false); // Stop loading once data is fetched
       });
-      setIsManuallyAdjusted(true); // Mark as manually adjusted
-    }, 100); // Adjust the interval speed as needed
-  };
 
-  const stopChangingLuminosity = () => {
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-      intervalRef.current = null;
+      // Clean up the listener when the component unmounts
+      return () => unsubscribe();
     }
-  };
+  }, [deviceId]);
 
-  const togglePower = () => {
-    setPower((prev) => !prev);
-  };
+  // Update lock state in Firestore
+  const updateLockState = async (newLockState: boolean) => {
+    if (deviceId) {
+      const db = getFirestore();
+      const deviceDocRef = doc(db, "devices", deviceId);
 
-  const toggleEcoMode = () => {
-    setEcoMode((prev) => {
-      if (!prev) {
-        // Activating Eco mode sets luminosity to 40%
-        setLuminosity(40);
-      } else {
-        // Deactivating Eco mode resets luminosity to the previous value
-        setLuminosity(25); // You can adjust this to a more appropriate value if needed
+      try {
+        await updateDoc(deviceDocRef, { locked: newLockState });
+        setIsLocked(newLockState); // Update local state
+      } catch (error) {
+        console.error("Error updating lock state:", error);
       }
-      return !prev;
-    });
-  };
-
-  const handleModeChange = (mode: string) => {
-    setActiveMode(mode.toLowerCase());
-    setIsManuallyAdjusted(false); // Reset manual adjustment flag
-
-    // Set luminosity based on the selected mode
-    switch (mode.toLowerCase()) {
-      case "bright":
-        setLuminosity(80);
-        break;
-      case "dim":
-        setLuminosity(50);
-        break;
-      case "off":
-        setLuminosity(0);
-        break;
-      default:
-        setLuminosity(25); // Default value
-        break;
     }
   };
+
+  // Update power state in Firestore
+  const updatePowerState = async (newPowerState: boolean) => {
+    if (deviceId) {
+      const db = getFirestore();
+      const deviceDocRef = doc(db, "devices", deviceId);
+
+      try {
+        await updateDoc(deviceDocRef, { on: newPowerState });
+        setPower(newPowerState); // Update local state
+      } catch (error) {
+        console.error("Error updating power state:", error);
+      }
+    }
+  };
+
+  if (loading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
+        <Spinner size="xl" />
+      </Box>
+    );
+  }
 
   return (
-    <div className="ac-control-container">
+    <div className="ac-control-container" style={{overflowY: 'auto', height:'auto', paddingBottom:'20%'}}>
       {/* Header */}
-      <div className="header" style={{padding: '20px', borderRadius:'20px', boxShadow:'0 4px 8px rgba(0, 0, 0, 0.2)'}}>
-        <button className="back-button">←</button>
-        <h1>Smart Door</h1>
+      <div className="header" style={{ padding: '20px', borderRadius: '20px', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)' }}>
+        {/* Back Button */}
+        <button className="back-button" onClick={() => navigate(`/devices/${roomId}`)}>←</button>
+        <Stack display={'flex'} justify={'center'} align={'center'}>
+          <Text fontSize="2xl" fontWeight="bold" color="black" textAlign={'center'} className="deviceNameConfig">
+            {deviceName} {/* Display the device name */}
+          </Text>
+          <Text fontSize="lg" color="black" textAlign={'center'}>
+            Smart Door {/* Display "Smart Door" below the device name */}
+          </Text>
+        </Stack>
+
         <div className="power-toggle">
           <label className="toggle-switch">
-            <input type="checkbox" checked={power} onChange={togglePower} />
+            <input type="checkbox" checked={power} onChange={() => updatePowerState(!power)} />
             <span className="slider round"></span>
           </label>
         </div>
       </div>
 
-      {/* Conjoined Buttons */}
+      {/* Conjoined Buttons for Lock/Unlock */}
       <Box
         display="flex"
         alignItems="center"
@@ -118,7 +121,7 @@ const Smartdoor = () => {
           bg={isLocked ? "#6cc358" : "white"}
           color={isLocked ? "white" : "#6cc358"}
           _hover={{ bg: isLocked ? "#6cc358" : "white" }}
-          onClick={() => setIsLocked(true)}
+          onClick={() => updateLockState(true)} // Set lock state to true
         >
           Lock
         </Button>
@@ -128,13 +131,13 @@ const Smartdoor = () => {
           bg={!isLocked ? "#6cc358" : "white"}
           color={!isLocked ? "white" : "#6cc358"}
           _hover={{ bg: !isLocked ? "#6cc358" : "white" }}
-          onClick={() => setIsLocked(false)}
+          onClick={() => updateLockState(false)} // Set lock state to false
         >
           Unlock
         </Button>
       </Box>
 
-      {/* Conjoined Buttons */}
+      {/* Conjoined Buttons for Power On/Off */}
       <Box
         display="flex"
         alignItems="center"
@@ -153,9 +156,9 @@ const Smartdoor = () => {
           bg={power ? "#6cc358" : "white"}
           color={power ? "white" : "#6cc358"}
           _hover={{ bg: power ? "#6cc358" : "white" }}
-          onClick={() => setPower(true)}
+          onClick={() => updatePowerState(true)} // Set power state to true
         >
-          Off
+          On
         </Button>
         <Button
           flex="1"
@@ -163,9 +166,9 @@ const Smartdoor = () => {
           bg={!power ? "#6cc358" : "white"}
           color={!power ? "white" : "#6cc358"}
           _hover={{ bg: !power ? "#6cc358" : "white" }}
-          onClick={() => setPower(false)}
+          onClick={() => updatePowerState(false)} // Set power state to false
         >
-          On
+          Off
         </Button>
       </Box>
     </div>

@@ -1,121 +1,88 @@
-import React, { useState } from "react";
-import "./DeviceControlPage.css"; // Updated styles
+import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
+import { getFirestore, doc, getDoc } from 'firebase/firestore';
+import LightsControlPage from './deviceconfigurations/LightsControlPage';
+import Washingmachine from './deviceconfigurations/Washingmachine';
+import Dishwasher from './deviceconfigurations/Dishwasher';
+import Heatconvector from './deviceconfigurations/Heatconvector';
+import Smartdoor from './deviceconfigurations/Smartdoor';
+import Fan from './deviceconfigurations/Fan';
+import TV from './deviceconfigurations/TV';
+import Thermo from './deviceconfigurations/Thermo';
+import Speaker from './deviceconfigurations/Speaker';
+import AC from './deviceconfigurations/ACControlPage';
+
+interface Device {
+  deviceType: string;
+}
 
 const DeviceControlPage = () => {
-  const [temperature, setTemperature] = useState(25); // Default temperature
-  const [power, setPower] = useState(true); // AC power toggle state
-  const [activeMode, setActiveMode] = useState("wind"); // Default mode
-  const [ecoMode, setEcoMode] = useState(false); // Eco mode state
+  const { roomId, deviceId } = useParams<{ roomId: string; deviceId: string }>();
+  const [device, setDevice] = useState<Device | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const modes = [
-    { name: "Wind", icon: "🌬️" },
-    { name: "Cool", icon: "❄️" },
-    { name: "Dry", icon: "💧" },
-    { name: "Auto", icon: "⚙️" },
-  ];
+  useEffect(() => {
+    const fetchDevice = async () => {
+      if (deviceId) {
+        const db = getFirestore();
+        const deviceDocRef = doc(db, 'devices', deviceId);
 
-  const settings = [
-    { name: "8 Hours", description: "Timer" },
-    { name: "Eco On", description: "Scenes" },
-    { name: "Fast", description: "Swing" },
-  ];
-
-  const handleTemperatureChange = (change: number) => {
-    // Prevent manual temperature change in Eco mode
-    if (!ecoMode) {
-      setTemperature((prev) => Math.min(45, Math.max(16, prev + change)));
-    }
-  };
-
-  const togglePower = () => {
-    setPower((prev) => !prev);
-  };
-
-  const toggleEcoMode = () => {
-    setEcoMode((prev) => {
-      if (!prev) {
-        // Activating Eco mode sets temperature to 25°C
-        setTemperature(25);
+        try {
+          const deviceDocSnap = await getDoc(deviceDocRef);
+          if (deviceDocSnap.exists()) {
+            const deviceData = deviceDocSnap.data();
+            if (deviceData.deviceType) {
+              setDevice({ deviceType: deviceData.deviceType });
+            } else {
+              console.error('Device data is missing deviceType');
+            }
+          } else {
+            console.error('Device not found');
+          }
+        } catch (error) {
+          console.error('Error fetching device:', error);
+        } finally {
+          setLoading(false);
+        }
       }
-      return !prev;
-    });
-  };
+    };
 
-  return (
-    <div className="ac-control-container">
-      {/* Header */}
-      <div className="header">
-        <button className="back-button">←</button>
-        <h1>Air Conditioner</h1>
-        <div className="power-toggle">
-          <label className="toggle-switch">
-            <input type="checkbox" checked={power} onChange={togglePower} />
-            <span className="slider round"></span>
-          </label>
-        </div>
-      </div>
+    fetchDevice();
+  }, [deviceId]);
 
-      {/* Temperature Control */}
-      <div className="temperature-control">
-        <div className="temperature-circle">
-          <button
-            className="temp-adjust temp-minus"
-            onClick={() => handleTemperatureChange(-1)}
-          >
-            –
-          </button>
-          <div className="temperature-display">
-            <p className="temperature-value">{temperature}°</p>
-            <p className="temperature-unit">Celsius</p>
-          </div>
-          <button
-            className="temp-adjust temp-plus"
-            onClick={() => handleTemperatureChange(1)}
-          >
-            +
-          </button>
-        </div>
-      </div>
+  if (loading) {
+    return <div>Loading...</div>;
+  }
 
-      {/* Modes */}
-      <div className="modes">
-        {modes.map((mode) => (
-          <button
-            key={mode.name}
-            className={`mode-button ${
-              activeMode === mode.name.toLowerCase() ? "active" : ""
-            }`}
-            onClick={() => setActiveMode(mode.name.toLowerCase())}
-          >
-            <span>{mode.icon}</span>
-            {mode.name}
-          </button>
-        ))}
-      </div>
+  if (!device) {
+    return <div>Device not found</div>;
+  }
 
-      {/* Settings */}
-      <div className="settings">
-        {settings.map((setting, index) => (
-          <div
-            key={setting.name}
-            className={`setting-item ${
-              index === 1 && ecoMode ? "eco-active" : ""
-            }`} // Add a class when Eco mode is active
-            onClick={index === 1 ? toggleEcoMode : undefined} // Toggle Eco mode on "Eco On"
-          >
-            <p className="setting-name">{setting.name}</p>
-            <p className="setting-description">{setting.description}</p>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
+  // Render the appropriate component based on deviceType
+  switch (device.deviceType) {
+    case 'light':
+      return <LightsControlPage deviceId={deviceId!} />;
+    case 'washingMachine':
+      return <Washingmachine deviceId={deviceId!} />;
+    case 'dishwasher':
+      return <Dishwasher deviceId={deviceId!} />;
+    case 'heatconvector':
+      return <Heatconvector deviceId={deviceId!} />;
+    case 'door':
+      return <Smartdoor deviceId={deviceId!} />;
+    case 'fan':
+      return <Fan deviceId={deviceId!} />;
+    case 'tv':
+      return <TV deviceId={deviceId!} />;
+    case 'thermostat':
+      return <Thermo deviceId={deviceId!} />;
+    case 'speaker':
+      return <Speaker deviceId={deviceId!} />;
+    case 'ac':
+      return <AC deviceId={deviceId!} />;
+    default:
+      return <div>Unknown device type</div>;
+  }
 };
 
 export default DeviceControlPage;
-
-
-
-
-

@@ -1,26 +1,114 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import "../DeviceControlPage.css"; // Updated styles
-import { Box, Button } from "@chakra-ui/react";
+import { Box, Button, Spinner, Stack, Text } from "@chakra-ui/react";
+import { getFirestore, doc, onSnapshot, updateDoc } from "firebase/firestore";
+import { useNavigate, useParams } from 'react-router-dom'; // Import useParams
 
-const Dishwasher = () => {
+interface DishwasherPageProps {
+  deviceId: string;
+}
+
+const Dishwasher: React.FC<DishwasherPageProps> = ({ deviceId }) => {
   const [timer, setTimer] = useState("00:00"); // Timer display
   const [isRunning, setIsRunning] = useState(false); // Track if the timer is running
-  const [activeMode, setActiveMode] = useState<string | null>(null); // Track active mode (Cotton, Fabric, Polyester)
-  const [activeRPM, setActiveRPM] = useState<string | null>(null); // Track active RPM (400, 800, 1200)
+  const [activeMode, setActiveMode] = useState<string | null>(null); // Track active mode (Cold, Warm, Hot)
+  const [activeRPM, setActiveRPM] = useState<string | null>(null); // Track active RPM (Water, Soap)
   const [activeDuration, setActiveDuration] = useState<string | null>(null); // Track active duration (1hr, 2hr, 3hr)
   const [isPaused, setIsPaused] = useState(false); // Track if the timer is paused
-  const [power, setPower] = useState(true); // Light power toggle state
+  const [power, setPower] = useState(true); // Power state
   const [remainingTime, setRemainingTime] = useState(0); // Track remaining time when paused
+  const [loading, setLoading] = useState(true); // Loading state
+  const [deviceName, setDeviceName] = useState(""); // Device name state
 
-  // Individual states for each button
-  const [activeButton, setActiveButton] = useState<"start" | "pause" | "continue" | "end" | null>(null);
+  const navigate = useNavigate(); // Initialize useNavigate
+  const { roomId } = useParams<{ roomId: string }>(); // Extract roomId from the URL
+  const timerRef = useRef<NodeJS.Timeout | null>(null); // Ref to store the interval ID for the timer
 
-  const modes = ["Cold", "Warm", "Hot"];
-  const rpms = ["Water", "Soap"];
-  const durations = ["1hr", "2hr", "3hr"];
+  // Fetch device data from Firestore in real time
+  useEffect(() => {
+    if (deviceId) {
+      const db = getFirestore();
+      const deviceDocRef = doc(db, "devices", deviceId);
 
-  // Ref to store the interval ID for the timer
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
+      // Set up a real-time listener for the device document
+      const unsubscribe = onSnapshot(deviceDocRef, (deviceDocSnap) => {
+        if (deviceDocSnap.exists()) {
+          const deviceData = deviceDocSnap.data();
+          setPower(deviceData.on || true); // Default to true if not set
+          setActiveMode(deviceData.waterTemp || null); // Set water temperature mode
+          setActiveRPM(deviceData.soap ? "Soap" : "Water"); // Set soap state
+          setActiveDuration(deviceData.length || null); // Set duration
+          setDeviceName(deviceData.deviceName || "Unnamed Device"); // Set device name
+        } else {
+          console.error("Device not found");
+        }
+        setLoading(false); // Stop loading once data is fetched
+      });
+
+      // Clean up the listener when the component unmounts
+      return () => unsubscribe();
+    }
+  }, [deviceId]);
+
+  // Update water temperature in Firestore
+  const updateWaterTemp = async (newWaterTemp: string) => {
+    if (deviceId) {
+      const db = getFirestore();
+      const deviceDocRef = doc(db, "devices", deviceId);
+
+      try {
+        await updateDoc(deviceDocRef, { waterTemp: newWaterTemp });
+        setActiveMode(newWaterTemp); // Update local state
+      } catch (error) {
+        console.error("Error updating water temperature:", error);
+      }
+    }
+  };
+
+  // Update soap state in Firestore
+  const updateSoap = async (newSoap: boolean) => {
+    if (deviceId) {
+      const db = getFirestore();
+      const deviceDocRef = doc(db, "devices", deviceId);
+
+      try {
+        await updateDoc(deviceDocRef, { soap: newSoap });
+        setActiveRPM(newSoap ? "Soap" : "Water"); // Update local state
+      } catch (error) {
+        console.error("Error updating soap state:", error);
+      }
+    }
+  };
+
+  // Update power state in Firestore
+  const updatePowerState = async (newPowerState: boolean) => {
+    if (deviceId) {
+      const db = getFirestore();
+      const deviceDocRef = doc(db, "devices", deviceId);
+
+      try {
+        await updateDoc(deviceDocRef, { on: newPowerState });
+        setPower(newPowerState); // Update local state
+      } catch (error) {
+        console.error("Error updating power state:", error);
+      }
+    }
+  };
+
+  // Update duration in Firestore
+  const updateDuration = async (newDuration: string) => {
+    if (deviceId) {
+      const db = getFirestore();
+      const deviceDocRef = doc(db, "devices", deviceId);
+
+      try {
+        await updateDoc(deviceDocRef, { length: newDuration });
+        setActiveDuration(newDuration); // Update local state
+      } catch (error) {
+        console.error("Error updating duration:", error);
+      }
+    }
+  };
 
   // Function to start the timer
   const startTimer = () => {
@@ -28,7 +116,6 @@ const Dishwasher = () => {
 
     setIsRunning(true);
     setIsPaused(false);
-    setActiveButton("start"); // Set the active button to "start"
 
     // Convert the selected duration to seconds
     const durationInSeconds = parseInt(activeDuration) * 3600; // Convert hours to seconds
@@ -41,7 +128,6 @@ const Dishwasher = () => {
         timerRef.current = null;
         setIsRunning(false);
         setTimer("00:00");
-        setActiveButton(null); // Reset active button when timer ends
         return;
       }
 
@@ -59,7 +145,6 @@ const Dishwasher = () => {
     }
     setIsRunning(false);
     setIsPaused(true);
-    setActiveButton("pause"); // Set the active button to "pause"
 
     // Save the remaining time when paused
     const [minutes, seconds] = timer.split(":").map(Number);
@@ -72,7 +157,6 @@ const Dishwasher = () => {
 
     setIsRunning(true);
     setIsPaused(false);
-    setActiveButton("continue"); // Set the active button to "continue"
 
     let time = remainingTime;
 
@@ -83,7 +167,6 @@ const Dishwasher = () => {
         timerRef.current = null;
         setIsRunning(false);
         setTimer("00:00");
-        setActiveButton(null); // Reset active button when timer ends
         return;
       }
 
@@ -103,38 +186,52 @@ const Dishwasher = () => {
     setIsRunning(false);
     setIsPaused(false);
     setRemainingTime(0); // Reset remaining time
-    setActiveButton("end"); // Set the active button to "end"
   };
 
   const togglePower = () => {
-    setPower((prev) => !prev);
+    updatePowerState(!power);
   };
 
   // Function to handle mode selection
   const handleModeChange = (mode: string) => {
     if (isRunning) return; // Prevent changes if the timer is running
-    setActiveMode(mode);
+    updateWaterTemp(mode);
   };
 
   // Function to handle RPM selection
   const handleRPMChange = (rpm: string) => {
     if (isRunning) return; // Prevent changes if the timer is running
-    setActiveRPM(rpm);
+    updateSoap(rpm === "Soap");
   };
 
   // Function to handle duration selection
   const handleDurationChange = (duration: string) => {
     if (isRunning) return; // Prevent changes if the timer is running
-    setActiveDuration(duration);
+    updateDuration(duration);
     setTimer(`${duration}:00`); // Update the timer display to the selected duration
   };
 
+  if (loading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
+        <Spinner size="xl" />
+      </Box>
+    );
+  }
+
   return (
-    <div className="ac-control-container">
+    <div className="ac-control-container" style={{overflowY: 'auto', height:'auto', paddingBottom:'20%'}}>
       {/* Header */}
       <div className="header" style={{ padding: "20px", borderRadius: "20px", boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)" }}>
-        <button className="back-button">←</button>
-        <h1>Dishwasher</h1>
+        <button className="back-button" onClick={() => navigate(`/devices/${roomId}`)}>←</button>
+        <Stack display={'flex'} justify={'center'} align={'center'}>
+          <Text fontSize="2xl" fontWeight="bold" color="black" textAlign={'center'} className="deviceNameConfig">
+            {deviceName} {/* Display the device name */}
+          </Text>
+          <Text fontSize="lg" color="black" textAlign={'center'}>
+            Dishwasher {/* Display "Smart Door" below the device name */}
+          </Text>
+        </Stack>
         <div className="power-toggle">
           <label className="toggle-switch">
             <input type="checkbox" checked={power} onChange={togglePower} />
@@ -155,7 +252,7 @@ const Dishwasher = () => {
 
       {/* Mode Buttons */}
       <div className="modes" style={{ padding: "20px", borderRadius: "20px", boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)" }}>
-        {modes.map((mode) => (
+        {["Cold", "Warm", "Hot"].map((mode) => (
           <button
             key={mode}
             className={`mode-button ${activeMode === mode ? "active" : ""}`}
@@ -169,7 +266,7 @@ const Dishwasher = () => {
 
       {/* RPM Buttons */}
       <div className="modes" style={{ padding: "20px", borderRadius: "20px", boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)" }}>
-        {rpms.map((rpm) => (
+        {["Water", "Soap"].map((rpm) => (
           <button
             key={rpm}
             className={`mode-button ${activeRPM === rpm ? "active" : ""}`}
@@ -183,7 +280,7 @@ const Dishwasher = () => {
 
       {/* Duration Buttons */}
       <div className="modes" style={{ padding: "20px", borderRadius: "20px", boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)" }}>
-        {durations.map((duration) => (
+        {["1hr", "2hr", "3hr"].map((duration) => (
           <button
             key={duration}
             className={`mode-button ${activeDuration === duration ? "active" : ""}`}
@@ -212,11 +309,11 @@ const Dishwasher = () => {
           flex="1"
           borderRadius="0"
           borderRight="1px solid #ccc"
-          bg={activeButton === "start" ? "#6cc358" : "white"}
-          color={activeButton === "start" ? "white" : "#6cc358"}
+          bg={isRunning ? "#6cc358" : "white"}
+          color={isRunning ? "white" : "#6cc358"}
           onClick={startTimer}
-          _disabled={{ opacity: 1, bg: isRunning ? "#6cc358" : "white", color: isRunning ? "white" : "#6cc358" }}
-          >
+          disabled={isRunning || !activeDuration}
+        >
           Start
         </Button>
 
@@ -225,11 +322,11 @@ const Dishwasher = () => {
           flex="1"
           borderRadius="0"
           borderRight="1px solid #ccc"
-          bg={activeButton === "pause" ? "#6cc358" : "white"}
-          color={activeButton === "pause" ? "white" : "#6cc358"}
+          bg={isPaused ? "#6cc358" : "white"}
+          color={isPaused ? "white" : "#6cc358"}
           onClick={pauseTimer}
-          _disabled={{ opacity: 1, bg: !isRunning ? "#6cc358" : "white", color: !isRunning ? "white" : "#6cc358" }}
-          >
+          disabled={!isRunning}
+        >
           Pause
         </Button>
 
@@ -238,11 +335,11 @@ const Dishwasher = () => {
           flex="1"
           borderRadius="0"
           borderRight="1px solid #ccc"
-          bg={activeButton === "continue" ? "#6cc358" : "white"}
-          color={activeButton === "continue" ? "white" : "#6cc358"}
+          bg={isPaused ? "#6cc358" : "white"}
+          color={isPaused ? "white" : "#6cc358"}
           onClick={continueTimer}
-          _disabled={{ opacity: 1, bg: !isPaused ? "#6cc358" : "white", color: !isPaused ? "white" : "#6cc358" }}
-          >
+          disabled={!isPaused}
+        >
           Continue
         </Button>
 
@@ -250,14 +347,48 @@ const Dishwasher = () => {
         <Button
           flex="1"
           borderRadius="0"
-          bg={activeButton === "end" ? "#6cc358" : "white"}
-          color={activeButton === "end" ? "white" : "#6cc358"}
+          bg={isRunning || isPaused ? "#6cc358" : "white"}
+          color={isRunning || isPaused ? "white" : "#6cc358"}
           onClick={endTimer}
-          _disabled={{ opacity: 1, bg: !isPaused && !isRunning ? "#6cc358" : "white", color: !isPaused && !isRunning ? "white" : "#6cc358" }}
+          disabled={!isRunning && !isPaused}
         >
           End
         </Button>
       </Box>
+
+      <Box
+              display="flex"
+              alignItems="center"
+              justifyContent="center"
+              borderRadius="20px"
+              overflow="hidden"
+              boxShadow="0 4px 8px rgba(0, 0, 0, 0.2)"
+              width="100%"
+              maxWidth="300px"
+              margin="20px auto"
+            >
+              <Button
+                flex="1"
+                borderRadius="0"
+                borderRight="1px solid #ccc"
+                bg={power ? "#6cc358" : "white"}
+                color={power ? "white" : "#6cc358"}
+                _hover={{ bg: power ? "#6cc358" : "white" }}
+                onClick={() => updatePowerState(true)}
+              >
+                On
+              </Button>
+              <Button
+                flex="1"
+                borderRadius="0"
+                bg={!power ? "#6cc358" : "white"}
+                color={!power ? "white" : "#6cc358"}
+                _hover={{ bg: !power ? "#6cc358" : "white" }}
+                onClick={() => updatePowerState(false)}
+              >
+                Off
+              </Button>
+            </Box>
     </div>
   );
 };

@@ -24,22 +24,13 @@ import ThirdPartyServices from './customComponents/account/ThirdPartyServices';
 import InitialView from './customComponents/homepage/InitialView';
 import SupportCenter from './customComponents/account/SupportCenter';
 import './index.css';
-import homesdata from '@/JSONFiles/homesdata.json';
 import { useState } from 'react';
-import LightsControlPage from './customComponents/rooms/deviceconfigurations/LightsControlPage'
-import Washingmachine from './customComponents/rooms/deviceconfigurations/Washingmachine'
-import Dishwasher from './customComponents/rooms/deviceconfigurations/Dishwasher';
-import Heatconvector from './customComponents/rooms/deviceconfigurations/Heatconvector';
-import Smartdoor from './customComponents/rooms/deviceconfigurations/Smartdoor';
-import Fan from './customComponents/rooms/deviceconfigurations/Fan';
-import TV from './customComponents/rooms/deviceconfigurations/TV';
-import Thermo from './customComponents/rooms/deviceconfigurations/Thermo';
-import Speaker from './customComponents/rooms/deviceconfigurations/Speaker';
 import Verification_hold from './customComponents/login/verification_hold'
 
 interface Home {
   homeName: string;
   homeType: string;
+  hubCode: string;
 }
 
 interface AuthenticatedLayoutProps {
@@ -69,6 +60,9 @@ const App = () => {
     setSelectedHome(home);
   };
 
+  console.log('Current path:', location.pathname); // Debugging
+
+
   return (
     <>
         {isAuthenticatedRoute && (
@@ -97,9 +91,15 @@ const App = () => {
 
         <Route path="/Rooms" element={
           <AuthenticatedLayout selectedHome={selectedHome}>
-            <RoomList />
+            <RoomList selectedHome={selectedHome} />
           </AuthenticatedLayout>
         } /> {/* Rooms */}
+
+<Route path="/devices/:roomId/:deviceId" element={
+  <AuthenticatedLayout selectedHome={selectedHome}>
+    <DeviceControlPage />
+  </AuthenticatedLayout>
+} />
 
 <Route path="/devices/:roomId" element={
           <AuthenticatedLayout selectedHome={selectedHome}>
@@ -112,68 +112,6 @@ const App = () => {
             <Verification_hold />
           </AuthenticatedLayout>
         } /> {/* Room page */}
-
-<Route path="/devices/:roomId/:deviceId" element={
-          <AuthenticatedLayout selectedHome={selectedHome}>
-            <DeviceControlPage />
-          </AuthenticatedLayout>
-        } />
-
-<Route path="/lights" element={
-          <AuthenticatedLayout selectedHome={selectedHome}>
-            <LightsControlPage />
-          </AuthenticatedLayout>
-        } />
-
-<Route path="/tv" element={
-          <AuthenticatedLayout selectedHome={selectedHome}>
-            <TV />
-          </AuthenticatedLayout>
-        } />
-
-<Route path="/thermo" element={
-          <AuthenticatedLayout selectedHome={selectedHome}>
-            <Thermo />
-          </AuthenticatedLayout>
-        } />
-
-<Route path="/speaker" element={
-          <AuthenticatedLayout selectedHome={selectedHome}>
-            <Speaker />
-          </AuthenticatedLayout>
-        } />
-
-<Route path="/heat" element={
-          <AuthenticatedLayout selectedHome={selectedHome}>
-            <Heatconvector />
-          </AuthenticatedLayout>
-        } />
-
-<Route path="/door" element={
-          <AuthenticatedLayout selectedHome={selectedHome}>
-            <Smartdoor />
-          </AuthenticatedLayout>
-        } />
-
-        
-
-<Route path="/washing" element={
-          <AuthenticatedLayout selectedHome={selectedHome}>
-            <Washingmachine />
-          </AuthenticatedLayout>
-        } />
-
-<Route path="/dish" element={
-          <AuthenticatedLayout selectedHome={selectedHome}>
-            <Dishwasher />
-          </AuthenticatedLayout>
-        } />
-        
-<Route path="/fan" element={
-          <AuthenticatedLayout selectedHome={selectedHome}>
-            <Fan />
-          </AuthenticatedLayout>
-        } />
 
         <Route path="/stats" element={
           <AuthenticatedLayout selectedHome={selectedHome}>

@@ -1,8 +1,13 @@
 import React, { useState, useRef } from "react";
 import "../DeviceControlPage.css"; // Updated styles
 import { Box, Button } from "@chakra-ui/react";
+import { useNavigate, useParams } from 'react-router-dom'; // Import useParams
 
-const Washingmachine = () => {
+interface WashingmachinePageProps {
+  deviceId: string;
+}
+
+const Washingmachine: React.FC<WashingmachinePageProps> = ({ deviceId }) => {
   const [timer, setTimer] = useState("00:00"); // Timer display
   const [isRunning, setIsRunning] = useState(false); // Track if the timer is running
   const [activeMode, setActiveMode] = useState<string | null>(null); // Track active mode (Cotton, Fabric, Polyester)
@@ -11,7 +16,9 @@ const Washingmachine = () => {
   const [isPaused, setIsPaused] = useState(false); // Track if the timer is paused
   const [power, setPower] = useState(true); // Light power toggle state
   const [remainingTime, setRemainingTime] = useState(0); // Track remaining time when paused
-
+  const navigate = useNavigate(); // Initialize useNavigate
+  const { roomId } = useParams<{ roomId: string }>(); // Extract roomId from the URL
+  
   // Individual states for each button
   const [activeButton, setActiveButton] = useState<"start" | "pause" | "continue" | "end" | null>(null);
 
@@ -130,10 +137,10 @@ const Washingmachine = () => {
   };
 
   return (
-    <div className="ac-control-container">
+    <div className="ac-control-container" style={{overflowY: 'auto', height:'auto', paddingBottom:'20%'}}>
       {/* Header */}
       <div className="header" style={{ padding: "20px", borderRadius: "20px", boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)" }}>
-        <button className="back-button">←</button>
+        <button className="back-button" onClick={() => navigate(`/devices/${roomId}`)}>←</button>
         <h1>Washing Machine</h1>
         <div className="power-toggle">
           <label className="toggle-switch">

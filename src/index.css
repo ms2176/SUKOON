@@ -61,6 +61,7 @@ html, body {
 .totConsHeading,
 .yourhome,
 .edithomes,
-.roomshd {
+.roomshd,
+.deviceNameConfig {
   font-family: 'SpotifyFont', sans-serif;
 }

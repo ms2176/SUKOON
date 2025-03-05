@@ -1,18 +1,23 @@
 import React, { useState, useRef } from "react";
 import "../DeviceControlPage.css"; // Updated styles
-import { useParams } from 'react-router-dom';
 import { Box, Button } from "@chakra-ui/react";
 import { BsLightbulbFill } from "react-icons/bs";
 import { BsLightbulb } from "react-icons/bs";
 import { BsLightbulbOff } from "react-icons/bs";
+import { useNavigate, useParams } from 'react-router-dom'; // Import useParams
 
-const LightsControlPage = () => {
+interface LightsControlPageProps {
+  deviceId: string;
+}
+
+const LightsControlPage: React.FC<LightsControlPageProps> = ({ deviceId }) => {
   const [luminosity, setLuminosity] = useState(25); // Default luminosity
   const [power, setPower] = useState(true); // Light power toggle state
   const [activeMode, setActiveMode] = useState<string | null>(null); // Track active mode
   const [ecoMode, setEcoMode] = useState(false); // Eco mode state
   const [isManuallyAdjusted, setIsManuallyAdjusted] = useState(false); // Track manual adjustments
-
+  const navigate = useNavigate(); // Initialize useNavigate
+  const { roomId } = useParams<{ roomId: string }>(); // Extract roomId from the URL
   const modes = [
     { name: "Off", icon: <BsLightbulbOff /> },
     { name: "Dim", icon: <BsLightbulb /> },
@@ -85,10 +90,10 @@ const LightsControlPage = () => {
   };
 
   return (
-    <div className="ac-control-container">
+    <div className="ac-control-container" style={{overflowY: 'auto', height:'auto', paddingBottom:'20%'}}>
       {/* Header */}
       <div className="header" style={{padding: '20px', borderRadius:'20px', boxShadow:'0 4px 8px rgba(0, 0, 0, 0.2)'}}>
-        <button className="back-button">←</button>
+        <button className="back-button" onClick={() => navigate(`/devices/${roomId}`)}>←</button>
         <h1>Light</h1>
         <div className="power-toggle">
           <label className="toggle-switch">
