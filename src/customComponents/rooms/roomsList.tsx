@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { Button, Box, Text, Image, Grid, Heading, Flex } from '@chakra-ui/react';
 import { useNavigate } from 'react-router-dom';
 import AddRoom from './addRooms';
-import { getFirestore, collection, query, where, getDocs } from 'firebase/firestore';
+import { getFirestore, collection, query, where, getDocs, addDoc } from 'firebase/firestore';
+import DeviceCol from '@/images/devicesIcons/devicesCol.png';
 
 // Import room images (if you want to use default images for rooms)
 import LivingRoomImg from '@/images/roomsImage/livingRoom.jpeg';
@@ -34,8 +35,9 @@ interface RoomListProps {
 }
 
 const RoomList: React.FC<RoomListProps> = () => {
-
-  const selectedHome = localStorage.getItem('selectedHome') ? JSON.parse(localStorage.getItem('selectedHome') as string) : null;
+  const selectedHome = localStorage.getItem('selectedHome')
+    ? JSON.parse(localStorage.getItem('selectedHome') as string)
+    : null;
   const navigate = useNavigate();
   const [showAddRoom, setShowAddRoom] = useState(false);
   const [rooms, setRooms] = useState<Room[]>([]);
@@ -72,10 +74,42 @@ const RoomList: React.FC<RoomListProps> = () => {
     fetchRooms();
   }, [selectedHome]);
 
-  const handleAddRoom = (newRoom: any) => {
-    const newRoomId = rooms.length ? rooms[rooms.length - 1].id + 1 : 1;
-    setRooms([...rooms, { ...newRoom, id: newRoomId }]);
-    setShowAddRoom(false);
+  const handleAddRoom = async (newRoom: { name: string; image?: string }) => {
+    if (!selectedHome) {
+      alert('No home selected. Please select a home first.');
+      return;
+    }
+
+    const db = getFirestore();
+
+    try {
+      // Add a new room to the "rooms" collection
+      const newRoomRef = await addDoc(collection(db, 'rooms'), {
+        devices: [], // Empty array for devices
+        hubCode: selectedHome.hubCode, // Set hubCode to the selected home
+        pinned: false, // Automatically set to false
+        roomName: newRoom.name, // Set the room name
+      });
+
+      // Update the UI with the new room
+      setRooms((prevRooms) => [
+        ...prevRooms,
+        {
+          id: newRoomRef.id,
+          roomName: newRoom.name,
+          hubCode: selectedHome.hubCode,
+          pinned: false,
+          devices: [],
+          image: newRoom.image || LivingRoomImg, // Use the provided image or a default
+        },
+      ]);
+
+      alert(`${newRoom.name} has been successfully added.`);
+      setShowAddRoom(false); // Close the modal
+    } catch (error) {
+      console.error('Error adding room:', error);
+      alert('Failed to add room. Please try again.');
+    }
   };
 
   return (
@@ -110,6 +144,8 @@ const RoomList: React.FC<RoomListProps> = () => {
 
       {/* Room Grid */}
       <Grid templateColumns="repeat(2, 1fr)" gap={6}>
+
+        {/* Dynamically Fetched Rooms */}
         {rooms.map((room) => (
           <Box
             key={room.id}
@@ -144,10 +180,48 @@ const RoomList: React.FC<RoomListProps> = () => {
             </Text>
           </Box>
         ))}
+
+        {/* Default "Devices" Box */}
+        <Box
+          borderRadius="20px"
+          overflow="hidden"
+          bg="white"
+          p={4}
+          cursor="pointer"
+          transition="all 0.3s ease-in-out"
+          boxShadow="0px 5px 10px rgba(0, 0, 0, 0.05)" // Soft elevation
+          border="1px solid rgba(0, 0, 0, 0.08)" // Light border for depth
+          _hover={{
+            transform: 'translateY(-5px)', // Slight lift
+            boxShadow: '0px 10px 20px rgba(0, 0, 0, 0.1)', // Stronger shadow on hover
+            backgroundColor: '#f5f5f5', // Light grey highlight on hover
+          }}
+          onClick={() => navigate('/alldevices')} // Navigate to the devices page
+        >
+          <Image
+            src={DeviceCol} // Use the DeviceCol image
+            alt="Devices"
+            borderRadius="12px"
+            objectFit="cover"
+            width="100%"
+            height="150px"
+          />
+          <Text fontWeight="bold" fontSize="lg" mt={4} color="#6cce58">
+            Devices
+          </Text>
+          <Text color="gray.500" fontSize="sm">
+            All devices
+          </Text>
+        </Box>
       </Grid>
 
       {/* Add Room Modal */}
-      {showAddRoom && <AddRoom onClose={() => setShowAddRoom(false)} onAddRoom={handleAddRoom} />}
+      {showAddRoom && (
+        <AddRoom
+          onClose={() => setShowAddRoom(false)}
+          onAddRoom={handleAddRoom}
+        />
+      )}
     </Box>
   );
 };

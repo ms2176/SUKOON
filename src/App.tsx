@@ -26,6 +26,8 @@ import SupportCenter from './customComponents/account/SupportCenter';
 import './index.css';
 import { useState } from 'react';
 import Verification_hold from './customComponents/login/verification_hold'
+import Alldevices from './customComponents/rooms/Alldevices'
+import DeviceControlPageNoRoom from './customComponents/rooms/DeviceControlPageNoRoom';
 
 interface Home {
   homeName: string;
@@ -95,6 +97,15 @@ const App = () => {
           </AuthenticatedLayout>
         } /> {/* Rooms */}
 
+      <Route
+        path="/device/:deviceId"
+        element={
+          <AuthenticatedLayout selectedHome={selectedHome}>
+            <DeviceControlPageNoRoom />
+          </AuthenticatedLayout>
+        }
+      />
+
 <Route path="/devices/:roomId/:deviceId" element={
   <AuthenticatedLayout selectedHome={selectedHome}>
     <DeviceControlPage />
@@ -107,13 +118,19 @@ const App = () => {
           </AuthenticatedLayout>
         } /> {/* Room page */}
 
+<Route path="/alldevices" element={
+          <AuthenticatedLayout selectedHome={selectedHome}>
+            <Alldevices />
+          </AuthenticatedLayout>
+        } /> {/* Statistics page */}
+
 <Route path="verification_hold" element={
           <AuthenticatedLayout selectedHome={selectedHome}>
             <Verification_hold />
           </AuthenticatedLayout>
         } /> {/* Room page */}
 
-        <Route path="/stats" element={
+<Route path="/stats" element={
           <AuthenticatedLayout selectedHome={selectedHome}>
             <Statistics />
           </AuthenticatedLayout>

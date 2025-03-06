@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import "../DeviceControlPage.css"; // Updated styles
 import { Box, Button, Spinner, Stack, Text } from "@chakra-ui/react";
 import { getFirestore, doc, onSnapshot, updateDoc } from "firebase/firestore";
-import { useNavigate, useParams } from 'react-router-dom'; // Import useParams
+import { useNavigate, useParams, useLocation } from 'react-router-dom'; // Import useParams
 
 interface DishwasherPageProps {
   deviceId: string;
@@ -23,6 +23,7 @@ const Dishwasher: React.FC<DishwasherPageProps> = ({ deviceId }) => {
   const navigate = useNavigate(); // Initialize useNavigate
   const { roomId } = useParams<{ roomId: string }>(); // Extract roomId from the URL
   const timerRef = useRef<NodeJS.Timeout | null>(null); // Ref to store the interval ID for the timer
+  const location = useLocation();
 
   // Fetch device data from Firestore in real time
   useEffect(() => {
@@ -218,12 +219,24 @@ const Dishwasher: React.FC<DishwasherPageProps> = ({ deviceId }) => {
       </Box>
     );
   }
+   // Get the current location
+
+  const handleBackButtonClick = () => {
+    // Check if the previous route was from AllDevices
+    if (location.state?.fromAllDevices) {
+      navigate('/alldevices'); // Navigate back to AllDevices
+    } else if (roomId) {
+      navigate(`/devices/${roomId}`); // Navigate back to the room's devices page
+    } else {
+      navigate('/'); // Fallback to home if no roomId or fromAllDevices state
+    }
+  };
 
   return (
     <div className="ac-control-container" style={{overflowY: 'auto', height:'auto', paddingBottom:'20%'}}>
       {/* Header */}
       <div className="header" style={{ padding: "20px", borderRadius: "20px", boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)" }}>
-        <button className="back-button" onClick={() => navigate(`/devices/${roomId}`)}>←</button>
+        <button className="back-button" onClick={handleBackButtonClick}>←</button>
         <Stack display={'flex'} justify={'center'} align={'center'}>
           <Text fontSize="2xl" fontWeight="bold" color="black" textAlign={'center'} className="deviceNameConfig">
             {deviceName} {/* Display the device name */}

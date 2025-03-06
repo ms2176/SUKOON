@@ -3,7 +3,7 @@ import './addRooms.css';
 
 interface AddRoomProps {
   onClose: () => void;
-  onAddRoom: (newRoom: { name: string; image: string; devices: number }) => void;
+  onAddRoom: (newRoom: { name: string; image?: string }) => void; // Callback to update the UI
 }
 
 const AddRoom: React.FC<AddRoomProps> = ({ onClose, onAddRoom }) => {
@@ -35,14 +35,12 @@ const AddRoom: React.FC<AddRoomProps> = ({ onClose, onAddRoom }) => {
       return;
     }
 
-    const newRoom = {
+    // Pass the room name and image URL (if available) to the parent component
+    onAddRoom({
       name: roomName,
-      image: previewUrl || defaultImageUrl, // Use previewUrl or fallback to default
-      devices: 0, // Default to 0 devices for a new room
-    };
+      image: previewUrl || undefined, // Pass the image URL if available
+    });
 
-    onAddRoom(newRoom); // Add the new room dynamically
-    alert(`${roomName} has been successfully added.`);
     setRoomName(''); // Reset the fields
     setImageFile(null);
     setPreviewUrl(null);
@@ -68,7 +66,7 @@ const AddRoom: React.FC<AddRoomProps> = ({ onClose, onAddRoom }) => {
             />
           </div>
           <div className="form-control">
-            <label>Upload Room Image</label>
+            <label>Upload Room Image (Optional)</label>
             <input
               type="file"
               accept="image/*"
@@ -103,4 +101,3 @@ const AddRoom: React.FC<AddRoomProps> = ({ onClose, onAddRoom }) => {
 };
 
 export default AddRoom;
-

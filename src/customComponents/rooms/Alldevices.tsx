@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Box, Grid, GridItem, Text, VStack, Center, Spinner, Image, HStack, Heading } from '@chakra-ui/react';
-import { Link, useParams } from 'react-router-dom';
-import { getFirestore, doc, getDoc, collection, getDocs, query, where } from 'firebase/firestore';
-import { useNavigate } from 'react-router-dom'; // Import useParams
+import { Link, useNavigate } from 'react-router-dom';
+import { getFirestore, collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
 
 // Import device images
 import LightImg from '@/images/devicesIcons/lamp.png';
@@ -32,6 +31,7 @@ interface Device {
   name: string;
   isOn: boolean;
   deviceType: DeviceType;
+  hubCode: string; // Add hubCode to the Device interface
 }
 
 // Map device types to their corresponding images
@@ -61,62 +61,52 @@ const normalizeDeviceType = (deviceType: string): DeviceType => {
   }
 };
 
-const Devices = () => {
-  const { roomId } = useParams<{ roomId: string }>();
+const AllDevices = () => {
   const [devices, setDevices] = useState<Device[]>([]);
-  const [roomName, setRoomName] = useState<string>(''); // State to store the room name
   const [loading, setLoading] = useState(true);
-
   const navigate = useNavigate();
-  // Fetch room and associated devices
+
+  // Get the selected home from localStorage
+  const selectedHome = localStorage.getItem('selectedHome')
+    ? JSON.parse(localStorage.getItem('selectedHome') as string)
+    : null;
+
+  // Fetch all devices attached to the hub
   useEffect(() => {
-    const fetchRoomAndDevices = async () => {
-      if (roomId) {
+    const fetchDevices = async () => {
+      if (selectedHome) {
         const db = getFirestore();
 
         try {
-          // Fetch the room document
-          const roomDocRef = doc(db, 'rooms', roomId);
-          const roomDocSnap = await getDoc(roomDocRef);
+          // Fetch devices with the same hubCode as the selected home
+          const devicesRef = collection(db, 'devices');
+          const devicesQuery = query(devicesRef, where('hubCode', '==', selectedHome.hubCode));
+          const devicesSnapshot = await getDocs(devicesQuery);
 
-          if (roomDocSnap.exists()) {
-            const roomData = roomDocSnap.data();
-            setRoomName(roomData.roomName || 'Room'); // Set the room name
-
-            const deviceIds = roomData.devices || []; // Array of device IDs
-
-            // Fetch devices associated with the room
-            const devicesRef = collection(db, 'devices');
-            const devicesQuery = query(devicesRef, where('__name__', 'in', deviceIds)); // Query devices by IDs
-            const devicesSnapshot = await getDocs(devicesQuery);
-
-            const devicesData: Device[] = [];
-            devicesSnapshot.forEach((doc) => {
-              const data = doc.data();
-              const deviceType = normalizeDeviceType(data.deviceType || 'light'); // Normalize the device type
-              console.log(`Device ID: ${doc.id}, Device Type: ${deviceType}`); // Log the device type
-              devicesData.push({
-                id: doc.id,
-                name: data.deviceName || 'Unnamed Device',
-                isOn: false,
-                deviceType: deviceType,
-              });
+          const devicesData: Device[] = [];
+          devicesSnapshot.forEach((doc) => {
+            const data = doc.data();
+            const deviceType = normalizeDeviceType(data.deviceType || 'light'); // Normalize the device type
+            devicesData.push({
+              id: doc.id,
+              name: data.deviceName || 'Unnamed Device',
+              isOn: data.on || false, // Use the 'on' field from Firestore
+              deviceType: deviceType,
+              hubCode: data.hubCode, // Include hubCode
             });
+          });
 
-            setDevices(devicesData);
-          } else {
-            console.error('Room not found');
-          }
+          setDevices(devicesData);
         } catch (error) {
-          console.error('Error fetching room and devices:', error);
+          console.error('Error fetching devices:', error);
         } finally {
           setLoading(false);
         }
       }
     };
 
-    fetchRoomAndDevices();
-  }, [roomId]);
+    fetchDevices();
+  }, [selectedHome]);
 
   // Get the image for a device based on its type
   const getDeviceImage = (deviceType: DeviceType) => {
@@ -133,7 +123,7 @@ const Devices = () => {
 
   return (
     <Box bg="white" minH="100vh" p={4} overflowY={'scroll'} pb={'20%'}>
-      {/* Room Header */}
+      {/* Header */}
       <Box
         bg="#6CCE58"
         p={6}
@@ -148,22 +138,20 @@ const Devices = () => {
           </button>
 
           <Heading fontSize="2xl" fontWeight="bold" color="white" bg="transparent" className="roomName">
-            {roomName} {/* Display the room name */}
+            All Devices {/* Display the title */}
           </Heading>
 
           <Heading fontSize="2xl" fontWeight="bold" color="white" bg="transparent">
             +
           </Heading>
         </HStack>
-
-        
       </Box>
 
       {/* Devices Grid */}
       <Grid templateColumns={{ base: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' }} gap={4}>
         {devices.map((device) => (
           <GridItem key={device.id}>
-            <Link to={`/devices/${roomId}/${device.id}`} state={{ fromAllDevices: false }}>
+            <Link to={`/device/${device.id}`} state={{ fromAllDevices: true }}> {/* Navigate to the device's page */}
               <VStack
                 p={4}
                 bg="white"
@@ -204,4 +192,4 @@ const Devices = () => {
   );
 };
 
-export default Devices;
+export default AllDevices;
