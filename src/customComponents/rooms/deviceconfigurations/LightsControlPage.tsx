@@ -1,10 +1,10 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import "../DeviceControlPage.css"; // Updated styles
-import { Box, Button } from "@chakra-ui/react";
-import { BsLightbulbFill } from "react-icons/bs";
-import { BsLightbulb } from "react-icons/bs";
-import { BsLightbulbOff } from "react-icons/bs";
+import { Box, Button, Spinner } from "@chakra-ui/react";
+import { BsLightbulbFill, BsLightbulb, BsLightbulbOff } from "react-icons/bs";
 import { useNavigate, useParams } from 'react-router-dom'; // Import useParams
+import { getFirestore, doc, onSnapshot, updateDoc } from "firebase/firestore";
+
 
 interface LightsControlPageProps {
   deviceId: string;
@@ -14,85 +14,160 @@ const LightsControlPage: React.FC<LightsControlPageProps> = ({ deviceId }) => {
   const [luminosity, setLuminosity] = useState(25); // Default luminosity
   const [power, setPower] = useState(true); // Light power toggle state
   const [activeMode, setActiveMode] = useState<string | null>(null); // Track active mode
-  const [ecoMode, setEcoMode] = useState(false); // Eco mode state
-  const [isManuallyAdjusted, setIsManuallyAdjusted] = useState(false); // Track manual adjustments
+  const [autoMode, setAutoMode] = useState<string>("timer"); // Auto mode state (timer, eco)
+  const [loading, setLoading] = useState(true); // Loading state
   const navigate = useNavigate(); // Initialize useNavigate
   const { roomId } = useParams<{ roomId: string }>(); // Extract roomId from the URL
+
+  // Modes with icons
   const modes = [
-    { name: "Off", icon: <BsLightbulbOff /> },
-    { name: "Dim", icon: <BsLightbulb /> },
-    { name: "Bright", icon: <BsLightbulbFill /> },
+    { name: "Off", value: "off", icon: <BsLightbulbOff /> },
+    { name: "Dim", value: "dim", icon: <BsLightbulb /> },
+    { name: "Bright", value: "bright", icon: <BsLightbulbFill /> },
   ];
 
+  // Settings with descriptions
   const settings = [
-    { name: "8 Hours", description: "Timer" },
-    { name: "Eco On", description: "Scenes" },
+    { name: "8 Hours", value: "timer", description: "Timer" },
+    { name: "Eco On", value: "eco", description: "Scenes" },
   ];
 
-  // Ref to store the interval ID
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  // Fetch device data from Firestore in real time
+  useEffect(() => {
+    if (deviceId) {
+      const db = getFirestore();
+      const deviceDocRef = doc(db, "devices", deviceId);
 
-  const startChangingLuminosity = (change: number) => {
-    if (intervalRef.current) return; // Prevent multiple intervals
-
-    intervalRef.current = setInterval(() => {
-      setLuminosity((prev) => {
-        const newValue = prev + change;
-        return Math.min(100, Math.max(0, newValue)); // Clamp between 0 and 100
+      // Set up a real-time listener for the device document
+      const unsubscribe = onSnapshot(deviceDocRef, (deviceDocSnap) => {
+        if (deviceDocSnap.exists()) {
+          const deviceData = deviceDocSnap.data();
+          setLuminosity(parseInt(deviceData.brightness) || 25); // Set brightness
+          setPower(deviceData.on || false); // Set power state
+          setActiveMode(deviceData.brightnessMode || null); // Set active mode
+          setAutoMode(deviceData.autoMode || "timer"); // Set auto mode
+        } else {
+          console.error("Device not found");
+        }
+        setLoading(false); // Stop loading once data is fetched
       });
-      setIsManuallyAdjusted(true); // Mark as manually adjusted
-    }, 100); // Adjust the interval speed as needed
-  };
 
-  const stopChangingLuminosity = () => {
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-      intervalRef.current = null;
+      // Clean up the listener when the component unmounts
+      return () => unsubscribe();
+    }
+  }, [deviceId]);
+
+  // Update brightness in Firestore
+  const updateBrightness = async (newBrightness: number) => {
+    if (deviceId) {
+      const db = getFirestore();
+      const deviceDocRef = doc(db, "devices", deviceId);
+
+      try {
+        await updateDoc(deviceDocRef, { brightness: newBrightness.toString() }); // Update brightness as a string
+        setLuminosity(newBrightness); // Update local state
+      } catch (error) {
+        console.error("Error updating brightness:", error);
+      }
     }
   };
 
-  const togglePower = () => {
-    setPower((prev) => !prev);
-  };
+  // Update power state in Firestore
+  const updatePowerState = async (newPowerState: boolean) => {
+    if (deviceId) {
+      const db = getFirestore();
+      const deviceDocRef = doc(db, "devices", deviceId);
 
-  const toggleEcoMode = () => {
-    setEcoMode((prev) => {
-      if (!prev) {
-        // Activating Eco mode sets luminosity to 40%
-        setLuminosity(40);
-      } else {
-        // Deactivating Eco mode resets luminosity to the previous value
-        setLuminosity(25); // You can adjust this to a more appropriate value if needed
+      try {
+        await updateDoc(deviceDocRef, { on: newPowerState });
+        setPower(newPowerState); // Update local state
+      } catch (error) {
+        console.error("Error updating power state:", error);
       }
-      return !prev;
-    });
+    }
   };
 
-  const handleModeChange = (mode: string) => {
-    setActiveMode(mode.toLowerCase());
-    setIsManuallyAdjusted(false); // Reset manual adjustment flag
+  // Update brightness mode in Firestore
+  const updateBrightnessMode = async (newMode: string) => {
+    if (deviceId) {
+      const db = getFirestore();
+      const deviceDocRef = doc(db, "devices", deviceId);
 
-    // Set luminosity based on the selected mode
-    switch (mode.toLowerCase()) {
+      try {
+        await updateDoc(deviceDocRef, { brightnessMode: newMode });
+        setActiveMode(newMode); // Update local state
+      } catch (error) {
+        console.error("Error updating brightness mode:", error);
+      }
+    }
+  };
+
+  // Update auto mode in Firestore
+  const updateAutoMode = async (newMode: string) => {
+    if (deviceId) {
+      const db = getFirestore();
+      const deviceDocRef = doc(db, "devices", deviceId);
+
+      try {
+        await updateDoc(deviceDocRef, { autoMode: newMode });
+        setAutoMode(newMode); // Update local state
+      } catch (error) {
+        console.error("Error updating auto mode:", error);
+      }
+    }
+  };
+
+  // Handle luminosity change
+  const handleLuminosityChange = (change: number) => {
+    const newLuminosity = Math.min(100, Math.max(0, luminosity + change)); // Clamp between 0 and 100
+    updateBrightness(newLuminosity);
+  };
+
+  // Toggle power state
+  const togglePower = () => {
+    updatePowerState(!power);
+  };
+
+  // Handle mode change
+  const handleModeChange = (mode: string) => {
+    updateBrightnessMode(mode);
+    switch (mode) {
       case "bright":
-        setLuminosity(80);
+        updateBrightness(80);
         break;
       case "dim":
-        setLuminosity(50);
+        updateBrightness(50);
         break;
       case "off":
-        setLuminosity(0);
+        updateBrightness(0);
         break;
       default:
-        setLuminosity(25); // Default value
+        updateBrightness(25); // Default value
         break;
     }
   };
 
+  // Handle setting selection (8 Hours or Eco On)
+  const handleSettingSelection = (settingValue: string) => {
+    if (settingValue === "timer") {
+      updateAutoMode("timer"); // Set autoMode to "timer" for 8-hour timer
+    } else if (settingValue === "eco") {
+      updateAutoMode("eco"); // Set autoMode to "eco" for eco mode
+    }
+  };
+
+  if (loading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
+        <Spinner size="xl" />
+      </Box>
+    );
+  }
+
   return (
-    <div className="ac-control-container" style={{overflowY: 'auto', height:'auto', paddingBottom:'20%'}}>
+    <div className="ac-control-container" style={{ overflowY: 'auto', height: 'auto', paddingBottom: '20%' }}>
       {/* Header */}
-      <div className="header" style={{padding: '20px', borderRadius:'20px', boxShadow:'0 4px 8px rgba(0, 0, 0, 0.2)'}}>
+      <div className="header" style={{ padding: '20px', borderRadius: '20px', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)' }}>
         <button className="back-button" onClick={() => navigate(`/devices/${roomId}`)}>←</button>
         <h1>Light</h1>
         <div className="power-toggle">
@@ -104,15 +179,12 @@ const LightsControlPage: React.FC<LightsControlPageProps> = ({ deviceId }) => {
       </div>
 
       {/* Luminosity Control */}
-      <div className="temperature-control" style={{padding: '20px', borderRadius:'20px', boxShadow:'0 4px 8px rgba(0, 0, 0, 0.2)'}}>
+      <div className="temperature-control" style={{ padding: '20px', borderRadius: '20px', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)' }}>
         <div className="temperature-circle">
           <button
             className="temp-adjust temp-minus"
-            onTouchEnd={stopChangingLuminosity}
-            onTouchStart={() => startChangingLuminosity(-1)}
-            onMouseDown={() => startChangingLuminosity(-1)}
-            onMouseUp={stopChangingLuminosity}
-            onMouseLeave={stopChangingLuminosity} // Stop if the mouse leaves the button
+            onClick={() => handleLuminosityChange(-1)}
+            aria-label="Decrease brightness"
           >
             -
           </button>
@@ -122,11 +194,8 @@ const LightsControlPage: React.FC<LightsControlPageProps> = ({ deviceId }) => {
           </div>
           <button
             className="temp-adjust temp-plus"
-            onTouchEnd={stopChangingLuminosity}
-            onTouchStart={() => startChangingLuminosity(1)}
-            onMouseDown={() => startChangingLuminosity(1)}
-            onMouseUp={stopChangingLuminosity}
-            onMouseLeave={stopChangingLuminosity} // Stop if the mouse leaves the button
+            onClick={() => handleLuminosityChange(1)}
+            aria-label="Increase brightness"
           >
             +
           </button>
@@ -134,14 +203,12 @@ const LightsControlPage: React.FC<LightsControlPageProps> = ({ deviceId }) => {
       </div>
 
       {/* Modes */}
-      <div className="modes" style={{padding: '20px', borderRadius:'20px', boxShadow:'0 4px 8px rgba(0, 0, 0, 0.2)'}}>
+      <div className="modes" style={{ padding: '20px', borderRadius: '20px', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)' }}>
         {modes.map((mode) => (
           <button
-            key={mode.name}
-            className={`mode-button ${
-              activeMode === mode.name.toLowerCase() && !isManuallyAdjusted ? "active" : ""
-            }`}
-            onClick={() => handleModeChange(mode.name.toLowerCase())}
+            key={mode.value}
+            className={`mode-button ${activeMode === mode.value ? "active" : ""}`}
+            onClick={() => handleModeChange(mode.value)}
           >
             <span>{mode.icon}</span>
             {mode.name}
@@ -150,14 +217,18 @@ const LightsControlPage: React.FC<LightsControlPageProps> = ({ deviceId }) => {
       </div>
 
       {/* Settings */}
-      <div className="settings" style={{padding: '20px', borderRadius:'20px', boxShadow:'0 4px 8px rgba(0, 0, 0, 0.2)'}}>
-        {settings.map((setting, index) => (
+      <div className="settings" style={{ padding: '20px', borderRadius: '20px', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)' }}>
+        {settings.map((setting) => (
           <div
-            key={setting.name}
-            className={`setting-item ${
-              index === 1 && ecoMode ? "eco-active" : ""
-            }`} // Add a class when Eco mode is active
-            onClick={index === 1 ? toggleEcoMode : undefined} // Toggle Eco mode on "Eco On"
+            key={setting.value}
+            style={{
+              cursor: 'pointer',
+              padding: '10px',
+              color: autoMode === setting.value ? '#6cc358' : 'inherit',
+              transition: 'background-color 0.3s, color 0.3s, border-color 0.3s',
+            }}
+            className={`setting-item ${autoMode === setting.value ? "active" : ""}`}
+            onClick={() => handleSettingSelection(setting.value)}
           >
             <p className="setting-name">{setting.name}</p>
             <p className="setting-description">{setting.description}</p>
@@ -184,9 +255,10 @@ const LightsControlPage: React.FC<LightsControlPageProps> = ({ deviceId }) => {
           bg={power ? "#6cc358" : "white"}
           color={power ? "white" : "#6cc358"}
           _hover={{ bg: power ? "#6cc358" : "white" }}
-          onClick={() => setPower(true)}
+          onClick={() => updatePowerState(true)}
+          aria-label="Turn on"
         >
-          Off
+          On
         </Button>
         <Button
           flex="1"
@@ -194,9 +266,10 @@ const LightsControlPage: React.FC<LightsControlPageProps> = ({ deviceId }) => {
           bg={!power ? "#6cc358" : "white"}
           color={!power ? "white" : "#6cc358"}
           _hover={{ bg: !power ? "#6cc358" : "white" }}
-          onClick={() => setPower(false)}
+          onClick={() => updatePowerState(false)}
+          aria-label="Turn off"
         >
-          On
+          Off
         </Button>
       </Box>
     </div>

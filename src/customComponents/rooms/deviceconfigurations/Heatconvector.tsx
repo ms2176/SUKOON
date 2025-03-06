@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import "../DeviceControlPage.css"; // Updated styles
-import { Box, Button, Spinner } from "@chakra-ui/react";
+import { Box, Button, Spinner, Stack, Text } from "@chakra-ui/react";
 import { useNavigate, useParams } from 'react-router-dom'; // Import useParams
 import { getFirestore, doc, onSnapshot, updateDoc } from "firebase/firestore";
 
@@ -14,6 +14,7 @@ const HeatConvector: React.FC<HeatConvectorProps> = ({ deviceId }) => {
   const [loading, setLoading] = useState(true); // Loading state
   const navigate = useNavigate(); // Initialize useNavigate
   const { roomId } = useParams<{ roomId: string }>(); // Extract roomId from the URL
+  const [deviceName, setDeviceName] = useState(""); // Device name state
 
   // Fetch device data from Firestore in real time
   useEffect(() => {
@@ -27,6 +28,8 @@ const HeatConvector: React.FC<HeatConvectorProps> = ({ deviceId }) => {
           const deviceData = deviceDocSnap.data();
           setTemperature(deviceData.temp || 25); // Set temperature
           setPower(deviceData.on || false); // Set power state
+          setDeviceName(deviceData.deviceName || "Unnamed Device"); // Set device name
+
         } else {
           console.error("Device not found");
         }
@@ -92,7 +95,14 @@ const HeatConvector: React.FC<HeatConvectorProps> = ({ deviceId }) => {
       {/* Header */}
       <div className="header" style={{ padding: '20px', borderRadius: '20px', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)' }}>
         <button className="back-button" onClick={() => navigate(`/devices/${roomId}`)}>←</button>
-        <h1>Heat Convector</h1>
+          <Stack display={'flex'} justify={'center'} align={'center'}>
+            <Text fontSize="2xl" fontWeight="bold" color="black" textAlign={'center'} className="deviceNameConfig">
+              {deviceName} {/* Display the device name */}
+            </Text>
+            <Text fontSize="lg" color="black" textAlign={'center'}>
+              Heat Convector {/* Display "Smart Door" below the device name */}
+            </Text>
+          </Stack>
         <div className="power-toggle">
           <label className="toggle-switch">
             <input type="checkbox" checked={power} onChange={togglePower} />

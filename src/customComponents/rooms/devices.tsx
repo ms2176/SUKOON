@@ -63,6 +63,7 @@ const normalizeDeviceType = (deviceType: string): DeviceType => {
 const Devices = () => {
   const { roomId } = useParams<{ roomId: string }>();
   const [devices, setDevices] = useState<Device[]>([]);
+  const [roomName, setRoomName] = useState<string>(''); // State to store the room name
   const [loading, setLoading] = useState(true);
 
   // Fetch room and associated devices
@@ -78,6 +79,8 @@ const Devices = () => {
 
           if (roomDocSnap.exists()) {
             const roomData = roomDocSnap.data();
+            setRoomName(roomData.roomName || 'Room'); // Set the room name
+
             const deviceIds = roomData.devices || []; // Array of device IDs
 
             // Fetch devices associated with the room
@@ -113,7 +116,6 @@ const Devices = () => {
     fetchRoomAndDevices();
   }, [roomId]);
 
-  
   // Get the image for a device based on its type
   const getDeviceImage = (deviceType: DeviceType) => {
     return deviceTypeToImage[deviceType] || LightImg; // Default to LightImg if deviceType is unknown
@@ -128,7 +130,7 @@ const Devices = () => {
   }
 
   return (
-    <Box bg="white" minH="100vh" p={4}>
+    <Box bg="white" minH="100vh" p={4} overflowY={'scroll'} pb={'20%'}>
       {/* Room Header */}
       <Box
         bg="#6CCE58"
@@ -139,10 +141,7 @@ const Devices = () => {
         mb={6}
       >
         <Text fontSize="2xl" fontWeight="bold" color="white" bg={'transparent'}>
-          Room Devices
-        </Text>
-        <Text fontSize="sm" color="whiteAlpha.800" mt={1} bg={'transparent'}>
-          Manage your devices seamlessly
+          {roomName} {/* Display the room name */}
         </Text>
       </Box>
 
@@ -184,7 +183,6 @@ const Devices = () => {
                 </Text>
               </VStack>
             </Link>
-            
           </GridItem>
         ))}
       </Grid>
