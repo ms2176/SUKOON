@@ -3,6 +3,7 @@ import { Box, Grid, GridItem, Text, VStack, Center, Spinner, Image, HStack, Head
 import { Link, useParams } from 'react-router-dom';
 import { getFirestore, doc, getDoc, collection, getDocs, query, where } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom'; // Import useParams
+import AddDevice from './AddDevice'
 
 // Import device images
 import LightImg from '@/images/devicesIcons/lamp.png';
@@ -133,6 +134,9 @@ const Devices = () => {
 
   return (
     <Box bg="white" minH="100vh" p={4} overflowY={'scroll'} pb={'20%'}>
+
+      <AddDevice />
+
       {/* Room Header */}
       <Box
         bg="#6CCE58"
