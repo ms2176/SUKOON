@@ -12,11 +12,10 @@ const Speaker: React.FC<SpeakerPageProps> = ({ deviceId }) => {
   const [volume, setVolume] = useState(25); // Default volume
   const [power, setPower] = useState(true); // Power toggle state
   const [loading, setLoading] = useState(true); // Loading state
-  const [isManuallyAdjusted, setIsManuallyAdjusted] = useState(false); // Track manual adjustments
-  const navigate = useNavigate(); // Initialize useNavigate
-  const { roomId } = useParams<{ roomId: string }>(); // Extract roomId from the URL
   const [deviceName, setDeviceName] = useState(""); // Device name state
   const intervalRef = useRef<NodeJS.Timeout | null>(null); // Ref to store the interval ID
+  const navigate = useNavigate(); // Initialize useNavigate
+  const { roomId } = useParams<{ roomId: string }>(); // Extract roomId from the URL
   const location = useLocation();
 
   const handleBackButtonClick = () => {
@@ -40,7 +39,14 @@ const Speaker: React.FC<SpeakerPageProps> = ({ deviceId }) => {
       const unsubscribe = onSnapshot(deviceDocRef, (deviceDocSnap) => {
         if (deviceDocSnap.exists()) {
           const deviceData = deviceDocSnap.data();
-          setVolume(deviceData.volume || 25); // Set volume
+          // Ensure volume is stored and retrieved as a valid number
+          const vol = parseInt(deviceData.volume || "25", 10);
+          if (!isNaN(vol)) {
+            setVolume(vol); // Set volume if valid
+          } else {
+            console.error("Invalid volume value in Firestore");
+            setVolume(25); // Fallback to default volume
+          }
           setPower(deviceData.on || false); // Set power state
           setDeviceName(deviceData.deviceName || "Unnamed Device"); // Set device name
         } else {
@@ -84,33 +90,28 @@ const Speaker: React.FC<SpeakerPageProps> = ({ deviceId }) => {
     }
   };
 
-  // Handle volume change
-  const handleVolumeChange = (change: number) => {
-    const newVolume = Math.min(100, Math.max(0, volume + change)); // Clamp between 0 and 100
-    updateVolume(newVolume);
+  // Handle continuous volume change
+  const startVolumeChange = (change: number) => {
+    if (intervalRef.current) clearInterval(intervalRef.current); // Clear any existing interval
+    intervalRef.current = setInterval(() => {
+      setVolume((prevVolume) => {
+        const newVolume = Math.min(100, Math.max(0, prevVolume + change));
+        updateVolume(newVolume); // Update Firestore
+        return newVolume;
+      });
+    }, 200); // Adjust the interval speed as needed
+  };
+
+  const stopVolumeChange = () => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current); // Stop the interval
+      intervalRef.current = null;
+    }
   };
 
   // Toggle power state
   const togglePower = () => {
     updatePowerState(!power);
-  };
-
-  // Start changing volume continuously
-  const startChangingVolume = (change: number) => {
-    if (intervalRef.current) return; // Prevent multiple intervals
-
-    intervalRef.current = setInterval(() => {
-      handleVolumeChange(change);
-      setIsManuallyAdjusted(true); // Mark as manually adjusted
-    }, 100); // Adjust the interval speed as needed
-  };
-
-  // Stop changing volume
-  const stopChangingVolume = () => {
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-      intervalRef.current = null;
-    }
   };
 
   if (loading) {
@@ -147,11 +148,11 @@ const Speaker: React.FC<SpeakerPageProps> = ({ deviceId }) => {
         <div className="temperature-circle">
           <button
             className="temp-adjust temp-minus"
-            onTouchEnd={stopChangingVolume}
-            onTouchStart={() => startChangingVolume(-1)}
-            onMouseDown={() => startChangingVolume(-1)}
-            onMouseUp={stopChangingVolume}
-            onMouseLeave={stopChangingVolume} // Stop if the mouse leaves the button
+            onTouchStart={() => startVolumeChange(-1)}
+            onTouchEnd={stopVolumeChange}
+            onMouseDown={() => startVolumeChange(-1)}
+            onMouseUp={stopVolumeChange}
+            onMouseLeave={stopVolumeChange} // Stop if the mouse leaves the button
           >
             -
           </button>
@@ -161,11 +162,11 @@ const Speaker: React.FC<SpeakerPageProps> = ({ deviceId }) => {
           </div>
           <button
             className="temp-adjust temp-plus"
-            onTouchEnd={stopChangingVolume}
-            onTouchStart={() => startChangingVolume(1)}
-            onMouseDown={() => startChangingVolume(1)}
-            onMouseUp={stopChangingVolume}
-            onMouseLeave={stopChangingVolume} // Stop if the mouse leaves the button
+            onTouchStart={() => startVolumeChange(1)}
+            onTouchEnd={stopVolumeChange}
+            onMouseDown={() => startVolumeChange(1)}
+            onMouseUp={stopVolumeChange}
+            onMouseLeave={stopVolumeChange} // Stop if the mouse leaves the button
           >
             +
           </button>

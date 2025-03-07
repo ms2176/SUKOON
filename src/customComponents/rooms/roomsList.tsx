@@ -2,21 +2,9 @@ import { useState, useEffect } from 'react';
 import { Button, Box, Text, Image, Grid, Heading, Flex } from '@chakra-ui/react';
 import { useNavigate } from 'react-router-dom';
 import AddRoom from './addRooms';
-import { getFirestore, collection, query, where, getDocs, addDoc, deleteDoc, doc } from 'firebase/firestore';
+import { getFirestore, collection, query, where, getDocs, deleteDoc, doc } from 'firebase/firestore';
 import DeviceCol from '@/images/devicesIcons/devicesCol.png';
-
-// Import room images (if you want to use default images for rooms)
-import LivingRoomImg from '@/images/roomsImage/livingRoom.jpeg';
-import BedroomImg from '@/images/roomsImage/bedroom.jpg';
-import KidsRoomImg from '@/images/roomsImage/kids.jpg';
-import KitchenImg from '@/images/roomsImage/kitchen.jpg';
-import BathroomImg from '@/images/roomsImage/bathroom.webp';
-import OfficeImg from '@/images/roomsImage/office.jpg';
-import DiningImg from '@/images/roomsImage/Dining.webp';
-import LaundryImg from '@/images/roomsImage/laundry.jpg';
-
-// Placeholder user image
-import PlaceholderUserImage from '@/images/roomsImage/userCircle.png';
+import NoImage from '@/images/noImage.png';
 
 // Define the Room type
 interface Room {
@@ -62,7 +50,7 @@ const RoomList: React.FC<RoomListProps> = () => {
               hubCode: data.hubCode,
               pinned: data.pinned || false,
               devices: data.devices || [],
-              image: data.image || LivingRoomImg, // Use a default image if no image is provided
+              image: data.image || NoImage, // Use a default image if no image is provided
             });
           });
           setRooms(roomsData);
@@ -164,7 +152,7 @@ const RoomList: React.FC<RoomListProps> = () => {
             }}
           >
             <Image
-              src={room.image || LivingRoomImg}
+              src={room.image || NoImage} // Use the image URL from Firestore or fallback
               alt={room.roomName}
               borderRadius="12px"
               objectFit="cover"

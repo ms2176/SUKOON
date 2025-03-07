@@ -1,10 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import "../DeviceControlPage.css"; // Updated styles
-import { Box, Button, Spinner, Stack, Heading, Text } from "@chakra-ui/react";
+import { Box, Button, Spinner, Stack, Text } from "@chakra-ui/react";
 import { BsLightbulbFill, BsLightbulb, BsLightbulbOff } from "react-icons/bs";
 import { useNavigate, useParams, useLocation } from 'react-router-dom'; // Import useParams
 import { getFirestore, doc, onSnapshot, updateDoc } from "firebase/firestore";
-
 
 interface LightsControlPageProps {
   deviceId: string;
@@ -16,10 +15,11 @@ const LightsControlPage: React.FC<LightsControlPageProps> = ({ deviceId }) => {
   const [activeMode, setActiveMode] = useState<string | null>(null); // Track active mode
   const [autoMode, setAutoMode] = useState<string>("timer"); // Auto mode state (timer, eco)
   const [loading, setLoading] = useState(true); // Loading state
+  const [deviceName, setDeviceName] = useState(""); // Device name state
+  const intervalRef = useRef<NodeJS.Timeout | null>(null); // Ref for the interval
   const navigate = useNavigate(); // Initialize useNavigate
   const { roomId } = useParams<{ roomId: string }>(); // Extract roomId from the URL
   const location = useLocation();
-  const [deviceName, setDeviceName] = useState(""); // Device name state
 
   // Modes with icons
   const modes = [
@@ -44,12 +44,18 @@ const LightsControlPage: React.FC<LightsControlPageProps> = ({ deviceId }) => {
       const unsubscribe = onSnapshot(deviceDocRef, (deviceDocSnap) => {
         if (deviceDocSnap.exists()) {
           const deviceData = deviceDocSnap.data();
-          setLuminosity(parseInt(deviceData.brightness) || 25); // Set brightness
+          // Ensure luminosity is stored and retrieved as a valid number
+          const brightness = parseInt(deviceData.brightness || "25", 10);
+          if (!isNaN(brightness)) {
+            setLuminosity(brightness); // Set brightness if valid
+          } else {
+            console.error("Invalid brightness value in Firestore");
+            setLuminosity(25); // Fallback to default brightness
+          }
           setPower(deviceData.on || false); // Set power state
           setActiveMode(deviceData.brightnessMode || null); // Set active mode
           setAutoMode(deviceData.autoMode || "timer"); // Set auto mode
           setDeviceName(deviceData.deviceName || "Unnamed Device"); // Set device name
-
         } else {
           console.error("Device not found");
         }
@@ -121,10 +127,23 @@ const LightsControlPage: React.FC<LightsControlPageProps> = ({ deviceId }) => {
     }
   };
 
-  // Handle luminosity change
-  const handleLuminosityChange = (change: number) => {
-    const newLuminosity = Math.min(100, Math.max(0, luminosity + change)); // Clamp between 0 and 100
-    updateBrightness(newLuminosity);
+  // Handle continuous luminosity change
+  const startLuminosityChange = (change: number) => {
+    if (intervalRef.current) clearInterval(intervalRef.current); // Clear any existing interval
+    intervalRef.current = setInterval(() => {
+      setLuminosity((prevLuminosity) => {
+        const newLuminosity = Math.min(100, Math.max(0, prevLuminosity + change)); // Clamp between 0 and 100
+        updateBrightness(newLuminosity); // Update Firestore
+        return newLuminosity;
+      });
+    }, 200); // Adjust the interval speed as needed
+  };
+
+  const stopLuminosityChange = () => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current); // Stop the interval
+      intervalRef.current = null;
+    }
   };
 
   // Toggle power state
@@ -189,7 +208,7 @@ const LightsControlPage: React.FC<LightsControlPageProps> = ({ deviceId }) => {
             {deviceName} {/* Display the device name */}
           </Text>
           <Text fontSize="lg" color="black" textAlign={'center'}>
-            Smart Door {/* Display "Smart Door" below the device name */}
+            Smart Light {/* Display "Smart Light" below the device name */}
           </Text>
         </Stack>
         <div className="power-toggle">
@@ -205,9 +224,11 @@ const LightsControlPage: React.FC<LightsControlPageProps> = ({ deviceId }) => {
         <div className="temperature-circle">
           <button
             className="temp-adjust temp-minus"
-            onClick={() => handleLuminosityChange(-1)}
-            
-            aria-label="Decrease brightness"
+            onTouchStart={() => startLuminosityChange(-1)}
+            onTouchEnd={stopLuminosityChange}
+            onMouseDown={() => startLuminosityChange(-1)}
+            onMouseUp={stopLuminosityChange}
+            onMouseLeave={stopLuminosityChange} // Stop if the mouse leaves the button
           >
             -
           </button>
@@ -217,8 +238,11 @@ const LightsControlPage: React.FC<LightsControlPageProps> = ({ deviceId }) => {
           </div>
           <button
             className="temp-adjust temp-plus"
-            onClick={() => handleLuminosityChange(1)}
-            aria-label="Increase brightness"
+            onTouchStart={() => startLuminosityChange(1)}
+            onTouchEnd={stopLuminosityChange}
+            onMouseDown={() => startLuminosityChange(1)}
+            onMouseUp={stopLuminosityChange}
+            onMouseLeave={stopLuminosityChange} // Stop if the mouse leaves the button
           >
             +
           </button>

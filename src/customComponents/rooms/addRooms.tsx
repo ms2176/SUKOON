@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { doc, setDoc, collection } from 'firebase/firestore';
+import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage'; // Firebase Storage functions
 import './addRooms.css';
-import { getFirestore, query, where, getDocs, addDoc } from 'firebase/firestore';
+import { getFirestore } from 'firebase/firestore';
 
 interface AddRoomProps {
   onClose: () => void;
@@ -11,8 +12,9 @@ const AddRoom: React.FC<AddRoomProps> = ({ onClose }) => {
   const [roomName, setRoomName] = useState('');
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false); // Track upload state
 
-  const defaultImageUrl = '/path/to/local/fallback-image.png'; // Use a local fallback image
+  const defaultImageUrl = '@/images/noImage.png'; // Use a local fallback image
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -36,10 +38,23 @@ const AddRoom: React.FC<AddRoomProps> = ({ onClose }) => {
       return;
     }
 
+    setIsUploading(true); // Start loading state
+
     try {
       const db = getFirestore();
+      const storage = getStorage(); // Initialize Firebase Storage
+
       // Create a reference to a new document with a unique auto-generated ID
       const newRoomRef = doc(collection(db, 'rooms'));
+
+      let imageUrl = null;
+
+      // Upload the image to Firebase Storage if a file is selected
+      if (imageFile) {
+        const storageRef = ref(storage, `room-images/${newRoomRef.id}`); // Use room ID as the file name
+        await uploadBytes(storageRef, imageFile); // Upload the file
+        imageUrl = await getDownloadURL(storageRef); // Get the download URL
+      }
 
       // Prepare the room data
       const roomData = {
@@ -48,11 +63,11 @@ const AddRoom: React.FC<AddRoomProps> = ({ onClose }) => {
         devices: [], // Initially empty array for devices
         hubCode: '333ttt', // Replace with the actual hubCode if dynamic
         pinned: false, // Default value for pinned
+        image: imageUrl || defaultImageUrl, // Store the image URL (or fallback if no image)
       };
 
       // Add the new room document to Firestore
       await setDoc(newRoomRef, roomData);
-
 
       // Reset the form fields
       setRoomName('');
@@ -64,6 +79,8 @@ const AddRoom: React.FC<AddRoomProps> = ({ onClose }) => {
     } catch (error) {
       console.error('Error adding room:', error);
       alert('An error occurred while adding the room. Please try again.');
+    } finally {
+      setIsUploading(false); // End loading state
     }
   };
 
@@ -108,8 +125,12 @@ const AddRoom: React.FC<AddRoomProps> = ({ onClose }) => {
           </div>
         </div>
         <div className="modal-footer">
-          <button className="btn btn-primary" onClick={handleSubmit}>
-            Add Room
+          <button
+            className="btn btn-primary"
+            onClick={handleSubmit}
+            disabled={isUploading} // Disable button while uploading
+          >
+            {isUploading ? 'Uploading...' : 'Add Room'}
           </button>
           <button className="btn btn-secondary" onClick={onClose}>
             Cancel

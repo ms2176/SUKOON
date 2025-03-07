@@ -13,11 +13,11 @@ const TV: React.FC<TVPageProps> = ({ deviceId }) => {
   const [volume, setVolume] = useState(25); // Default volume
   const [power, setPower] = useState(true); // Power toggle state
   const [loading, setLoading] = useState(true); // Loading state
-  const navigate = useNavigate(); // Initialize useNavigate
-  const { roomId } = useParams<{ roomId: string }>(); // Extract roomId from the URL
   const [deviceName, setDeviceName] = useState(""); // Device name state
   const volumeIntervalRef = useRef<NodeJS.Timeout | null>(null); // Ref for volume interval
   const brightnessIntervalRef = useRef<NodeJS.Timeout | null>(null); // Ref for brightness interval
+  const navigate = useNavigate(); // Initialize useNavigate
+  const { roomId } = useParams<{ roomId: string }>(); // Extract roomId from the URL
   const location = useLocation();
 
   // Fetch device data from Firestore in real time
@@ -30,8 +30,24 @@ const TV: React.FC<TVPageProps> = ({ deviceId }) => {
       const unsubscribe = onSnapshot(deviceDocRef, (deviceDocSnap) => {
         if (deviceDocSnap.exists()) {
           const deviceData = deviceDocSnap.data();
-          setBrightness(deviceData.brightness || 50); // Set brightness
-          setVolume(deviceData.volume || 25); // Set volume
+          // Ensure brightness and volume are valid numbers
+          const brightnessValue = parseInt(deviceData.brightness || "50", 10);
+          const volumeValue = parseInt(deviceData.volume || "25", 10);
+
+          if (!isNaN(brightnessValue)) {
+            setBrightness(brightnessValue); // Set brightness if valid
+          } else {
+            console.error("Invalid brightness value in Firestore");
+            setBrightness(50); // Fallback to default brightness
+          }
+
+          if (!isNaN(volumeValue)) {
+            setVolume(volumeValue); // Set volume if valid
+          } else {
+            console.error("Invalid volume value in Firestore");
+            setVolume(25); // Fallback to default volume
+          }
+
           setPower(deviceData.on || false); // Set power state
           setDeviceName(deviceData.deviceName || "Unnamed Device"); // Set device name
         } else {
@@ -52,7 +68,7 @@ const TV: React.FC<TVPageProps> = ({ deviceId }) => {
       const deviceDocRef = doc(db, "devices", deviceId);
 
       try {
-        await updateDoc(deviceDocRef, { brightness: newBrightness });
+        await updateDoc(deviceDocRef, { brightness: newBrightness.toString() }); // Update brightness as a string
         setBrightness(newBrightness); // Update local state
       } catch (error) {
         console.error("Error updating brightness:", error);
@@ -67,7 +83,7 @@ const TV: React.FC<TVPageProps> = ({ deviceId }) => {
       const deviceDocRef = doc(db, "devices", deviceId);
 
       try {
-        await updateDoc(deviceDocRef, { volume: newVolume });
+        await updateDoc(deviceDocRef, { volume: newVolume.toString() }); // Update volume as a string
         setVolume(newVolume); // Update local state
       } catch (error) {
         console.error("Error updating volume:", error);
@@ -90,33 +106,47 @@ const TV: React.FC<TVPageProps> = ({ deviceId }) => {
     }
   };
 
-  // Handle volume change
-  const handleVolumeChange = (change: number) => {
-    const newVolume = Math.min(100, Math.max(0, volume + change)); // Clamp between 0 and 100
-    updateVolume(newVolume);
+  // Handle continuous brightness change
+  const startBrightnessChange = (change: number) => {
+    if (brightnessIntervalRef.current) clearInterval(brightnessIntervalRef.current); // Clear any existing interval
+    brightnessIntervalRef.current = setInterval(() => {
+      setBrightness((prevBrightness) => {
+        const newBrightness = Math.min(100, Math.max(0, prevBrightness + change)); // Clamp between 0 and 100
+        updateBrightness(newBrightness); // Update Firestore
+        return newBrightness;
+      });
+    }, 200); // Adjust the interval speed as needed
   };
 
-  // Handle brightness change
-  const handleBrightnessChange = (change: number) => {
-    const newBrightness = Math.min(100, Math.max(0, brightness + change)); // Clamp between 0 and 100
-    updateBrightness(newBrightness);
+  const stopBrightnessChange = () => {
+    if (brightnessIntervalRef.current) {
+      clearInterval(brightnessIntervalRef.current); // Stop the interval
+      brightnessIntervalRef.current = null;
+    }
   };
 
-  // Start changing volume continuously
-  const startChangingVolume = (change: number) => {
-    if (volumeIntervalRef.current) return; // Prevent multiple intervals
-
+  // Handle continuous volume change
+  const startVolumeChange = (change: number) => {
+    if (volumeIntervalRef.current) clearInterval(volumeIntervalRef.current); // Clear any existing interval
     volumeIntervalRef.current = setInterval(() => {
-      handleVolumeChange(change);
-    }, 100); // Adjust the interval speed as needed
+      setVolume((prevVolume) => {
+        const newVolume = Math.min(100, Math.max(0, prevVolume + change)); // Clamp between 0 and 100
+        updateVolume(newVolume); // Update Firestore
+        return newVolume;
+      });
+    }, 200); // Adjust the interval speed as needed
   };
 
-  // Stop changing volume
-  const stopChangingVolume = () => {
+  const stopVolumeChange = () => {
     if (volumeIntervalRef.current) {
-      clearInterval(volumeIntervalRef.current);
+      clearInterval(volumeIntervalRef.current); // Stop the interval
       volumeIntervalRef.current = null;
     }
+  };
+
+  // Toggle power state
+  const togglePower = () => {
+    updatePowerState(!power);
   };
 
   const handleBackButtonClick = () => {
@@ -128,28 +158,6 @@ const TV: React.FC<TVPageProps> = ({ deviceId }) => {
     } else {
       navigate('/'); // Fallback to home if no roomId or fromAllDevices state
     }
-  };
-
-  // Start changing brightness continuously
-  const startChangingBrightness = (change: number) => {
-    if (brightnessIntervalRef.current) return; // Prevent multiple intervals
-
-    brightnessIntervalRef.current = setInterval(() => {
-      handleBrightnessChange(change);
-    }, 100); // Adjust the interval speed as needed
-  };
-
-  // Stop changing brightness
-  const stopChangingBrightness = () => {
-    if (brightnessIntervalRef.current) {
-      clearInterval(brightnessIntervalRef.current);
-      brightnessIntervalRef.current = null;
-    }
-  };
-
-  // Toggle power state
-  const togglePower = () => {
-    updatePowerState(!power);
   };
 
   if (loading) {
@@ -186,11 +194,11 @@ const TV: React.FC<TVPageProps> = ({ deviceId }) => {
         <div className="temperature-circle">
           <button
             className="temp-adjust temp-minus"
-            onTouchEnd={stopChangingVolume}
-            onTouchStart={() => startChangingVolume(-1)}
-            onMouseDown={() => startChangingVolume(-1)}
-            onMouseUp={stopChangingVolume}
-            onMouseLeave={stopChangingVolume} // Stop if the mouse leaves the button
+            onTouchStart={() => startVolumeChange(-1)}
+            onTouchEnd={stopVolumeChange}
+            onMouseDown={() => startVolumeChange(-1)}
+            onMouseUp={stopVolumeChange}
+            onMouseLeave={stopVolumeChange} // Stop if the mouse leaves the button
           >
             -
           </button>
@@ -200,11 +208,11 @@ const TV: React.FC<TVPageProps> = ({ deviceId }) => {
           </div>
           <button
             className="temp-adjust temp-plus"
-            onTouchEnd={stopChangingVolume}
-            onTouchStart={() => startChangingVolume(1)}
-            onMouseDown={() => startChangingVolume(1)}
-            onMouseUp={stopChangingVolume}
-            onMouseLeave={stopChangingVolume} // Stop if the mouse leaves the button
+            onTouchStart={() => startVolumeChange(1)}
+            onTouchEnd={stopVolumeChange}
+            onMouseDown={() => startVolumeChange(1)}
+            onMouseUp={stopVolumeChange}
+            onMouseLeave={stopVolumeChange} // Stop if the mouse leaves the button
           >
             +
           </button>
@@ -216,11 +224,11 @@ const TV: React.FC<TVPageProps> = ({ deviceId }) => {
         <div className="temperature-circle">
           <button
             className="temp-adjust temp-minus"
-            onTouchEnd={stopChangingBrightness}
-            onTouchStart={() => startChangingBrightness(-1)}
-            onMouseDown={() => startChangingBrightness(-1)}
-            onMouseUp={stopChangingBrightness}
-            onMouseLeave={stopChangingBrightness} // Stop if the mouse leaves the button
+            onTouchStart={() => startBrightnessChange(-1)}
+            onTouchEnd={stopBrightnessChange}
+            onMouseDown={() => startBrightnessChange(-1)}
+            onMouseUp={stopBrightnessChange}
+            onMouseLeave={stopBrightnessChange} // Stop if the mouse leaves the button
           >
             -
           </button>
@@ -230,11 +238,11 @@ const TV: React.FC<TVPageProps> = ({ deviceId }) => {
           </div>
           <button
             className="temp-adjust temp-plus"
-            onTouchEnd={stopChangingBrightness}
-            onTouchStart={() => startChangingBrightness(1)}
-            onMouseDown={() => startChangingBrightness(1)}
-            onMouseUp={stopChangingBrightness}
-            onMouseLeave={stopChangingBrightness} // Stop if the mouse leaves the button
+            onTouchStart={() => startBrightnessChange(1)}
+            onTouchEnd={stopBrightnessChange}
+            onMouseDown={() => startBrightnessChange(1)}
+            onMouseUp={stopBrightnessChange}
+            onMouseLeave={stopBrightnessChange} // Stop if the mouse leaves the button
           >
             +
           </button>
