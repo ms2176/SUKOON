@@ -67,6 +67,7 @@ const Devices = () => {
   const [devices, setDevices] = useState<Device[]>([]);
   const [roomName, setRoomName] = useState<string>(''); // State to store the room name
   const [loading, setLoading] = useState(true);
+  const [isAddDeviceVisible, setIsAddDeviceVisible] = useState(false); // State to manage AddDevice visibility
 
   const navigate = useNavigate();
   // Fetch room and associated devices
@@ -135,7 +136,7 @@ const Devices = () => {
   return (
     <Box bg="white" minH="100vh" p={4} overflowY={'scroll'} pb={'20%'}>
 
-      <AddDevice />
+      {isAddDeviceVisible && <AddDevice roomId={roomId} onClose={() => setIsAddDeviceVisible(false)} />}
 
       {/* Room Header */}
       <Box
@@ -155,7 +156,7 @@ const Devices = () => {
             {roomName} {/* Display the room name */}
           </Heading>
 
-          <Heading fontSize="2xl" fontWeight="bold" color="white" bg="transparent">
+          <Heading fontSize="2xl" fontWeight="bold" color="white" bg="transparent" onClick={() => setIsAddDeviceVisible(true)}>
             +
           </Heading>
         </HStack>

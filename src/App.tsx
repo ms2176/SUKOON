@@ -28,6 +28,7 @@ import { useState } from 'react';
 import Verification_hold from './customComponents/login/verification_hold'
 import Alldevices from './customComponents/rooms/Alldevices'
 import DeviceControlPageNoRoom from './customComponents/rooms/DeviceControlPageNoRoom';
+import AddDevice from './customComponents/rooms/AddDevice';
 
 interface Home {
   homeName: string;
@@ -88,6 +89,12 @@ const App = () => {
 <Route path="/initial" element={
           <AuthenticatedLayout selectedHome={selectedHome}>
             <InitialView />
+          </AuthenticatedLayout>
+        } /> {/* Homepage */}
+
+<Route path="/adddevice" element={
+          <AuthenticatedLayout selectedHome={selectedHome}>
+            <AddDevice />
           </AuthenticatedLayout>
         } /> {/* Homepage */}
 
