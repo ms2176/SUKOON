@@ -13,6 +13,7 @@ import SpeakerImg from '@/images/devicesIcons/speaker.png';
 import ThermostatImg from '@/images/devicesIcons/thermostat.png';
 import DoorbellImg from '@/images/devicesIcons/smart-door.png';
 import HeatconvectorImg from '@/images/devicesIcons/heater-convector.png';
+import Dishwasher from '@/images/devicesIcons/dishwasher.png'
 
 // Define the Device type
 type DeviceType =
@@ -24,7 +25,8 @@ type DeviceType =
   | 'speaker'
   | 'thermostat'
   | 'door'
-  | 'heatConvector';
+  | 'heatconvector'
+  | 'dishwasher';
 
 interface Device {
   id: string;
@@ -44,7 +46,8 @@ const deviceTypeToImage: Record<DeviceType, string> = {
   speaker: SpeakerImg,
   thermostat: ThermostatImg,
   door: DoorbellImg,
-  heatConvector: HeatconvectorImg,
+  heatconvector: HeatconvectorImg,
+  dishwasher: Dishwasher
 };
 
 // Normalize device type to match the keys in deviceTypeToImage
@@ -142,7 +145,7 @@ const AllDevices = () => {
           </Heading>
 
           <Heading fontSize="2xl" fontWeight="bold" color="white" bg="transparent">
-            +
+            
           </Heading>
         </HStack>
       </Box>
@@ -157,7 +160,7 @@ const AllDevices = () => {
                 bg="white"
                 borderRadius="lg"
                 boxShadow="base"
-                border={device.isOn ? '2px solid #66BB6A' : '1px solid #e0e0e0'}
+                border={'1px solid #e0e0e0'}
                 transition="all 0.3s ease"
                 _hover={{
                   transform: 'scale(1.05)',
@@ -174,7 +177,7 @@ const AllDevices = () => {
                   alt={device.name}
                   boxSize="64px"
                   borderRadius="full"
-                  bg={device.isOn ? 'green.50' : 'gray.50'}
+                  bg={'gray.50'}
                   p={2}
                   transition="all 0.3s ease"
                 />

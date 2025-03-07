@@ -9,12 +9,21 @@ import './EditHomes.css';
 import { getAuth } from "firebase/auth";
 import { getFirestore, collection, query, where, getDocs, updateDoc } from "firebase/firestore";
 
+interface Home {
+  homeName: string;
+  homeType: string;
+  hubCode: string;
+}
+
 interface EditHomesProps {
   closeEditHomes: () => void;
   onHomeDeleted: () => void; // Callback to notify parent component of a deleted home
+  onHomeRenamed: () => void;
+  homes: Home[]; // Add the homes prop
+
 }
 
-const EditHomes: React.FC<EditHomesProps> = ({ closeEditHomes, onHomeDeleted }) => {
+const EditHomes: React.FC<EditHomesProps> = ({ closeEditHomes, onHomeDeleted, onHomeRenamed, homes }) => {
   const [selectedHome, setSelectedHome] = useState<string | null>(null); // State for selected home name
   const [newHomeName, setNewHomeName] = useState(""); // State for new home name input
   const [error, setError] = useState(""); // State for error messages
@@ -119,6 +128,10 @@ const EditHomes: React.FC<EditHomesProps> = ({ closeEditHomes, onHomeDeleted }) 
       setSelectedHome(null);
       setNewHomeName("");
       setError("");
+
+      // Notify the parent component that a home has been renamed
+      onHomeRenamed(); // Call the callback
+
       alert("Home renamed successfully.");
     } catch (error) {
       console.error("Error renaming home:", error);
@@ -161,7 +174,7 @@ const EditHomes: React.FC<EditHomesProps> = ({ closeEditHomes, onHomeDeleted }) 
 
           <HStack bg={"transparent"} spaceX={"20%"}>
             {/* Listbox to select a home */}
-            <ListboxComp onSelectHome={handleSelectHome} />
+            <ListboxComp onSelectHome={handleSelectHome} homes={homes}/>
 
             <Stack bg={"transparent"}>
               {/* Display the selected home */}

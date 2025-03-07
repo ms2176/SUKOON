@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react';
 import { Box, Grid, GridItem, Text, VStack, Center, Spinner, Image, HStack, Heading } from '@chakra-ui/react';
 import { Link, useParams } from 'react-router-dom';
 import { getFirestore, doc, getDoc, collection, getDocs, query, where } from 'firebase/firestore';
-import { useNavigate } from 'react-router-dom'; // Import useParams
-import AddDevice from './AddDevice'
+import { useNavigate } from 'react-router-dom';
+import AddDevice from './AddDevice';
 
 // Import device images
 import LightImg from '@/images/devicesIcons/lamp.png';
@@ -15,8 +15,8 @@ import SpeakerImg from '@/images/devicesIcons/speaker.png';
 import ThermostatImg from '@/images/devicesIcons/thermostat.png';
 import DoorbellImg from '@/images/devicesIcons/smart-door.png';
 import HeatconvectorImg from '@/images/devicesIcons/heater-convector.png';
+import Dishwasher from '@/images/devicesIcons/dishwasher.png';
 
-// Define the Device type
 type DeviceType =
   | 'light'
   | 'tv'
@@ -26,13 +26,15 @@ type DeviceType =
   | 'speaker'
   | 'thermostat'
   | 'door'
-  | 'heatConvector';
+  | 'heatconvector'
+  | 'dishwasher';
 
 interface Device {
   id: string;
   name: string;
   isOn: boolean;
   deviceType: DeviceType;
+  hubCode: string; // Add hubCode to the Device interface
 }
 
 // Map device types to their corresponding images
@@ -45,7 +47,8 @@ const deviceTypeToImage: Record<DeviceType, string> = {
   speaker: SpeakerImg,
   thermostat: ThermostatImg,
   door: DoorbellImg,
-  heatConvector: HeatconvectorImg,
+  heatconvector: HeatconvectorImg,
+  dishwasher: Dishwasher
 };
 
 // Normalize device type to match the keys in deviceTypeToImage
@@ -70,53 +73,54 @@ const Devices = () => {
   const [isAddDeviceVisible, setIsAddDeviceVisible] = useState(false); // State to manage AddDevice visibility
 
   const navigate = useNavigate();
+
   // Fetch room and associated devices
-  useEffect(() => {
-    const fetchRoomAndDevices = async () => {
-      if (roomId) {
-        const db = getFirestore();
+  const fetchRoomAndDevices = async () => {
+    if (roomId) {
+      const db = getFirestore();
 
-        try {
-          // Fetch the room document
-          const roomDocRef = doc(db, 'rooms', roomId);
-          const roomDocSnap = await getDoc(roomDocRef);
+      try {
+        // Fetch the room document
+        const roomDocRef = doc(db, 'rooms', roomId);
+        const roomDocSnap = await getDoc(roomDocRef);
 
-          if (roomDocSnap.exists()) {
-            const roomData = roomDocSnap.data();
-            setRoomName(roomData.roomName || 'Room'); // Set the room name
+        if (roomDocSnap.exists()) {
+          const roomData = roomDocSnap.data();
+          setRoomName(roomData.roomName || 'Room'); // Set the room name
 
-            const deviceIds = roomData.devices || []; // Array of device IDs
+          const deviceIds = roomData.devices || []; // Array of device IDs
 
-            // Fetch devices associated with the room
-            const devicesRef = collection(db, 'devices');
-            const devicesQuery = query(devicesRef, where('__name__', 'in', deviceIds)); // Query devices by IDs
-            const devicesSnapshot = await getDocs(devicesQuery);
+          // Fetch devices associated with the room
+          const devicesRef = collection(db, 'devices');
+          const devicesQuery = query(devicesRef, where('__name__', 'in', deviceIds)); // Query devices by IDs
+          const devicesSnapshot = await getDocs(devicesQuery);
 
-            const devicesData: Device[] = [];
-            devicesSnapshot.forEach((doc) => {
-              const data = doc.data();
-              const deviceType = normalizeDeviceType(data.deviceType || 'light'); // Normalize the device type
-              console.log(`Device ID: ${doc.id}, Device Type: ${deviceType}`); // Log the device type
-              devicesData.push({
-                id: doc.id,
-                name: data.deviceName || 'Unnamed Device',
-                isOn: false,
-                deviceType: deviceType,
-              });
+          const devicesData: Device[] = [];
+          devicesSnapshot.forEach((doc) => {
+            const data = doc.data();
+            const deviceType = normalizeDeviceType(data.deviceType || 'light'); // Normalize the device type
+            console.log(`Device ID: ${doc.id}, Device Type: ${deviceType}`); // Log the device type
+            devicesData.push({
+              id: doc.id,
+              name: data.deviceName || 'Unnamed Device',
+              isOn: false,
+              deviceType: deviceType,
             });
+          });
 
-            setDevices(devicesData);
-          } else {
-            console.error('Room not found');
-          }
-        } catch (error) {
-          console.error('Error fetching room and devices:', error);
-        } finally {
-          setLoading(false);
+          setDevices(devicesData);
+        } else {
+          console.error('Room not found');
         }
+      } catch (error) {
+        console.error('Error fetching room and devices:', error);
+      } finally {
+        setLoading(false);
       }
-    };
+    }
+  };
 
+  useEffect(() => {
     fetchRoomAndDevices();
   }, [roomId]);
 
@@ -135,8 +139,14 @@ const Devices = () => {
 
   return (
     <Box bg="white" minH="100vh" p={4} overflowY={'scroll'} pb={'20%'}>
-
-      {isAddDeviceVisible && <AddDevice roomId={roomId} onClose={() => setIsAddDeviceVisible(false)} />}
+      {/* Pass the refreshDevices function to AddDevice */}
+      {isAddDeviceVisible && (
+        <AddDevice
+          roomId={roomId}
+          onClose={() => setIsAddDeviceVisible(false)}
+          refreshDevices={fetchRoomAndDevices} // Pass the refresh function
+        />
+      )}
 
       {/* Room Header */}
       <Box
@@ -160,8 +170,6 @@ const Devices = () => {
             +
           </Heading>
         </HStack>
-
-        
       </Box>
 
       {/* Devices Grid */}

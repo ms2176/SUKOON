@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import "../DeviceControlPage.css"; // Updated styles
 import { Box, Button, Spinner, Stack, Text } from "@chakra-ui/react";
 import { useNavigate, useParams, useLocation } from 'react-router-dom'; // Import useParams
@@ -12,10 +12,14 @@ const HeatConvector: React.FC<HeatConvectorProps> = ({ deviceId }) => {
   const [temperature, setTemperature] = useState(25); // Default temperature
   const [power, setPower] = useState(true); // Power toggle state
   const [loading, setLoading] = useState(true); // Loading state
+  const [deviceName, setDeviceName] = useState(""); // Device name state
   const navigate = useNavigate(); // Initialize useNavigate
   const { roomId } = useParams<{ roomId?: string }>(); // Extract roomId from the URL
-  const [deviceName, setDeviceName] = useState(""); // Device name state
   const location = useLocation();
+
+  // Ref for the interval to handle continuous temperature change
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+
   // Fetch device data from Firestore in real time
   useEffect(() => {
     if (deviceId) {
@@ -26,10 +30,16 @@ const HeatConvector: React.FC<HeatConvectorProps> = ({ deviceId }) => {
       const unsubscribe = onSnapshot(deviceDocRef, (deviceDocSnap) => {
         if (deviceDocSnap.exists()) {
           const deviceData = deviceDocSnap.data();
-          setTemperature(deviceData.temp || 25); // Set temperature
+          // Ensure temperature is stored and retrieved as a valid number
+          const temp = parseInt(deviceData.temp || "25", 10);
+          if (!isNaN(temp)) {
+            setTemperature(temp); // Set temperature if valid
+          } else {
+            console.error("Invalid temperature value in Firestore");
+            setTemperature(25); // Fallback to default temperature
+          }
           setPower(deviceData.on || false); // Set power state
           setDeviceName(deviceData.deviceName || "Unnamed Device"); // Set device name
-
         } else {
           console.error("Device not found");
         }
@@ -48,11 +58,31 @@ const HeatConvector: React.FC<HeatConvectorProps> = ({ deviceId }) => {
       const deviceDocRef = doc(db, "devices", deviceId);
 
       try {
-        await updateDoc(deviceDocRef, { temp: newTemp.toString() }); // Update temp as a string
+        // Store temperature as a string in Firestore
+        await updateDoc(deviceDocRef, { temp: newTemp.toString() });
         setTemperature(newTemp); // Update local state
       } catch (error) {
         console.error("Error updating temperature:", error);
       }
+    }
+  };
+
+  // Handle continuous temperature change
+  const startTemperatureChange = (change: number) => {
+    if (intervalRef.current) clearInterval(intervalRef.current); // Clear any existing interval
+    intervalRef.current = setInterval(() => {
+      setTemperature((prevTemp) => {
+        const newTemp = Math.min(100, Math.max(0, prevTemp + change)); // Clamp between 0 and 100
+        updateTemperature(newTemp); // Update Firestore
+        return newTemp;
+      });
+    }, 200); // Adjust the interval speed as needed
+  };
+
+  const stopTemperatureChange = () => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current); // Stop the interval
+      intervalRef.current = null;
     }
   };
 
@@ -69,12 +99,6 @@ const HeatConvector: React.FC<HeatConvectorProps> = ({ deviceId }) => {
         console.error("Error updating power state:", error);
       }
     }
-  };
-
-  // Handle temperature change
-  const handleTemperatureChange = (change: number) => {
-    const newTemp = Math.min(100, Math.max(0, temperature + change)); // Clamp between 0 and 100
-    updateTemperature(newTemp);
   };
 
   // Toggle power state
@@ -111,7 +135,7 @@ const HeatConvector: React.FC<HeatConvectorProps> = ({ deviceId }) => {
               {deviceName} {/* Display the device name */}
             </Text>
             <Text fontSize="lg" color="black" textAlign={'center'}>
-              Heat Convector {/* Display "Smart Door" below the device name */}
+              Heat Convector {/* Display "Heat Convector" below the device name */}
             </Text>
           </Stack>
         <div className="power-toggle">
@@ -128,6 +152,11 @@ const HeatConvector: React.FC<HeatConvectorProps> = ({ deviceId }) => {
           <button
             className="temp-adjust temp-minus"
             onClick={() => handleTemperatureChange(-1)}
+            onTouchStart={() => startTemperatureChange(-1)}
+            onTouchEnd={stopTemperatureChange}
+            onMouseDown={() => startTemperatureChange(-1)}
+            onMouseUp={stopTemperatureChange}
+            onMouseLeave={stopTemperatureChange} // Stop if mouse leaves the button
             aria-label="Decrease temperature"
           >
             -
@@ -139,6 +168,11 @@ const HeatConvector: React.FC<HeatConvectorProps> = ({ deviceId }) => {
           <button
             className="temp-adjust temp-plus"
             onClick={() => handleTemperatureChange(1)}
+            onTouchStart={() => startTemperatureChange(1)}
+            onTouchEnd={stopTemperatureChange}
+            onMouseDown={() => startTemperatureChange(1)}
+            onMouseUp={stopTemperatureChange}
+            onMouseLeave={stopTemperatureChange} // Stop if mouse leaves the button
             aria-label="Increase temperature"
           >
             +

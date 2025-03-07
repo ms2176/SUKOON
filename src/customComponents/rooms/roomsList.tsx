@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Button, Box, Text, Image, Grid, Heading, Flex } from '@chakra-ui/react';
 import { useNavigate } from 'react-router-dom';
 import AddRoom from './addRooms';
-import { getFirestore, collection, query, where, getDocs, addDoc } from 'firebase/firestore';
+import { getFirestore, collection, query, where, getDocs, addDoc, deleteDoc, doc } from 'firebase/firestore';
 import DeviceCol from '@/images/devicesIcons/devicesCol.png';
 
 // Import room images (if you want to use default images for rooms)
@@ -41,6 +41,7 @@ const RoomList: React.FC<RoomListProps> = () => {
   const navigate = useNavigate();
   const [showAddRoom, setShowAddRoom] = useState(false);
   const [rooms, setRooms] = useState<Room[]>([]);
+  const [deleteMode, setDeleteMode] = useState(false); // State to track delete mode
 
   // Fetch rooms when selectedHome changes
   useEffect(() => {
@@ -74,49 +75,21 @@ const RoomList: React.FC<RoomListProps> = () => {
     fetchRooms();
   }, [selectedHome]);
 
-  const handleAddRoom = async (newRoom: { name: string; image?: string }) => {
-    if (!selectedHome) {
-      alert('No home selected. Please select a home first.');
-      return;
-    }
-
+  // Function to delete a room
+  const handleDeleteRoom = async (roomId: string) => {
     const db = getFirestore();
-
     try {
-      // Add a new room to the "rooms" collection
-      const newRoomRef = await addDoc(collection(db, 'rooms'), {
-        devices: [], // Empty array for devices
-        hubCode: selectedHome.hubCode, // Set hubCode to the selected home
-        pinned: false, // Automatically set to false
-        roomName: newRoom.name, // Set the room name
-      });
-
-      // Update the UI with the new room
-      setRooms((prevRooms) => [
-        ...prevRooms,
-        {
-          id: newRoomRef.id,
-          roomName: newRoom.name,
-          hubCode: selectedHome.hubCode,
-          pinned: false,
-          devices: [],
-          image: newRoom.image || LivingRoomImg, // Use the provided image or a default
-        },
-      ]);
-
-      alert(`${newRoom.name} has been successfully added.`);
-      setShowAddRoom(false); // Close the modal
+      await deleteDoc(doc(db, 'rooms', roomId));
+      setRooms((prevRooms) => prevRooms.filter((room) => room.id !== roomId));
+      alert('Room deleted successfully.');
     } catch (error) {
-      console.error('Error adding room:', error);
-      alert('Failed to add room. Please try again.');
+      console.error('Error deleting room:', error);
+      alert('Failed to delete room. Please try again.');
     }
   };
 
   return (
     <Box p={6} bg="white" minHeight="100vh" pb="90px">
-
-      
-
       {/* Header */}
       <Flex justifyContent="space-between" alignItems="center" mb={8}>
         <Heading as="h1" size="lg" fontWeight="bold" color="#464646" fontSize="50px" className='roomshd'>
@@ -130,24 +103,41 @@ const RoomList: React.FC<RoomListProps> = () => {
           <Text as="span" fontWeight="normal">Your </Text>
           <Text as="span" fontWeight="bold">Rooms</Text>
         </Heading>
-        <Button
+        {/* Rounded Box with + and - Buttons */}
+        <Flex
           bg="#6cce58"
-          color="white"
-          px={6}
-          py={2}
           borderRadius="full"
-          fontSize="md"
           boxShadow="md"
-          _hover={{ bg: '#5bb046' }}
-          onClick={() => setShowAddRoom(true)}
+          overflow="hidden"
+          alignItems="center"
         >
-          + Create Room
-        </Button>
+          <Button
+            bg="transparent"
+            color="white"
+            px={6}
+            py={2}
+            fontSize="md"
+            _hover={{ bg: '#5bb046' }}
+            onClick={() => setShowAddRoom(true)}
+          >
+            +
+          </Button>
+          <Button
+            bg="transparent"
+            color="white"
+            px={6}
+            py={2}
+            fontSize="md"
+            _hover={{ bg: '#5bb046' }}
+            onClick={() => setDeleteMode(!deleteMode)}
+          >
+            -
+          </Button>
+        </Flex>
       </Flex>
 
       {/* Room Grid */}
       <Grid templateColumns="repeat(2, 1fr)" gap={6}>
-
         {/* Dynamically Fetched Rooms */}
         {rooms.map((room) => (
           <Box
@@ -158,17 +148,23 @@ const RoomList: React.FC<RoomListProps> = () => {
             p={4}
             cursor="pointer"
             transition="all 0.3s ease-in-out"
-            boxShadow="0px 5px 10px rgba(0, 0, 0, 0.05)" // Soft elevation
-            border="1px solid rgba(0, 0, 0, 0.08)" // Light border for depth
+            boxShadow="0px 5px 10px rgba(0, 0, 0, 0.05)"
+            border={`1px solid ${deleteMode ? 'red' : 'rgba(0, 0, 0, 0.08)'}`}
             _hover={{
-              transform: 'translateY(-5px)', // Slight lift
-              boxShadow: '0px 10px 20px rgba(0, 0, 0, 0.1)', // Stronger shadow on hover
-              backgroundColor: '#f5f5f5', // Light grey highlight on hover
+              transform: 'translateY(-5px)',
+              boxShadow: '0px 10px 20px rgba(0, 0, 0, 0.1)',
+              backgroundColor: '#f5f5f5',
             }}
-            onClick={() => navigate(`/devices/${room.id}`)}
+            onClick={() => {
+              if (deleteMode) {
+                handleDeleteRoom(room.id);
+              } else {
+                navigate(`/devices/${room.id}`);
+              }
+            }}
           >
             <Image
-              src={room.image || LivingRoomImg} // Use the room's image or a default image
+              src={room.image || LivingRoomImg}
               alt={room.roomName}
               borderRadius="12px"
               objectFit="cover"
@@ -192,17 +188,17 @@ const RoomList: React.FC<RoomListProps> = () => {
           p={4}
           cursor="pointer"
           transition="all 0.3s ease-in-out"
-          boxShadow="0px 5px 10px rgba(0, 0, 0, 0.05)" // Soft elevation
-          border="1px solid rgba(0, 0, 0, 0.08)" // Light border for depth
+          boxShadow="0px 5px 10px rgba(0, 0, 0, 0.05)"
+          border="1px solid rgba(0, 0, 0, 0.08)"
           _hover={{
-            transform: 'translateY(-5px)', // Slight lift
-            boxShadow: '0px 10px 20px rgba(0, 0, 0, 0.1)', // Stronger shadow on hover
-            backgroundColor: '#f5f5f5', // Light grey highlight on hover
+            transform: 'translateY(-5px)',
+            boxShadow: '0px 10px 20px rgba(0, 0, 0, 0.1)',
+            backgroundColor: '#f5f5f5',
           }}
-          onClick={() => navigate('/alldevices')} // Navigate to the devices page
+          onClick={() => navigate('/alldevices')}
         >
           <Image
-            src={DeviceCol} // Use the DeviceCol image
+            src={DeviceCol}
             alt="Devices"
             borderRadius="12px"
             objectFit="cover"
@@ -222,7 +218,6 @@ const RoomList: React.FC<RoomListProps> = () => {
       {showAddRoom && (
         <AddRoom
           onClose={() => setShowAddRoom(false)}
-          onAddRoom={handleAddRoom}
         />
       )}
     </Box>

@@ -129,6 +129,10 @@ const Homepage: React.FC<HomepageProps> = ({ selectedHomePass, onSelectHome }) =
     localStorage.setItem('selectedHome', JSON.stringify(home));
   };
 
+  const handleHomeRenamed = () => {
+    fetchHomes(); // Refetch the list of homes
+  };
+
   interface Room {
     type: 'room';
     id: string; // Map to roomId
@@ -385,13 +389,16 @@ const Homepage: React.FC<HomepageProps> = ({ selectedHomePass, onSelectHome }) =
         <AddHome
           closeAddHome={() => setIsAddHomeVisible(false)}
           onHomeAdded={handleHomeAdded} // Pass the callback to update the dropdown
+          
         />
       )}
 
       {isEditHomesVisible && (
         <EditHomes
           closeEditHomes={toggleEditHomes}
-          onHomeDeleted={handleHomeDeleted} />)}
+          onHomeDeleted={handleHomeDeleted} 
+          onHomeRenamed={handleHomeRenamed} 
+          homes={homes}/>)}
 
       <Stack className='homepageContainer' position={'relative'} display={'flex'} overflow={'hidden'}>
         <Box className='homepageHeader' bg={selectedHome?.homeType === 'admin' ? '#0b13b0' : '#6cce58'}>

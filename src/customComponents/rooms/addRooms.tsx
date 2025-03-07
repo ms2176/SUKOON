@@ -1,17 +1,18 @@
 import React, { useState } from 'react';
+import { doc, setDoc, collection } from 'firebase/firestore';
 import './addRooms.css';
+import { getFirestore, query, where, getDocs, addDoc } from 'firebase/firestore';
 
 interface AddRoomProps {
   onClose: () => void;
-  onAddRoom: (newRoom: { name: string; image?: string }) => void; // Callback to update the UI
 }
 
-const AddRoom: React.FC<AddRoomProps> = ({ onClose, onAddRoom }) => {
+const AddRoom: React.FC<AddRoomProps> = ({ onClose }) => {
   const [roomName, setRoomName] = useState('');
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
-  const defaultImageUrl = 'https://via.placeholder.com/150?text=Room+Image'; // Default placeholder image
+  const defaultImageUrl = '/path/to/local/fallback-image.png'; // Use a local fallback image
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -29,22 +30,41 @@ const AddRoom: React.FC<AddRoomProps> = ({ onClose, onAddRoom }) => {
     setPreviewUrl(defaultImageUrl);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!roomName) {
       alert('Please provide a room name before adding.');
       return;
     }
 
-    // Pass the room name and image URL (if available) to the parent component
-    onAddRoom({
-      name: roomName,
-      image: previewUrl || undefined, // Pass the image URL if available
-    });
+    try {
+      const db = getFirestore();
+      // Create a reference to a new document with a unique auto-generated ID
+      const newRoomRef = doc(collection(db, 'rooms'));
 
-    setRoomName(''); // Reset the fields
-    setImageFile(null);
-    setPreviewUrl(null);
-    onClose(); // Close the modal
+      // Prepare the room data
+      const roomData = {
+        roomId: newRoomRef.id, // Use the auto-generated ID as the roomId
+        roomName: roomName,
+        devices: [], // Initially empty array for devices
+        hubCode: '333ttt', // Replace with the actual hubCode if dynamic
+        pinned: false, // Default value for pinned
+      };
+
+      // Add the new room document to Firestore
+      await setDoc(newRoomRef, roomData);
+
+
+      // Reset the form fields
+      setRoomName('');
+      setImageFile(null);
+      setPreviewUrl(null);
+
+      // Close the modal
+      onClose();
+    } catch (error) {
+      console.error('Error adding room:', error);
+      alert('An error occurred while adding the room. Please try again.');
+    }
   };
 
   return (

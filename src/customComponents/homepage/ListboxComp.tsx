@@ -4,52 +4,28 @@ import { ListboxWrapper } from './ListboxWrapper.tsx'; // Adjust the path as nee
 import { getAuth, onAuthStateChanged, User } from "firebase/auth"; // Import User type
 import { getFirestore, collection, query, where, getDocs, QueryDocumentSnapshot } from "firebase/firestore"; // Import QueryDocumentSnapshot
 
-interface ListboxCompProps {
-  onSelectHome: (homeName: string) => void; // Callback to pass selected home name
+interface Home {
+  homeName: string;
+  homeType: string;
+  hubCode: string;
 }
 
-const ListboxComp: React.FC<ListboxCompProps> = ({ onSelectHome }) => {
+interface ListboxCompProps {
+  onSelectHome: (homeName: string) => void; // Callback to pass selected home name
+  homes: Home[]; // Add the homes prop
+}
+
+const ListboxComp: React.FC<ListboxCompProps> = ({ onSelectHome, homes }) => {
   const [selectedHome, setSelectedHome] = useState<string | null>(null);
-  const [homes, setHomes] = useState<{ [key: string]: string }>({}); // State to store hub names
 
-  // Fetch the user's hubs when the component mounts
-  useEffect(() => {
-    const auth = getAuth();
-    const db = getFirestore();
-
-    const unsubscribe = onAuthStateChanged(auth, async (user: User | null) => { // Explicitly type the user parameter
-      if (user) {
-        const userId = user.uid;
-
-        // Query the `hubs` collection for hubs associated with the user
-        const hubsRef = collection(db, "userHubs");
-        const q = query(hubsRef, where("userId", "==", userId));
-
-        try {
-          const querySnapshot = await getDocs(q);
-          const homesData: { [key: string]: string } = {};
-
-          let index = 0; // Track the index manually
-          querySnapshot.forEach((doc: QueryDocumentSnapshot) => { // Use a single parameter
-            const data = doc.data();
-            homesData[`Home${index + 1}`] = data.homeName; // Use a unique key for each home
-            index++; // Increment the index
-          });
-
-          setHomes(homesData); // Update the state with the fetched hubs
-        } catch (error) {
-          console.error("Error fetching user hubs:", error);
-        }
-      } else {
-        console.log("No user is signed in.");
-      }
-    });
-
-    return () => unsubscribe(); // Cleanup the listener
-  }, []);
+  // Convert the homes array to a key-value object
+  const homesData = homes.reduce((acc, home, index) => {
+    acc[`Home${index + 1}`] = home.homeName;
+    return acc;
+  }, {} as { [key: string]: string });
 
   const handleSelection = (key: string) => {
-    const homeName = homes[key]; // Get the home name from the homes state
+    const homeName = homesData[key]; // Get the home name from the homesData object
     setSelectedHome(homeName);
     onSelectHome(homeName); // Pass the selected home name to the parent
   };
@@ -59,7 +35,7 @@ const ListboxComp: React.FC<ListboxCompProps> = ({ onSelectHome }) => {
       <ListboxWrapper>
         <Listbox aria-label="Actions" onAction={(key) => handleSelection(key as string)}>
           {/* Dynamically generate ListboxItem components */}
-          {Object.entries(homes).map(([key, value]) => (
+          {Object.entries(homesData).map(([key, value]) => (
             <ListboxItem key={key}>{value}</ListboxItem>
           ))}
         </Listbox>

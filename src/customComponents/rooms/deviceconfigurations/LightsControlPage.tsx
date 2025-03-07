@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import "../DeviceControlPage.css"; // Updated styles
-import { Box, Button, Spinner } from "@chakra-ui/react";
+import { Box, Button, Spinner, Stack, Heading, Text } from "@chakra-ui/react";
 import { BsLightbulbFill, BsLightbulb, BsLightbulbOff } from "react-icons/bs";
 import { useNavigate, useParams, useLocation } from 'react-router-dom'; // Import useParams
 import { getFirestore, doc, onSnapshot, updateDoc } from "firebase/firestore";
@@ -19,6 +19,7 @@ const LightsControlPage: React.FC<LightsControlPageProps> = ({ deviceId }) => {
   const navigate = useNavigate(); // Initialize useNavigate
   const { roomId } = useParams<{ roomId: string }>(); // Extract roomId from the URL
   const location = useLocation();
+  const [deviceName, setDeviceName] = useState(""); // Device name state
 
   // Modes with icons
   const modes = [
@@ -47,6 +48,8 @@ const LightsControlPage: React.FC<LightsControlPageProps> = ({ deviceId }) => {
           setPower(deviceData.on || false); // Set power state
           setActiveMode(deviceData.brightnessMode || null); // Set active mode
           setAutoMode(deviceData.autoMode || "timer"); // Set auto mode
+          setDeviceName(deviceData.deviceName || "Unnamed Device"); // Set device name
+
         } else {
           console.error("Device not found");
         }
@@ -181,7 +184,14 @@ const LightsControlPage: React.FC<LightsControlPageProps> = ({ deviceId }) => {
       {/* Header */}
       <div className="header" style={{ padding: '20px', borderRadius: '20px', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)' }}>
         <button className="back-button" onClick={handleBackButtonClick}>←</button>
-        <h1>Light</h1>
+        <Stack display={'flex'} justify={'center'} align={'center'}>
+          <Text fontSize="2xl" fontWeight="bold" color="black" textAlign={'center'} className="deviceNameConfig">
+            {deviceName} {/* Display the device name */}
+          </Text>
+          <Text fontSize="lg" color="black" textAlign={'center'}>
+            Smart Door {/* Display "Smart Door" below the device name */}
+          </Text>
+        </Stack>
         <div className="power-toggle">
           <label className="toggle-switch">
             <input type="checkbox" checked={power} onChange={togglePower} />
@@ -196,6 +206,7 @@ const LightsControlPage: React.FC<LightsControlPageProps> = ({ deviceId }) => {
           <button
             className="temp-adjust temp-minus"
             onClick={() => handleLuminosityChange(-1)}
+            
             aria-label="Decrease brightness"
           >
             -
