@@ -1,63 +1,91 @@
 import React, { useState, useEffect, useRef } from "react";
-import "../DeviceControlPage.css"; // Updated styles
+import "../DeviceControlPage.css";
 import { Box, Button, Spinner, Text, Stack } from "@chakra-ui/react";
-import { useNavigate, useParams, useLocation } from 'react-router-dom'; // Import useParams
-import { getFirestore, doc, onSnapshot, updateDoc } from "firebase/firestore";
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
+import { getFirestore, doc, onSnapshot, updateDoc, serverTimestamp } from "firebase/firestore";
 
 interface WashingmachinePageProps {
   deviceId: string;
 }
 
 const Washingmachine: React.FC<WashingmachinePageProps> = ({ deviceId }) => {
-  const [timer, setTimer] = useState("00:00"); // Timer display
-  const [isRunning, setIsRunning] = useState(false); // Track if the timer is running
-  const [activeMode, setActiveMode] = useState<string | null>(null); // Track active mode (Cotton, Fabric, Polyester)
-  const [activeRPM, setActiveRPM] = useState<string | null>(null); // Track active RPM (400, 800, 1200)
-  const [activeDuration, setActiveDuration] = useState<string | null>(null); // Track active duration (1hr, 2hr, 3hr)
-  const [isPaused, setIsPaused] = useState(false); // Track if the timer is paused
-  const [power, setPower] = useState(true); // Power toggle state
-  const [remainingTime, setRemainingTime] = useState(0); // Track remaining time when paused
-  const [loading, setLoading] = useState(true); // Loading state
-  const navigate = useNavigate(); // Initialize useNavigate
-  const { roomId } = useParams<{ roomId: string }>(); // Extract roomId from the URL
-  const [deviceName, setDeviceName] = useState(""); // Device name state
-  const [activeButton, setActiveButton] = useState<"start" | "pause" | "continue" | "end" | null>(null); // Track active button
+  const [timer, setTimer] = useState("00:00");
+  const [isRunning, setIsRunning] = useState(false);
+  const [activeMode, setActiveMode] = useState<string | null>(null);
+  const [activeRPM, setActiveRPM] = useState<string | null>(null);
+  const [activeDuration, setActiveDuration] = useState<string | null>(null);
+  const [isPaused, setIsPaused] = useState(false);
+  const [power, setPower] = useState(true);
+  const [remainingTime, setRemainingTime] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+  const { roomId } = useParams<{ roomId: string }>();
+  const [deviceName, setDeviceName] = useState("");
+  const [activeButton, setActiveButton] = useState<"start" | "pause" | "continue" | "end" | null>(null);
   const location = useLocation();
 
   const modes = ["Cotton", "Fabric", "Polyester"];
   const rpms = ["400 RPM", "800 RPM", "1200 RPM"];
   const durations = ["1hr", "2hr", "3hr"];
 
-  // Ref to store the interval ID for the timer
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Fetch device data from Firestore in real time
   useEffect(() => {
     if (deviceId) {
       const db = getFirestore();
       const deviceDocRef = doc(db, "devices", deviceId);
-
-      // Set up a real-time listener for the device document
+  
       const unsubscribe = onSnapshot(deviceDocRef, (deviceDocSnap) => {
         if (deviceDocSnap.exists()) {
           const deviceData = deviceDocSnap.data();
-          setPower(deviceData.on || false); // Set power state
-          setActiveMode(deviceData.clothType || null); // Set active mode
-          setActiveRPM(deviceData.rpm || null); // Set active RPM
-          setActiveDuration(deviceData.length || null); // Set active duration
-          setDeviceName(deviceData.deviceName || "Unnamed Device"); // Set device name
+          setPower(deviceData.on || false);
+          setActiveMode(deviceData.clothType || null);
+          setActiveRPM(deviceData.rpm || null);
+          setActiveDuration(deviceData.length || null);
+          setDeviceName(deviceData.deviceName || "Unnamed Device");
+  
+          // Sync timer state
+          if (deviceData.timerRunning) {
+            const startTime = deviceData.timerStartTime?.toDate().getTime() || 0;
+            const currentTime = new Date().getTime();
+            const elapsedTime = Math.floor((currentTime - startTime) / 1000); // Elapsed time in seconds
+            const remainingTime = Math.max(deviceData.timerRemaining - elapsedTime, 0); // Ensure it doesn't go below 0
+  
+            if (remainingTime > 0) {
+              setRemainingTime(remainingTime);
+              startTimer(remainingTime); // Start the timer with the updated remaining time
+            } else {
+              endTimer(); // End the timer if the remaining time is 0
+            }
+          } else if (deviceData.timerPaused) {
+            const remainingTime = deviceData.timerRemaining || 0;
+            const minutes = Math.floor(remainingTime / 60);
+            const seconds = remainingTime % 60;
+            setTimer(`${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`);
+            setRemainingTime(remainingTime);
+            setIsPaused(true);
+          } else {
+            // If the timer is not running or paused, reset the timer
+            setTimer("00:00");
+            setRemainingTime(0);
+            setIsRunning(false);
+            setIsPaused(false);
+          }
         } else {
           console.error("Device not found");
         }
-        setLoading(false); // Stop loading once data is fetched
+        setLoading(false);
       });
-
-      // Clean up the listener when the component unmounts
-      return () => unsubscribe();
+  
+      return () => {
+        unsubscribe();
+        if (timerRef.current) {
+          clearInterval(timerRef.current); // Clear the interval when the component unmounts
+        }
+      };
     }
   }, [deviceId]);
 
-  // Update power state in Firestore
   const updatePowerState = async (newPowerState: boolean) => {
     if (deviceId) {
       const db = getFirestore();
@@ -65,14 +93,13 @@ const Washingmachine: React.FC<WashingmachinePageProps> = ({ deviceId }) => {
 
       try {
         await updateDoc(deviceDocRef, { on: newPowerState });
-        setPower(newPowerState); // Update local state
+        setPower(newPowerState);
       } catch (error) {
         console.error("Error updating power state:", error);
       }
     }
   };
 
-  // Update cloth type in Firestore
   const updateClothType = async (newClothType: string) => {
     if (deviceId) {
       const db = getFirestore();
@@ -80,14 +107,13 @@ const Washingmachine: React.FC<WashingmachinePageProps> = ({ deviceId }) => {
 
       try {
         await updateDoc(deviceDocRef, { clothType: newClothType });
-        setActiveMode(newClothType); // Update local state
+        setActiveMode(newClothType);
       } catch (error) {
         console.error("Error updating cloth type:", error);
       }
     }
   };
 
-  // Update RPM in Firestore
   const updateRPM = async (newRPM: string) => {
     if (deviceId) {
       const db = getFirestore();
@@ -95,14 +121,13 @@ const Washingmachine: React.FC<WashingmachinePageProps> = ({ deviceId }) => {
 
       try {
         await updateDoc(deviceDocRef, { rpm: newRPM });
-        setActiveRPM(newRPM); // Update local state
+        setActiveRPM(newRPM);
       } catch (error) {
         console.error("Error updating RPM:", error);
       }
     }
   };
 
-  // Update duration in Firestore
   const updateDuration = async (newDuration: string) => {
     if (deviceId) {
       const db = getFirestore();
@@ -110,7 +135,7 @@ const Washingmachine: React.FC<WashingmachinePageProps> = ({ deviceId }) => {
 
       try {
         await updateDoc(deviceDocRef, { length: newDuration });
-        setActiveDuration(newDuration); // Update local state
+        setActiveDuration(newDuration);
       } catch (error) {
         console.error("Error updating duration:", error);
       }
@@ -118,28 +143,42 @@ const Washingmachine: React.FC<WashingmachinePageProps> = ({ deviceId }) => {
   };
 
   const handleBackButtonClick = () => {
-    // Check if the previous route was from AllDevices
     if (location.state?.fromAllDevices) {
-      navigate('/alldevices'); // Navigate back to AllDevices
+      navigate('/alldevices');
     } else if (roomId) {
-      navigate(`/devices/${roomId}`); // Navigate back to the room's devices page
+      navigate(`/devices/${roomId}`);
     } else {
-      navigate('/home'); // Fallback to home if no roomId or fromAllDevices state
+      navigate('/home');
     }
   };
 
-  // Function to start the timer
-  const startTimer = () => {
-    if (isRunning || !activeDuration) return; // Prevent starting if no duration is selected
-
+  const startTimer = async (initialTime?: number) => {
+    if (isRunning || !activeDuration) return;
+  
     setIsRunning(true);
     setIsPaused(false);
-    setActiveButton("start"); // Set the active button to "start"
-
-    // Convert the selected duration to seconds
-    const durationInSeconds = parseInt(activeDuration) * 3600; // Convert hours to seconds
+    setActiveButton("start");
+  
+    const durationInSeconds = initialTime || parseInt(activeDuration) * 3600;
     let time = durationInSeconds;
-
+  
+    // Update Firestore
+    if (deviceId) {
+      const db = getFirestore();
+      const deviceDocRef = doc(db, "devices", deviceId);
+  
+      try {
+        await updateDoc(deviceDocRef, {
+          timerRunning: true,
+          timerPaused: false,
+          timerRemaining: durationInSeconds, // Ensure this is a valid number
+          timerStartTime: serverTimestamp(),
+        });
+      } catch (error) {
+        console.error("Error updating timer state:", error);
+      }
+    }
+  
     timerRef.current = setInterval(() => {
       time -= 1;
       if (time < 0) {
@@ -147,38 +186,69 @@ const Washingmachine: React.FC<WashingmachinePageProps> = ({ deviceId }) => {
         timerRef.current = null;
         setIsRunning(false);
         setTimer("00:00");
-        setActiveButton(null); // Reset active button when timer ends
+        setActiveButton(null);
         return;
       }
-
+  
       const minutes = Math.floor(time / 60);
       const seconds = time % 60;
       setTimer(`${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`);
-    }, 1000); // Update every second
+    }, 1000);
   };
 
-  // Function to pause the timer
-  const pauseTimer = () => {
+  const pauseTimer = async () => {
     if (timerRef.current) {
       clearInterval(timerRef.current);
       timerRef.current = null;
     }
     setIsRunning(false);
     setIsPaused(true);
-    setActiveButton("pause"); // Set the active button to "pause"
+    setActiveButton("pause");
 
-    // Save the remaining time when paused
+    // Calculate remaining time from the current timer value
     const [minutes, seconds] = timer.split(":").map(Number);
-    setRemainingTime(minutes * 60 + seconds);
+    const remainingTime = minutes * 60 + seconds;
+    setRemainingTime(remainingTime);
+
+    // Update Firestore
+    if (deviceId) {
+      const db = getFirestore();
+      const deviceDocRef = doc(db, "devices", deviceId);
+
+      try {
+        await updateDoc(deviceDocRef, {
+          timerRunning: false,
+          timerPaused: true,
+          timerRemaining: remainingTime, // Ensure this is a valid number
+        });
+      } catch (error) {
+        console.error("Error updating timer state:", error);
+      }
+    }
   };
 
-  // Function to continue the timer
-  const continueTimer = () => {
-    if (isRunning || !remainingTime) return; // Prevent continuing if no remaining time
+  const continueTimer = async () => {
+    if (isRunning || !remainingTime) return;
 
     setIsRunning(true);
     setIsPaused(false);
-    setActiveButton("continue"); // Set the active button to "continue"
+    setActiveButton("continue");
+
+    // Update Firestore
+    if (deviceId) {
+      const db = getFirestore();
+      const deviceDocRef = doc(db, "devices", deviceId);
+
+      try {
+        await updateDoc(deviceDocRef, {
+          timerRunning: true,
+          timerPaused: false,
+          timerStartTime: serverTimestamp(),
+        });
+      } catch (error) {
+        console.error("Error updating timer state:", error);
+      }
+    }
 
     let time = remainingTime;
 
@@ -189,18 +259,17 @@ const Washingmachine: React.FC<WashingmachinePageProps> = ({ deviceId }) => {
         timerRef.current = null;
         setIsRunning(false);
         setTimer("00:00");
-        setActiveButton(null); // Reset active button when timer ends
+        setActiveButton(null);
         return;
       }
 
       const minutes = Math.floor(time / 60);
       const seconds = time % 60;
       setTimer(`${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`);
-    }, 1000); // Update every second
+    }, 1000);
   };
 
-  // Function to end the timer
-  const endTimer = () => {
+  const endTimer = async () => {
     if (timerRef.current) {
       clearInterval(timerRef.current);
       timerRef.current = null;
@@ -208,30 +277,42 @@ const Washingmachine: React.FC<WashingmachinePageProps> = ({ deviceId }) => {
     setTimer("00:00");
     setIsRunning(false);
     setIsPaused(false);
-    setRemainingTime(0); // Reset remaining time
-    setActiveButton("end"); // Set the active button to "end"
+    setRemainingTime(0);
+    setActiveButton("end");
+
+    // Update Firestore
+    if (deviceId) {
+      const db = getFirestore();
+      const deviceDocRef = doc(db, "devices", deviceId);
+
+      try {
+        await updateDoc(deviceDocRef, {
+          timerRunning: false,
+          timerPaused: false,
+          timerRemaining: 0,
+        });
+      } catch (error) {
+        console.error("Error updating timer state:", error);
+      }
+    }
   };
 
-  // Function to handle mode selection
   const handleModeChange = (mode: string) => {
-    if (isRunning) return; // Prevent changes if the timer is running
+    if (isRunning) return;
     updateClothType(mode);
   };
 
-  // Function to handle RPM selection
   const handleRPMChange = (rpm: string) => {
-    if (isRunning) return; // Prevent changes if the timer is running
+    if (isRunning) return;
     updateRPM(rpm);
   };
 
-  // Function to handle duration selection
   const handleDurationChange = (duration: string) => {
-    if (isRunning) return; // Prevent changes if the timer is running
+    if (isRunning) return;
     updateDuration(duration);
-    setTimer(`${duration}:00`); // Update the timer display to the selected duration
+    setTimer(`${duration}:00`);
   };
 
-  // Toggle power state
   const togglePower = () => {
     updatePowerState(!power);
   };
@@ -251,10 +332,10 @@ const Washingmachine: React.FC<WashingmachinePageProps> = ({ deviceId }) => {
         <button className="back-button" onClick={handleBackButtonClick}>←</button>
         <Stack display={'flex'} justify={'center'} align={'center'}>
           <Text fontSize="2xl" fontWeight="bold" color="black" textAlign={'center'} className="deviceNameConfig">
-            {deviceName} {/* Display the device name */}
+            {deviceName}
           </Text>
           <Text fontSize="lg" color="black" textAlign={'center'}>
-            Washing Machine {/* Display "Washing Machine" below the device name */}
+            Washing Machine
           </Text>
         </Stack>
         <div className="power-toggle">
@@ -282,7 +363,7 @@ const Washingmachine: React.FC<WashingmachinePageProps> = ({ deviceId }) => {
             key={mode}
             className={`mode-button ${activeMode === mode ? "active" : ""}`}
             onClick={() => handleModeChange(mode)}
-            disabled={isRunning} // Disable if the timer is running
+            disabled={isRunning}
           >
             {mode}
           </button>
@@ -296,7 +377,7 @@ const Washingmachine: React.FC<WashingmachinePageProps> = ({ deviceId }) => {
             key={rpm}
             className={`mode-button ${activeRPM === rpm ? "active" : ""}`}
             onClick={() => handleRPMChange(rpm)}
-            disabled={isRunning} // Disable if the timer is running
+            disabled={isRunning}
           >
             {rpm}
           </button>
@@ -310,7 +391,7 @@ const Washingmachine: React.FC<WashingmachinePageProps> = ({ deviceId }) => {
             key={duration}
             className={`mode-button ${activeDuration === duration ? "active" : ""}`}
             onClick={() => handleDurationChange(duration)}
-            disabled={isRunning} // Disable if the timer is running
+            disabled={isRunning}
           >
             {duration}
           </button>
@@ -326,7 +407,7 @@ const Washingmachine: React.FC<WashingmachinePageProps> = ({ deviceId }) => {
         overflow="hidden"
         boxShadow="0 4px 8px rgba(0, 0, 0, 0.2)"
         width="100%"
-        maxWidth="400px" // Adjusted width to fit all buttons
+        maxWidth="400px"
         margin="20px auto"
       >
         {/* Start Button */}
@@ -336,7 +417,7 @@ const Washingmachine: React.FC<WashingmachinePageProps> = ({ deviceId }) => {
           borderRight="1px solid #ccc"
           bg={activeButton === "start" ? "#6cc358" : "white"}
           color={activeButton === "start" ? "white" : "#6cc358"}
-          onClick={startTimer}
+          onClick={() => startTimer()}
           _disabled={{ opacity: 1, bg: isRunning ? "#6cc358" : "white", color: isRunning ? "white" : "#6cc358" }}
         >
           Start
@@ -382,41 +463,41 @@ const Washingmachine: React.FC<WashingmachinePageProps> = ({ deviceId }) => {
       </Box>
 
       {/* Conjoined Buttons */}
-            <Box
-              display="flex"
-              alignItems="center"
-              justifyContent="center"
-              borderRadius="20px"
-              overflow="hidden"
-              boxShadow="0 4px 8px rgba(0, 0, 0, 0.2)"
-              width="100%"
-              maxWidth="300px"
-              margin="20px auto"
-            >
-              <Button
-                flex="1"
-                borderRadius="0"
-                borderRight="1px solid #ccc"
-                bg={power ? "#6cc358" : "white"}
-                color={power ? "white" : "#6cc358"}
-                _hover={{ bg: power ? "#6cc358" : "white" }}
-                onClick={() => updatePowerState(true)}
-                aria-label="Turn on"
-              >
-                On
-              </Button>
-              <Button
-                flex="1"
-                borderRadius="0"
-                bg={!power ? "#6cc358" : "white"}
-                color={!power ? "white" : "#6cc358"}
-                _hover={{ bg: !power ? "#6cc358" : "white" }}
-                onClick={() => updatePowerState(false)}
-                aria-label="Turn off"
-              >
-                Off
-              </Button>
-            </Box>
+      <Box
+        display="flex"
+        alignItems="center"
+        justifyContent="center"
+        borderRadius="20px"
+        overflow="hidden"
+        boxShadow="0 4px 8px rgba(0, 0, 0, 0.2)"
+        width="100%"
+        maxWidth="300px"
+        margin="20px auto"
+      >
+        <Button
+          flex="1"
+          borderRadius="0"
+          borderRight="1px solid #ccc"
+          bg={power ? "#6cc358" : "white"}
+          color={power ? "white" : "#6cc358"}
+          _hover={{ bg: power ? "#6cc358" : "white" }}
+          onClick={() => updatePowerState(true)}
+          aria-label="Turn on"
+        >
+          On
+        </Button>
+        <Button
+          flex="1"
+          borderRadius="0"
+          bg={!power ? "#6cc358" : "white"}
+          color={!power ? "white" : "#6cc358"}
+          _hover={{ bg: !power ? "#6cc358" : "white" }}
+          onClick={() => updatePowerState(false)}
+          aria-label="Turn off"
+        >
+          Off
+        </Button>
+      </Box>
     </div>
   );
 };
