@@ -148,6 +148,7 @@ const Homepage: React.FC<{ selectedHomePass: Home | null; onSelectHome: (home: H
   const [homes, setHomes] = useState<Home[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const [activeDevicesCount, setActiveDevicesCount] = useState<number>(0); // State for active devices count
 
   useEffect(() => {
     const auth = getAuth();
@@ -211,6 +212,26 @@ const Homepage: React.FC<{ selectedHomePass: Home | null; onSelectHome: (home: H
     setSelectedHome(home);
     onSelectHome(home);
   };
+
+  const fetchActiveDevicesCount = async (hubCode: string) => {
+    const db = getFirestore();
+    const devicesRef = collection(db, 'devices');
+    const q = query(devicesRef, where('hubCode', '==', hubCode), where('on', '==', true));
+
+    try {
+      const querySnapshot = await getDocs(q);
+      setActiveDevicesCount(querySnapshot.size); // Set the count of active devices
+    } catch (error) {
+      console.error('Error fetching active devices:', error);
+    }
+  };
+
+  // Update active devices count when selectedHome changes
+  useEffect(() => {
+    if (selectedHome) {
+      fetchActiveDevicesCount(selectedHome.hubCode);
+    }
+  }, [selectedHome]);
 
   const handleSelectHome = (home: Home) => {
     setSelectedHome(home);
@@ -466,7 +487,7 @@ const Homepage: React.FC<{ selectedHomePass: Home | null; onSelectHome: (home: H
 
         <Flex display={'flex'} justifyContent={'center'} alignItems={'center'} alignContent={'center'} mt={'25px'} zIndex={1} bg={'transparent'}>
           <HStack spaceX={'-5%'} justifyContent={'center'} alignItems={'center'} alignContent={'center'} bg={'transparent'}>
-            <MiniDisplays Icon={MdOutlinePhoneAndroid} title="Active devices:" value="8" />
+            <MiniDisplays Icon={MdOutlinePhoneAndroid} title="Active devices:" value={activeDevicesCount.toString()}/>
             <MiniDisplays Icon={BsGraphUpArrow} title="Home Status:" value="Good" />
             <MiniDisplays Icon={MdOutlineBatterySaver} title="Energy Generation:" value="50KW/h" />
           </HStack>

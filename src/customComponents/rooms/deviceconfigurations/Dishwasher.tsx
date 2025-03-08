@@ -228,7 +228,7 @@ const Dishwasher: React.FC<DishwasherPageProps> = ({ deviceId }) => {
     } else if (roomId) {
       navigate(`/devices/${roomId}`); // Navigate back to the room's devices page
     } else {
-      navigate('/'); // Fallback to home if no roomId or fromAllDevices state
+      navigate('/home'); // Fallback to home if no roomId or fromAllDevices state
     }
   };
 
