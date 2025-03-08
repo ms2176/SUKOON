@@ -85,9 +85,13 @@ const PinnedMenu: React.FC<PinnedMenuProps> = ({ isVisible, onClose, onPinItem, 
     const user = auth.currentUser;
     if (user && selectedHubCode) {
       try {
-        // Fetch all rooms associated with the selected hub
+        // Fetch all rooms associated with the selected hub that are not pinned
         const roomsRef = collection(db, 'rooms');
-        const roomsQuery = query(roomsRef, where('hubCode', '==', selectedHubCode));
+        const roomsQuery = query(
+          roomsRef,
+          where('hubCode', '==', selectedHubCode),
+          where('pinned', 'in', [false, null]) // Include items where pinned is false or undefined
+        );
         const roomsSnapshot = await getDocs(roomsQuery);
 
         const roomsData: Room[] = [];
@@ -98,16 +102,20 @@ const PinnedMenu: React.FC<PinnedMenuProps> = ({ isVisible, onClose, onPinItem, 
             id: doc.id,
             roomName: data.roomName,
             hubCode: data.hubCode,
-            pinned: data.pinned || false,
+            pinned: data.pinned || false, // Default to false if pinned is undefined
             devices: data.devices || [],
             image: data.image || NoImage, // Use a default image if no image is provided
           });
         });
         setRooms(roomsData);
 
-        // Fetch all devices associated with the selected hub
+        // Fetch all devices associated with the selected hub that are not pinned
         const devicesRef = collection(db, 'devices');
-        const devicesQuery = query(devicesRef, where('hubCode', '==', selectedHubCode));
+        const devicesQuery = query(
+          devicesRef,
+          where('hubCode', '==', selectedHubCode),
+          where('pinned', 'in', [false, null]) // Include items where pinned is false or undefined
+        );
         const devicesSnapshot = await getDocs(devicesQuery);
 
         const devicesData: Device[] = [];
@@ -119,7 +127,7 @@ const PinnedMenu: React.FC<PinnedMenuProps> = ({ isVisible, onClose, onPinItem, 
             deviceName: data.deviceName,
             deviceType: data.deviceType as DeviceType, // Ensure deviceType matches DeviceType
             hubCode: data.hubCode,
-            pinned: data.pinned || false,
+            pinned: data.pinned || false, // Default to false if pinned is undefined
           });
         });
         setDevices(devicesData);

@@ -112,8 +112,8 @@ const Login = () => {
     navigate("/"); // Navigate to the root Auth page
   };
 
-  const goToQR = () => {
-    navigate("/QRWait"); // Navigate to the root Auth page
+  const goToReg = () => {
+    navigate("/register"); // Navigate to the root Auth page
   };
 
   const goToResetPassword = () => {
@@ -270,7 +270,7 @@ const Login = () => {
             Don't have an account?{" "}
             <span
               style={{ color: "#6cce58", textDecoration: "underline" }}
-              onClick={goToQR}
+              onClick={goToReg}
             >
               {" "}
               Sign Up!

@@ -1,31 +1,29 @@
-import { Box, Button, Flex, Heading, HStack, Stack, Image, Text, Grid } from '@chakra-ui/react'
-import React, { useState, useRef } from 'react'
-import './Homepage.css'
-import Dropdown from './Dropdown.tsx'
+import { Box, Button, Flex, Heading, HStack, Stack, Image, Text, Grid } from '@chakra-ui/react';
+import React, { useState, useRef, useEffect } from 'react';
+import './Homepage.css';
+import Dropdown from './Dropdown.tsx';
 import MiniDisplays from './miniDisplays.tsx';
 import { useNavigate } from 'react-router-dom'; // Import useNavigate
-
 import Lottie from 'react-lottie-player';
-import PulseAnimationGreen from '@/images/animatedIcons/Animation - 1737092091343.json'
-import PulseAnimationBlue from '@/images/animatedIcons/Animation - 1738960096286.json'
-import { TbCirclePlusFilled } from "react-icons/tb";
+import PulseAnimationGreen from '@/images/animatedIcons/Animation - 1737092091343.json';
+import PulseAnimationBlue from '@/images/animatedIcons/Animation - 1738960096286.json';
+import { TbCirclePlusFilled } from 'react-icons/tb';
 import PinnedMenu from './pinnedMenu.tsx';
-import { useEffect } from 'react';
 import Mockroom from './Mockroom.tsx';
-import { MdOutlinePhoneAndroid } from "react-icons/md";
-import { BsGraphUpArrow } from "react-icons/bs";
-import { MdOutlineBatterySaver } from "react-icons/md";
-import { FaExpandAlt } from "react-icons/fa";
-import { AiOutlineShrink } from "react-icons/ai";
+import { MdOutlinePhoneAndroid } from 'react-icons/md';
+import { BsGraphUpArrow } from 'react-icons/bs';
+import { MdOutlineBatterySaver } from 'react-icons/md';
+import { FaExpandAlt } from 'react-icons/fa';
+import { AiOutlineShrink } from 'react-icons/ai';
 import AddHome from './AddHome.tsx';
-import EditHomes from './EditHomes.tsx'
+import EditHomes from './EditHomes.tsx';
 import MockDevice from './MockDevice.tsx';
 import PinnedMenuAdmin from './pinnedMenuAdmin.tsx';
 import MockUnits from './MockUnits.tsx';
-import { MdOutlineEdit } from "react-icons/md";
-import { getAuth, onAuthStateChanged } from "firebase/auth";
-import { getFirestore, collection, query, where, getDocs, QueryDocumentSnapshot, doc, updateDoc, getDoc } from "firebase/firestore";
-import NoImage from '@/images/noImage.png'
+import { MdOutlineEdit } from 'react-icons/md';
+import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import { getFirestore, collection, query, where, getDocs, QueryDocumentSnapshot, doc, updateDoc, getDoc } from 'firebase/firestore';
+import NoImage from '@/images/noImage.png';
 // Import device images
 import LightImg from '@/images/devicesIcons/lamp.png';
 import TvImg from '@/images/devicesIcons/tv.png';
@@ -45,7 +43,7 @@ interface Home {
 }
 
 interface HomepageProps {
-  selectedHome: Home | null;
+  selectedHomePass: Home | null;
   onSelectHome: (home: Home) => void;
 }
 
@@ -147,8 +145,8 @@ const Homepage: React.FC<{ selectedHomePass: Home | null; onSelectHome: (home: H
   const [selectedHome, setSelectedHome] = useState<Home | null>(null);
   const [homes, setHomes] = useState<Home[]>([]);
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
   const [activeDevicesCount, setActiveDevicesCount] = useState<number>(0); // State for active devices count
+  const navigate = useNavigate();
 
   useEffect(() => {
     const auth = getAuth();
@@ -487,7 +485,7 @@ const Homepage: React.FC<{ selectedHomePass: Home | null; onSelectHome: (home: H
 
         <Flex display={'flex'} justifyContent={'center'} alignItems={'center'} alignContent={'center'} mt={'25px'} zIndex={1} bg={'transparent'}>
           <HStack spaceX={'-5%'} justifyContent={'center'} alignItems={'center'} alignContent={'center'} bg={'transparent'}>
-            <MiniDisplays Icon={MdOutlinePhoneAndroid} title="Active devices:" value={activeDevicesCount.toString()}/>
+            <MiniDisplays Icon={MdOutlinePhoneAndroid} title="Active devices:" value={activeDevicesCount.toString()} />
             <MiniDisplays Icon={BsGraphUpArrow} title="Home Status:" value="Good" />
             <MiniDisplays Icon={MdOutlineBatterySaver} title="Energy Generation:" value="50KW/h" />
           </HStack>
@@ -522,7 +520,7 @@ const Homepage: React.FC<{ selectedHomePass: Home | null; onSelectHome: (home: H
 
             <HStack display={'flex'} bg={'transparent'} transform={'translateX(-5%)'}>
               <Flex
-                bg="#6cce58"
+                bg={selectedHome?.homeType === 'admin' ? '#0b13b0' : '#6cce58'} // Change background color based on homeType
                 borderRadius="full"
                 overflow="hidden"
                 alignItems="center"
@@ -534,7 +532,7 @@ const Homepage: React.FC<{ selectedHomePass: Home | null; onSelectHome: (home: H
                   px={6}
                   py={2}
                   fontSize="md"
-                  _hover={{ bg: '#5bb046' }}
+                  _hover={{ bg: selectedHome?.homeType === 'admin' ? '#0a0f8f' : '#5bb046' }} // Change hover color based on homeType
                   onClick={() => setPinnedMenuVisible(true)}
                 >
                   +
@@ -545,7 +543,7 @@ const Homepage: React.FC<{ selectedHomePass: Home | null; onSelectHome: (home: H
                   px={6}
                   py={2}
                   fontSize="md"
-                  _hover={{ bg: '#5bb046' }}
+                  _hover={{ bg: selectedHome?.homeType === 'admin' ? '#0a0f8f' : '#5bb046' }} // Change hover color based on homeType
                   onClick={() => setIsEditing(!isEditing)}
                 >
                   -
