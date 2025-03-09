@@ -1,12 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Button, VStack, Heading, Stack, HStack, Grid, GridItem, Text, Image, Input } from '@chakra-ui/react';
-import { FaPen } from "react-icons/fa";
-import { IoMdClose } from "react-icons/io";
-import { LuImageUp } from "react-icons/lu";
+import { FaPen } from 'react-icons/fa';
+import { IoMdClose } from 'react-icons/io';
+import { LuImageUp } from 'react-icons/lu';
 import { getFirestore, collection, query, where, getDocs, doc, getDoc, updateDoc } from 'firebase/firestore';
-import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage'; // Firebase Storage functions
-
-// Import device images
+import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import LightImg from '@/images/devicesIcons/lamp.png';
 import TvImg from '@/images/devicesIcons/tv.png';
 import AcImg from '@/images/devicesIcons/ac.png';
@@ -35,10 +33,8 @@ interface Device {
   name: string;
   isOn: boolean;
   deviceType: DeviceType;
-  hubCode: string; // Add hubCode to the Device interface
 }
 
-// Map device types to their corresponding images
 const deviceTypeToImage: Record<DeviceType, string> = {
   light: LightImg,
   tv: TvImg,
@@ -49,18 +45,16 @@ const deviceTypeToImage: Record<DeviceType, string> = {
   thermostat: ThermostatImg,
   door: DoorbellImg,
   heatconvector: HeatconvectorImg,
-  dishwasher: Dishwasher
+  dishwasher: Dishwasher,
 };
 
-// Normalize device type to match the keys in deviceTypeToImage
 const normalizeDeviceType = (deviceType: string): DeviceType => {
-  const normalizedType = deviceType.toLowerCase().replace(/\s+/g, ''); // Remove spaces and convert to lowercase
+  const normalizedType = deviceType.toLowerCase().replace(/\s+/g, '');
   switch (normalizedType) {
     case 'washingmachine':
       return 'washingMachine';
     case 'smartdoor':
       return 'door';
-    // Add other mappings as needed
     default:
       return normalizedType as DeviceType;
   }
@@ -68,21 +62,20 @@ const normalizeDeviceType = (deviceType: string): DeviceType => {
 
 interface AddDeviceProps {
   onClose: () => void;
-  roomId: string; // Pass the roomId as a prop
-  refreshDevices: () => void; // Callback to refresh the devices list
+  roomId: string;
+  refreshDevices: () => void;
 }
 
 const AddDevice = ({ onClose, roomId, refreshDevices }: AddDeviceProps) => {
   const [isAddActive, setIsAddActive] = useState(true);
-  const [roomName, setRoomName] = useState<string>(''); // State to store the room name
-  const [isEditingRoomName, setIsEditingRoomName] = useState(false); // State to track edit mode
-  const [devices, setDevices] = useState<Device[]>([]); // State to store devices in the room
-  const [availableDevices, setAvailableDevices] = useState<Device[]>([]); // State to store available devices
-  const [loading, setLoading] = useState(true); // State to manage loading state
-  const [selectedDeviceIds, setSelectedDeviceIds] = useState<Set<string>>(new Set()); // Track selected devices
-  const [roomImage, setRoomImage] = useState<string | null>(null); // State to store the room image URL
+  const [roomName, setRoomName] = useState<string>('');
+  const [isEditingRoomName, setIsEditingRoomName] = useState(false);
+  const [devices, setDevices] = useState<Device[]>([]);
+  const [availableDevices, setAvailableDevices] = useState<Device[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedDeviceIds, setSelectedDeviceIds] = useState<Set<string>>(new Set());
+  const [roomImage, setRoomImage] = useState<string | null>(null);
 
-  // Fetch room name, devices, and available devices when the component mounts
   useEffect(() => {
     fetchRoomAndDevices();
   }, [roomId]);
@@ -92,25 +85,19 @@ const AddDevice = ({ onClose, roomId, refreshDevices }: AddDeviceProps) => {
       const db = getFirestore();
 
       try {
-        // Fetch the room document
         const roomDocRef = doc(db, 'rooms', roomId);
         const roomDocSnap = await getDoc(roomDocRef);
 
         if (roomDocSnap.exists()) {
           const roomData = roomDocSnap.data();
-          setRoomName(roomData.roomName || 'Room'); // Set the room name
-          setRoomImage(roomData.image || null); // Set the room image
+          setRoomName(roomData.roomName || 'Room');
+          setRoomImage(roomData.image || null);
 
-          const deviceIds = roomData.devices || []; // Array of device IDs in the room
-          console.log('Room Data:', roomData); // Debugging
-          console.log('Device IDs in the Room:', deviceIds); // Debugging
-
-          // Fetch devices associated with the room
+          const deviceIds = roomData.devices || [];
           const devicesRef = collection(db, 'devices');
           let devicesData: Device[] = [];
 
           if (deviceIds.length > 0) {
-            // Only query devices if deviceIds is not empty
             const devicesQuery = query(devicesRef, where('__name__', 'in', deviceIds));
             const devicesSnapshot = await getDocs(devicesQuery);
 
@@ -128,19 +115,14 @@ const AddDevice = ({ onClose, roomId, refreshDevices }: AddDeviceProps) => {
 
           setDevices(devicesData);
 
-          // Fetch all rooms and devices for the hubCode
           const selectedHome = JSON.parse(localStorage.getItem('selectedHome') || '{}') || {};
           const hubCode = selectedHome.hubCode || 'defaultHubCode';
-          console.log('Selected Home:', selectedHome); // Debugging
-          console.log('Hub Code:', hubCode); // Debugging
 
           if (hubCode) {
-            // Fetch all rooms with the same hubCode
             const roomsRef = collection(db, 'rooms');
             const roomsQuery = query(roomsRef, where('hubCode', '==', hubCode));
             const roomsSnapshot = await getDocs(roomsQuery);
 
-            // Collect all device IDs from all rooms
             const assignedDeviceIds = new Set<string>();
             roomsSnapshot.forEach((doc) => {
               const roomData = doc.data();
@@ -149,10 +131,6 @@ const AddDevice = ({ onClose, roomId, refreshDevices }: AddDeviceProps) => {
               }
             });
 
-            console.log('All Rooms with Same hubCode:', roomsSnapshot.docs.map(doc => doc.data())); // Debugging
-            console.log('Assigned Device IDs:', assignedDeviceIds); // Debugging
-
-            // Fetch all devices with the same hubCode
             const allDevicesQuery = query(devicesRef, where('hubCode', '==', hubCode));
             const allDevicesSnapshot = await getDocs(allDevicesQuery);
 
@@ -168,14 +146,9 @@ const AddDevice = ({ onClose, roomId, refreshDevices }: AddDeviceProps) => {
               });
             });
 
-            console.log('All Devices with Same hubCode:', allDevices); // Debugging
-
-            // Filter out devices that are already assigned to any room
             const availableDevicesData = allDevices.filter(
               (device) => !assignedDeviceIds.has(device.id)
             );
-
-            console.log('Available Devices:', availableDevicesData); // Debugging
 
             setAvailableDevices(availableDevicesData);
           }
@@ -190,55 +163,61 @@ const AddDevice = ({ onClose, roomId, refreshDevices }: AddDeviceProps) => {
     }
   };
 
-  // Handle device selection
   const handleDeviceSelect = (deviceId: string) => {
     setSelectedDeviceIds((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(deviceId)) {
-        newSet.delete(deviceId); // Deselect if already selected
+        newSet.delete(deviceId);
       } else {
-        newSet.add(deviceId); // Select if not already selected
+        newSet.add(deviceId);
       }
       return newSet;
     });
   };
 
-  // Handle Apply button click
   const handleApply = async () => {
     if (roomId) {
       const db = getFirestore();
       const roomDocRef = doc(db, 'rooms', roomId);
-
+  
       try {
         const roomDocSnap = await getDoc(roomDocRef);
         if (roomDocSnap.exists()) {
           const roomData = roomDocSnap.data();
           const currentDevices = roomData.devices || [];
-
+  
           if (isAddActive) {
             // Add selected devices to the room's devices array
             const updatedDevices = [...currentDevices, ...Array.from(selectedDeviceIds)];
             await updateDoc(roomDocRef, { devices: updatedDevices });
+  
+            const newDevices = availableDevices.filter((device) =>
+              Array.from(selectedDeviceIds).includes(device.id)
+            );
+            setDevices((prev) => [...prev, ...newDevices]);
           } else {
             // Remove selected devices from the room's devices array
             const updatedDevices = currentDevices.filter((id: string) => !selectedDeviceIds.has(id));
             await updateDoc(roomDocRef, { devices: updatedDevices });
+  
+            // Update the local state by filtering out the removed devices
+            setDevices((prev) => prev.filter((device) => !selectedDeviceIds.has(device.id)));
           }
-
+  
           // Update the room name if it was edited
           if (isEditingRoomName) {
             await updateDoc(roomDocRef, { roomName: roomName });
-            setIsEditingRoomName(false); // Exit edit mode
+            setIsEditingRoomName(false);
           }
-
+  
           // Clear selected devices
           setSelectedDeviceIds(new Set());
-
+  
           // Refresh the device grids
           fetchRoomAndDevices();
-
+  
           // Call the refreshDevices callback to update the Devices page
-          refreshDevices();
+          refreshDevices(); // This ensures the Devices component updates its state
         }
       } catch (error) {
         console.error('Error updating room devices:', error);
@@ -246,7 +225,6 @@ const AddDevice = ({ onClose, roomId, refreshDevices }: AddDeviceProps) => {
     }
   };
 
-  // Handle image upload
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
@@ -254,18 +232,14 @@ const AddDevice = ({ onClose, roomId, refreshDevices }: AddDeviceProps) => {
         const db = getFirestore();
         const storage = getStorage();
 
-        // Upload the image to Firebase Storage
         const storageRef = ref(storage, `room-images/${roomId}`);
         await uploadBytes(storageRef, file);
 
-        // Get the download URL of the uploaded image
         const imageUrl = await getDownloadURL(storageRef);
 
-        // Update the room's image field in Firestore
         const roomDocRef = doc(db, 'rooms', roomId);
         await updateDoc(roomDocRef, { image: imageUrl });
 
-        // Update the local state with the new image URL
         setRoomImage(imageUrl);
       } catch (error) {
         console.error('Error uploading image:', error);
@@ -274,51 +248,48 @@ const AddDevice = ({ onClose, roomId, refreshDevices }: AddDeviceProps) => {
     }
   };
 
-  // Get the image for a device based on its type
   const getDeviceImage = (deviceType: DeviceType) => {
-    return deviceTypeToImage[deviceType] || LightImg; // Default to LightImg if deviceType is unknown
+    return deviceTypeToImage[deviceType] || LightImg;
   };
 
   return (
-    <Box 
-      width={'80%'} 
-      zIndex={1000} 
-      height={'auto'} 
-      bg={'white'} 
-      display={'flex'} 
-      position={'absolute'} 
-      alignContent={'center'} 
-      justifyContent={'center'} 
-      alignItems={'center'} 
-      transform={'translate(-50%, -50%)'} 
-      top={'50%'} 
+    <Box
+      width={'80%'}
+      zIndex={1000}
+      height={'auto'}
+      bg={'white'}
+      display={'flex'}
+      position={'absolute'}
+      alignContent={'center'}
+      justifyContent={'center'}
+      alignItems={'center'}
+      transform={'translate(-50%, -50%)'}
+      top={'50%'}
       left={'50%'}
-      style={{ borderRadius: "20px", boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)" }}
+      style={{ borderRadius: '20px', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)' }}
     >
-      <Stack 
-        bg={'transparent'} 
-        width={'100%'} 
-        spaceY={'5%'} 
-        paddingTop={'5%'} 
-        paddingBottom={'5%'} 
-        display={'flex'} 
+      <Stack
+        bg={'transparent'}
+        width={'100%'}
+        spaceY={'5%'}
+        paddingTop={'5%'}
+        paddingBottom={'5%'}
+        display={'flex'}
         alignItems={'center'}
       >
-        {/* Close Button */}
-        <IoMdClose 
+        <IoMdClose
           style={{
             background: 'transparent',
             position: 'absolute',
             top: '3%',
             right: '5%',
             fontSize: '24px',
-            cursor: 'pointer'
+            cursor: 'pointer',
           }}
-          color='black'
+          color="black"
           onClick={onClose}
         />
 
-        {/* Image Upload Icon */}
         <Box
           position="absolute"
           top="3%"
@@ -336,7 +307,6 @@ const AddDevice = ({ onClose, roomId, refreshDevices }: AddDeviceProps) => {
           />
         </Box>
 
-        {/* Centered Room Name with Pen Icon */}
         <HStack justifyContent="center">
           {isEditingRoomName ? (
             <Input
@@ -351,18 +321,17 @@ const AddDevice = ({ onClose, roomId, refreshDevices }: AddDeviceProps) => {
             />
           ) : (
             <Heading color={'#6cc358'} textDecor={'underline'}>
-              {roomName} {/* Display the room name */}
+              {roomName}
             </Heading>
           )}
-          <FaPen 
-            color="#6cc358" 
-            size={16} 
-            onClick={() => setIsEditingRoomName(!isEditingRoomName)} // Toggle edit mode
+          <FaPen
+            color="#6cc358"
+            size={16}
+            onClick={() => setIsEditingRoomName(!isEditingRoomName)}
             style={{ cursor: 'pointer' }}
           />
         </HStack>
 
-        {/* Power Buttons */}
         <Box
           display="flex"
           alignItems="center"
@@ -376,8 +345,8 @@ const AddDevice = ({ onClose, roomId, refreshDevices }: AddDeviceProps) => {
             flex="1"
             borderRadius="0"
             borderRight="1px solid #ccc"
-            bg={isAddActive ? "#6cc358" : "white"}
-            color={isAddActive ? "white" : "#6cc358"}
+            bg={isAddActive ? '#6cc358' : 'white'}
+            color={isAddActive ? 'white' : '#6cc358'}
             onClick={() => setIsAddActive(true)}
           >
             Add +
@@ -385,15 +354,14 @@ const AddDevice = ({ onClose, roomId, refreshDevices }: AddDeviceProps) => {
           <Button
             flex="1"
             borderRadius="0"
-            bg={!isAddActive ? "#6cc358" : "white"}
-            color={!isAddActive ? "white" : "#6cc358"}
+            bg={!isAddActive ? '#6cc358' : 'white'}
+            color={!isAddActive ? 'white' : '#6cc358'}
             onClick={() => setIsAddActive(false)}
           >
             Delete -
           </Button>
         </Box>
 
-        {/* Devices Grid (Visible only when Add is active) */}
         {isAddActive && (
           <Box width={'100%'} height={'30vh'} overflowY={'auto'}>
             <Grid templateColumns={{ base: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' }} gap={4}>
@@ -417,7 +385,6 @@ const AddDevice = ({ onClose, roomId, refreshDevices }: AddDeviceProps) => {
                     onClick={() => handleDeviceSelect(device.id)}
                     cursor="pointer"
                   >
-                    {/* Device Icon */}
                     <Image
                       src={getDeviceImage(device.deviceType)}
                       alt={device.name}
@@ -427,8 +394,6 @@ const AddDevice = ({ onClose, roomId, refreshDevices }: AddDeviceProps) => {
                       p={2}
                       transition="all 0.3s ease"
                     />
-
-                    {/* Device Name */}
                     <Text fontSize="md" fontWeight="medium" color="gray.700" textAlign={'center'}>
                       {device.name}
                     </Text>
@@ -439,7 +404,6 @@ const AddDevice = ({ onClose, roomId, refreshDevices }: AddDeviceProps) => {
           </Box>
         )}
 
-        {/* Devices Grid (Visible only when Delete is active) */}
         {!isAddActive && (
           <Box width={'100%'} height={'30vh'} overflowY={'auto'}>
             <Grid templateColumns={{ base: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' }} gap={4}>
@@ -463,7 +427,6 @@ const AddDevice = ({ onClose, roomId, refreshDevices }: AddDeviceProps) => {
                     onClick={() => handleDeviceSelect(device.id)}
                     cursor="pointer"
                   >
-                    {/* Device Icon */}
                     <Image
                       src={getDeviceImage(device.deviceType)}
                       alt={device.name}
@@ -473,8 +436,6 @@ const AddDevice = ({ onClose, roomId, refreshDevices }: AddDeviceProps) => {
                       p={2}
                       transition="all 0.3s ease"
                     />
-
-                    {/* Device Name */}
                     <Text fontSize="md" fontWeight="medium" color="gray.700" textAlign={'center'}>
                       {device.name}
                     </Text>
@@ -485,15 +446,14 @@ const AddDevice = ({ onClose, roomId, refreshDevices }: AddDeviceProps) => {
           </Box>
         )}
 
-        {/* Apply Button */}
-        <Button 
-          width={'50%'} 
-          display={'flex'} 
-          height={'auto'} 
-          borderRadius={'20px'} 
-          bg={'#6cc35a'} 
-          color={'white'} 
-          fontSize={'150%'} 
+        <Button
+          width={'50%'}
+          display={'flex'}
+          height={'auto'}
+          borderRadius={'20px'}
+          bg={'#6cc35a'}
+          color={'white'}
+          fontSize={'150%'}
           padding={'3%'}
           onClick={handleApply}
         >

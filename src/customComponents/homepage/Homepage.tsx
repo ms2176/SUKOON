@@ -75,6 +75,7 @@ interface Unit {
   unitName: string;
   hubCode: string;
   pinned: boolean;
+  image?: string;
 }
 
 // Define the PinnedItem type as a union of Room, Device, and Unit
@@ -241,15 +242,14 @@ const Homepage: React.FC<{ selectedHomePass: Home | null; onSelectHome: (home: H
     fetchHomes();
   };
 
-  const handlePinItem = (item: PinnedItem) => {
-    setPinnedItems((prev) => [...prev, item]);
-  };
+  
 
   const fetchPinnedItems = async () => {
     const db = getFirestore();
-
+  
     if (selectedHome) {
       try {
+        // Fetch pinned rooms
         const roomsRef = collection(db, 'rooms');
         const roomsQuery = query(roomsRef, where('hubCode', '==', selectedHome.hubCode), where('pinned', '==', true));
         const roomsSnapshot = await getDocs(roomsQuery);
@@ -262,7 +262,8 @@ const Homepage: React.FC<{ selectedHomePass: Home | null; onSelectHome: (home: H
           devices: doc.data().devices || [],
           image: doc.data().image || NoImage,
         }));
-
+  
+        // Fetch pinned devices
         const devicesRef = collection(db, 'devices');
         const devicesQuery = query(devicesRef, where('hubCode', '==', selectedHome.hubCode), where('pinned', '==', true));
         const devicesSnapshot = await getDocs(devicesQuery);
@@ -274,24 +275,51 @@ const Homepage: React.FC<{ selectedHomePass: Home | null; onSelectHome: (home: H
           hubCode: doc.data().hubCode,
           pinned: doc.data().pinned,
         }));
-
-        const unitsRef = collection(db, 'units');
-        const unitsQuery = query(unitsRef, where('hubCode', '==', selectedHome.hubCode), where('pinned', '==', true));
-        const unitsSnapshot = await getDocs(unitsQuery);
-        const pinnedUnits: Unit[] = unitsSnapshot.docs.map((doc) => ({
-          type: 'unit',
-          id: doc.id,
-          unitName: doc.data().unitName,
-          hubCode: doc.data().hubCode,
-          pinned: doc.data().pinned,
-        }));
-
+  
+        // Fetch pinned units (tenant hubs) for admin hubs
+        let pinnedUnits: Unit[] = [];
+        if (selectedHome.homeType === 'admin') {
+          // Step 1: Get the admin hub document
+          const adminHubRef = doc(db, 'userHubs', selectedHome.hubCode);
+          const adminHubDoc = await getDoc(adminHubRef);
+  
+          if (adminHubDoc.exists()) {
+            const adminHubData = adminHubDoc.data();
+            const unitHubCodes = adminHubData.units || []; // Array of hubCodes for managed units
+  
+            // Step 2: Fetch the tenant hubs with hubCodes in the units array
+            const userHubsRef = collection(db, 'userHubs');
+            const unitsQuery = query(userHubsRef, where('hubCode', 'in', unitHubCodes), where('pinned', '==', true));
+            const unitsSnapshot = await getDocs(unitsQuery);
+  
+            // Step 3: Map the tenant hubs to the Unit type
+            pinnedUnits = unitsSnapshot.docs.map((doc) => ({
+              type: 'unit',
+              id: doc.id,
+              unitName: doc.data().unitName,
+              hubCode: doc.data().hubCode,
+              pinned: doc.data().pinned,
+              image: doc.data().image || NoImage,
+            }));
+          }
+        }
+  
+        // Combine all pinned items
         const pinnedItems = [...pinnedRooms, ...pinnedDevices, ...pinnedUnits];
         setPinnedItems(pinnedItems);
       } catch (error) {
         console.error('Error fetching pinned items:', error);
       }
     }
+  };
+
+  useEffect(() => {
+    console.log('Pinned Items:', pinnedItems);
+  }, [pinnedItems]);
+
+  const handlePinItem = (item: PinnedItem) => {
+    setPinnedItems((prev) => [...prev, item]); // Immediately add the new pinned item to the state
+    fetchPinnedItems(); // Fetch the latest pinned items from Firestore to ensure consistency
   };
 
   const refreshPinnedMenu = () => {
@@ -609,7 +637,7 @@ const Homepage: React.FC<{ selectedHomePass: Home | null; onSelectHome: (home: H
                   borderRadius="20px"
                   overflow="hidden"
                   bg="white"
-                  p={3} // Reduced padding
+                  p={3}
                   cursor="pointer"
                   transition="all 0.3s ease-in-out"
                   boxShadow="0px 5px 10px rgba(0, 0, 0, 0.05)"
@@ -632,25 +660,41 @@ const Homepage: React.FC<{ selectedHomePass: Home | null; onSelectHome: (home: H
                       }
                     }
                   }}
-                  height="180px" // Slightly reduced height
+                  height="180px"
                 >
                   <Image
                     src={
                       item.type === 'room'
                         ? (item as Room).image || NoImage
-                        : deviceTypeToImage[normalizeDeviceType((item as Device).deviceType)] || LightImg
+                        : item.type === 'device'
+                        ? deviceTypeToImage[normalizeDeviceType((item as Device).deviceType)] || LightImg
+                        : (item as Unit).image || NoImage // Handle units
                     }
-                    alt={item.type === 'room' ? (item as Room).roomName : (item as Device).deviceName}
+                    alt={
+                      item.type === 'room'
+                        ? (item as Room).roomName
+                        : item.type === 'device'
+                        ? (item as Device).deviceName
+                        : (item as Unit).unitName
+                    }
                     borderRadius="12px"
                     objectFit="cover"
                     width="100%"
-                    height="90px" // Reduced image height
+                    height="90px"
                   />
-                  <Text fontWeight="bold" fontSize="md" mt={2} color="#6cce58"> {/* Reduced font size */}
-                    {item.type === 'room' ? (item as Room).roomName : (item as Device).deviceName}
+                  <Text fontWeight="bold" fontSize="md" mt={2} color="#6cce58">
+                    {item.type === 'room'
+                      ? (item as Room).roomName
+                      : item.type === 'device'
+                      ? (item as Device).deviceName
+                      : (item as Unit).unitName}
                   </Text>
                   <Text color="gray.500" fontSize="sm">
-                    {item.type === 'room' ? `${(item as Room).devices.length} devices` : (item as Device).deviceType}
+                    {item.type === 'room'
+                      ? `${(item as Room).devices.length} devices`
+                      : item.type === 'device'
+                      ? (item as Device).deviceType
+                      : 'Unit'}
                   </Text>
                 </Box>
               ))}
@@ -660,10 +704,10 @@ const Homepage: React.FC<{ selectedHomePass: Home | null; onSelectHome: (home: H
       </Stack>
 
       {selectedHome?.homeType === 'admin' ? (
-        <PinnedMenuAdmin
+          <PinnedMenuAdmin
           isVisible={isPinnedMenuVisible}
           onClose={() => setPinnedMenuVisible(false)}
-          onPinItem={handlePinItem}
+          onPinItem={handlePinItem} // Pass the handlePinItem function
           selectedHubCode={selectedHome?.hubCode || ''}
           refreshPinnedMenu={refreshPinnedMenu}
         />
