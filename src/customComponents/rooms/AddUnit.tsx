@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { doc, setDoc, collection, updateDoc, query, where, getDocs } from 'firebase/firestore';
+import { doc, collection, updateDoc, query, where, getDocs } from 'firebase/firestore';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import './addRooms.css'; // Reuse the same CSS for styling
 import { getFirestore } from 'firebase/firestore';
@@ -39,91 +39,90 @@ const AddUnit: React.FC<AddUnitProps> = ({ onClose }) => {
       alert('Please provide a unit name and hub code before adding.');
       return;
     }
-  
+
     setIsUploading(true); // Start loading state
     setError(null); // Reset error state
-  
+
     try {
       const db = getFirestore();
       const storage = getStorage(); // Initialize Firebase Storage
-  
+
       // Step 1: Validate the hubCode by querying the userHubs collection
       const userHubsRef = collection(db, 'userHubs');
       const q = query(userHubsRef, where('hubCode', '==', hubCode)); // Query for the hubCode
       const querySnapshot = await getDocs(q);
-  
+
       if (querySnapshot.empty) {
         setError('Invalid hub code. No tenant hub found with this code.');
         return;
       }
-  
-      // Step 2: Get the admin hub's document
+
+      // Step 2: Get the tenant hub document
+      const tenantHubDoc = querySnapshot.docs[0]; // There should only be one document with this hubCode
+      const tenantHubRef = tenantHubDoc.ref;
+
+      // Step 3: Get the admin hub's document
       const selectedHome = localStorage.getItem('selectedHome')
         ? JSON.parse(localStorage.getItem('selectedHome') as string)
         : null;
-  
+
       if (!selectedHome || !selectedHome.hubCode) {
         setError('No admin hub selected. Please select an admin hub first.');
         return;
       }
-  
+
       // Query the userHubs collection to find the admin hub document with the matching hubCode
       const adminHubQuery = query(userHubsRef, where('hubCode', '==', selectedHome.hubCode));
       const adminHubSnapshot = await getDocs(adminHubQuery);
-  
+
       if (adminHubSnapshot.empty) {
         setError('Admin hub not found. Please try again.');
         return;
       }
-  
+
       const adminHubDoc = adminHubSnapshot.docs[0]; // There should only be one document with this hubCode
       const adminHubData = adminHubDoc.data();
-  
+
       // Ensure the selected hub is an admin hub
       if (adminHubData.homeType !== 'admin') {
         setError('Selected hub is not an admin hub.');
         return;
       }
-  
-      // Step 3: Upload the image (if provided)
-        let imageUrl = null;
-        if (imageFile) {
+
+      // Step 4: Upload the image (if provided)
+      let imageUrl = null;
+      if (imageFile) {
         try {
-            const storageRef = ref(storage, `unit-images/${hubCode}`); // Use hubCode as the file name
-            await uploadBytes(storageRef, imageFile); // Upload the file
-            imageUrl = await getDownloadURL(storageRef); // Get the download URL
-            console.log('Image uploaded successfully. URL:', imageUrl); // Log the image URL
+          const storageRef = ref(storage, `unit-images/${hubCode}`); // Use hubCode as the file name
+          await uploadBytes(storageRef, imageFile); // Upload the file
+          imageUrl = await getDownloadURL(storageRef); // Get the download URL
+          console.log('Image uploaded successfully. URL:', imageUrl); // Log the image URL
         } catch (uploadError) {
-            console.error('Error uploading image:', uploadError);
-            setError('Failed to upload image. Please try again.');
-            return;
+          console.error('Error uploading image:', uploadError);
+          setError('Failed to upload image. Please try again.');
+          return;
         }
-        }
-  
-      // Step 4: Create the new unit document
-      const newUnitRef = doc(collection(db, 'userHubs')); // Create a new document in userHubs
-      const unitData = {
-        id: newUnitRef.id,
+      }
+
+      // Step 5: Update the tenant hub document
+      await updateDoc(tenantHubRef, {
         unitName: unitName,
-        hubCode: hubCode,
-        image: imageUrl || defaultImageUrl, // Store the image URL (or fallback if no image)
-      };
-  
-      await setDoc(newUnitRef, unitData);
-  
-      // Step 5: Update the admin hub's units array
+        image: imageUrl || null, // Use the uploaded image URL or null if no image
+      });
+
+      // Step 6: Update the admin hub's units array
       const updatedUnits = [...(adminHubData.units || []), hubCode]; // Add the new hubCode to the units array
-  
+
       await updateDoc(adminHubDoc.ref, {
         units: updatedUnits,
       });
-  
+
       // Reset the form fields
       setUnitName('');
       setHubCode('');
       setImageFile(null);
       setPreviewUrl(null);
-  
+
       // Close the modal
       onClose();
     } catch (error) {
