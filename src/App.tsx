@@ -28,7 +28,7 @@ import { useState } from 'react';
 import Verification_hold from './customComponents/login/verification_hold'
 import Alldevices from './customComponents/rooms/Alldevices'
 import DeviceControlPageNoRoom from './customComponents/rooms/DeviceControlPageNoRoom';
-import AddDevice from './customComponents/rooms/AddDevice';
+import UnitsList from './customComponents/rooms/unitsList';
 
 interface Home {
   homeName: string;
@@ -92,15 +92,16 @@ const App = () => {
           </AuthenticatedLayout>
         } /> {/* Homepage */}
 
-<Route path="/adddevice" element={
-          <AuthenticatedLayout selectedHome={selectedHome}>
-            <AddDevice />
-          </AuthenticatedLayout>
-        } /> {/* Homepage */}
 
-        <Route path="/Rooms" element={
+<Route path="/Rooms" element={
           <AuthenticatedLayout selectedHome={selectedHome}>
             <RoomList selectedHome={selectedHome} />
+          </AuthenticatedLayout>
+        } /> {/* Rooms */}
+
+<Route path="/unitsList" element={
+          <AuthenticatedLayout selectedHome={selectedHome}>
+            <UnitsList selectedHome={selectedHome} />
           </AuthenticatedLayout>
         } /> {/* Rooms */}
 

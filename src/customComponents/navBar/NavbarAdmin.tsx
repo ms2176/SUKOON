@@ -54,9 +54,9 @@ const NavbarAdmin = () => {
     }
   };
 
-  const goToRooms = () => {
+  const goToUnits = () => {
     if (hasHubs) {
-      navigate('/Rooms');
+      navigate("/unitsList");
     }
   };
 
@@ -103,7 +103,7 @@ const NavbarAdmin = () => {
         {/* Units Button */}
         <Button
           className="navButton"
-          onClick={goToRooms}
+          onClick={goToUnits}
           isDisabled={!hasHubs || loading} // Disable if no hubs or still loading
           opacity={!hasHubs || loading ? 0.5 : 1} // Gray out if no hubs
         >

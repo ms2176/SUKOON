@@ -171,7 +171,7 @@ const Washingmachine: React.FC<WashingmachinePageProps> = ({ deviceId }) => {
         await updateDoc(deviceDocRef, {
           timerRunning: true,
           timerPaused: false,
-          timerRemaining: durationInSeconds, // Ensure this is a valid number
+          timerRemaining: durationInSeconds,
           timerStartTime: serverTimestamp(),
         });
       } catch (error) {
@@ -204,17 +204,17 @@ const Washingmachine: React.FC<WashingmachinePageProps> = ({ deviceId }) => {
     setIsRunning(false);
     setIsPaused(true);
     setActiveButton("pause");
-
+  
     // Calculate remaining time from the current timer value
     const [minutes, seconds] = timer.split(":").map(Number);
     const remainingTime = minutes * 60 + seconds;
     setRemainingTime(remainingTime);
-
+  
     // Update Firestore
     if (deviceId) {
       const db = getFirestore();
       const deviceDocRef = doc(db, "devices", deviceId);
-
+  
       try {
         await updateDoc(deviceDocRef, {
           timerRunning: false,
@@ -229,29 +229,30 @@ const Washingmachine: React.FC<WashingmachinePageProps> = ({ deviceId }) => {
 
   const continueTimer = async () => {
     if (isRunning || !remainingTime) return;
-
+  
     setIsRunning(true);
     setIsPaused(false);
     setActiveButton("continue");
-
+  
     // Update Firestore
     if (deviceId) {
       const db = getFirestore();
       const deviceDocRef = doc(db, "devices", deviceId);
-
+  
       try {
         await updateDoc(deviceDocRef, {
           timerRunning: true,
           timerPaused: false,
-          timerStartTime: serverTimestamp(),
+          timerRemaining: remainingTime, // Pass the remaining time
+          timerStartTime: serverTimestamp(), // Reset the start time
         });
       } catch (error) {
         console.error("Error updating timer state:", error);
       }
     }
-
+  
     let time = remainingTime;
-
+  
     timerRef.current = setInterval(() => {
       time -= 1;
       if (time < 0) {
@@ -262,7 +263,7 @@ const Washingmachine: React.FC<WashingmachinePageProps> = ({ deviceId }) => {
         setActiveButton(null);
         return;
       }
-
+  
       const minutes = Math.floor(time / 60);
       const seconds = time % 60;
       setTimer(`${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`);
@@ -279,12 +280,12 @@ const Washingmachine: React.FC<WashingmachinePageProps> = ({ deviceId }) => {
     setIsPaused(false);
     setRemainingTime(0);
     setActiveButton("end");
-
+  
     // Update Firestore
     if (deviceId) {
       const db = getFirestore();
       const deviceDocRef = doc(db, "devices", deviceId);
-
+  
       try {
         await updateDoc(deviceDocRef, {
           timerRunning: false,
