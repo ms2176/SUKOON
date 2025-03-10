@@ -9,54 +9,35 @@ import { useEffect, useState } from "react";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { getFirestore, collection, query, where, getDocs } from "firebase/firestore"; // Import Firestore functions
 
-const NavbarTenant = () => {
+interface Home {
+  homeName: string;
+  homeType: string;
+  hubCode: string;
+}
+
+interface NavbarTenantProps {
+  homes: Home[]; // Add this prop
+}
+
+const NavbarTenant: React.FC<NavbarTenantProps> = ({ homes }) => {
   const navigate = useNavigate();
   const [hasHubs, setHasHubs] = useState(false); // State to track if the user has hubs
   const [loading, setLoading] = useState(true); // State to track loading status
 
-  // Function to check if the user has any hubs
-  const checkUserHubs = async (userId: string) => {
-    const db = getFirestore();
-    const userHubsRef = collection(db, "userHubs");
-    const q = query(userHubsRef, where("userId", "==", userId));
-
-    try {
-      const querySnapshot = await getDocs(q);
-      return !querySnapshot.empty; // Return true if hubs exist, false otherwise
-    } catch (error) {
-      console.error("Error checking user hubs:", error);
-      return false;
-    }
-  };
-
-  // Fetch hubs when the component mounts
+  // Update hasHubs whenever the homes prop changes
   useEffect(() => {
-    const auth = getAuth();
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        const userId = user.uid;
-        const hasHubs = await checkUserHubs(userId);
-        setHasHubs(hasHubs); // Update the state
-      } else {
-        setHasHubs(false); // No user is signed in
-      }
-      setLoading(false); // Set loading to false
-    });
-
-    return () => unsubscribe(); // Cleanup the listener
-  }, []);
+    setHasHubs(homes.length > 0);
+    setLoading(false);
+  }, [homes]); // Reacts to homes prop changes
 
   // Navigation functions
   const goToHome = () => {
-
     if (hasHubs) {
-        navigate('/Home');
+      navigate('/Home');
+    } else {
+      navigate('/initial');
     }
-
-    else {
-        navigate('/initial')
-    }
-};
+  };
 
   const goToRooms = () => {
     if (hasHubs) {
@@ -82,10 +63,10 @@ const NavbarTenant = () => {
 
   return (
     <Box
-      position="fixed"  // Keeps it fixed on the screen
-      bottom="-4"        // Moves it to the bottom
+      position="fixed"
+      bottom="-4"
       width="100%"
-      bg="white"     // Temporary color for visibility
+      bg="white"
       color="white"
       p="4"
       className="navContainer"
@@ -114,8 +95,8 @@ const NavbarTenant = () => {
         <Button
           className="navButton"
           onClick={goToRooms}
-          isDisabled={!hasHubs || loading} // Disable if no hubs or still loading
-          opacity={!hasHubs || loading ? 0.5 : 1} // Gray out if no hubs
+          isDisabled={!hasHubs || loading}
+          opacity={!hasHubs || loading ? 0.5 : 1}
         >
           <Stack spaceY={-3} display={'flex'} justifyContent={'center'} alignItems={'center'} alignContent={'center'}>
             <BsDoorClosed size={'70%'} style={{ background: 'transparent' }} color="#21334a" />
@@ -129,8 +110,8 @@ const NavbarTenant = () => {
         <Button
           className="navButton"
           onClick={goToBeati}
-          isDisabled={!hasHubs || loading} // Disable if no hubs or still loading
-          opacity={!hasHubs || loading ? 0.5 : 1} // Gray out if no hubs
+          isDisabled={!hasHubs || loading}
+          opacity={!hasHubs || loading ? 0.5 : 1}
         >
           <Stack spaceY={-3} display={'flex'} justifyContent={'center'} alignItems={'center'} alignContent={'center'}>
             <GiCircleForest size={'70%'} style={{ background: 'transparent' }} color="#21334a" />
@@ -144,8 +125,8 @@ const NavbarTenant = () => {
         <Button
           className="navButton"
           onClick={goToStats}
-          isDisabled={!hasHubs || loading} // Disable if no hubs or still loading
-          opacity={!hasHubs || loading ? 0.5 : 1} // Gray out if no hubs
+          isDisabled={!hasHubs || loading}
+          opacity={!hasHubs || loading ? 0.5 : 1}
         >
           <Stack spaceY={-3} display={'flex'} justifyContent={'center'} alignItems={'center'} alignContent={'center'}>
             <SlGraph size={'70%'} style={{ background: 'transparent' }} color="#21334a" />

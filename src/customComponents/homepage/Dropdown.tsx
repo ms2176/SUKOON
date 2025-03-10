@@ -1,5 +1,5 @@
 import { Heading, HStack } from '@chakra-ui/react';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import {
   MenuContent,
@@ -21,11 +21,24 @@ interface DropdownProps {
   onSelect: (home: Home) => void; // Callback for when a hub is selected
 }
 
-const Dropdown: React.FC<DropdownProps> = ({ initialShow, homes, onSelect }) => {
-  const [selectedItem, setSelectedItem] = useState<string>(initialShow);
+const Dropdown: React.FC<{
+  homes: Home[];
+  onSelect: (home: Home) => void;
+  initialShow: string;
+}> = ({ homes, onSelect, initialShow }) => {
+  const [selectedHome, setSelectedHome] = useState(initialShow);
+
+  useEffect(() => {
+    setSelectedHome(initialShow);
+  }, [homes, initialShow]); // Update when homes change
+
+  const handleSelect = (home: Home) => {
+    setSelectedHome(home.homeName);
+    onSelect(home);
+  };
 
   return (
-    <div style={{ background: 'transparent', width: '100%' }}>
+    <div key={homes.length} style={{ background: 'transparent', width: '100%' }}>
       <MenuRoot>
         <MenuTrigger asChild>
           <Button
@@ -53,7 +66,7 @@ const Dropdown: React.FC<DropdownProps> = ({ initialShow, homes, onSelect }) => 
               value={home.homeName}
               color={'inherit'}
               onClick={() => {
-                setSelectedItem(home.homeName);
+                setSelectedHome(home.homeName);
                 onSelect(home); // Call the onSelect callback with the selected home
               }}
               style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}

@@ -2,7 +2,7 @@ import { Box, Flex, Heading, HStack, Stack, Image, Text, Grid } from '@chakra-ui
 import React, { useState, useEffect } from 'react';
 import './pinnedMenu.css';
 import { VscClose } from 'react-icons/vsc';
-import { getFirestore, collection, query, where, getDocs, doc, updateDoc } from 'firebase/firestore';
+import { getFirestore, collection, query, where, getDocs, doc, updateDoc, getDoc } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 import NoImage from '@/images/noImage.png'; // Default image for units
 
@@ -33,90 +33,74 @@ const PinnedMenuAdmin: React.FC<PinnedMenuAdminProps> = ({ isVisible, onClose, o
     const auth = getAuth();
     const db = getFirestore();
   
-    const user = auth.currentUser;
-    if (user && selectedHubCode) {
-      try {
-        // Step 1: Get the admin hub document
-        const userHubsRef = collection(db, 'userHubs');
-        const adminHubQuery = query(userHubsRef, where('hubCode', '==', selectedHubCode));
-        const adminHubSnapshot = await getDocs(adminHubQuery);
+    if (!selectedHubCode) return;
   
-        if (adminHubSnapshot.empty) {
-          console.error('Admin hub not found.');
-          return;
-        }
+    try {
+      // Get admin hub document
+      const adminHubRef = doc(db, 'userHubs', selectedHubCode);
+      const adminHubDoc = await getDoc(adminHubRef);
   
-        const adminHubDoc = adminHubSnapshot.docs[0];
-        const adminHubData = adminHubDoc.data();
-  
-        // Ensure the selected hub is an admin hub
-        if (adminHubData.homeType !== 'admin') {
-          console.error('Selected hub is not an admin hub.');
-          return;
-        }
-  
-        // Step 2: Get the units array from the admin hub document
-        const unitHubCodes = adminHubData.units || []; // Array of hubCodes for managed units
-  
-        // Step 3: Fetch details for each unit hub
-        const unitsData: Unit[] = [];
-        for (const hubCode of unitHubCodes) {
-          const unitQuery = query(userHubsRef, where('hubCode', '==', hubCode));
-          const unitSnapshot = await getDocs(unitQuery);
-  
-          if (!unitSnapshot.empty) {
-            const unitDoc = unitSnapshot.docs[0];
-            const unitData = unitDoc.data();
-            if (!unitData.pinned) {
-              unitsData.push({
-                type: 'unit',
-                id: unitDoc.id,
-                unitName: unitData.unitName || 'Unnamed Unit',
-                hubCode: hubCode,
-                pinned: unitData.pinned || false,
-                image: unitData.image || NoImage, // Include the image property
-              });
-            }
-          } else {
-            console.error(`Unit hub with hubCode ${hubCode} not found`);
-          }
-        }
-  
-        setUnits(unitsData);
-      } catch (error) {
-        console.error('Error fetching units:', error);
+      if (!adminHubDoc.exists() || adminHubDoc.data()?.homeType !== 'admin') {
+        setUnits([]);
+        return;
       }
+      
+      const unitHubCodes = adminHubDoc.data().units || [];
+      
+      // Exit if no units available
+      if (unitHubCodes.length === 0) {
+        setUnits([]);
+        return;
+      }
+  
+      // Fetch tenant hubs using hubCodes
+      const userHubsRef = collection(db, 'userHubs');
+      const pinnedUnitsQuery = query(
+        collection(db, 'userHubs'),
+        where('hubCode', 'in', unitHubCodes),
+        where('pinned', '==', false)
+      );
+  
+      const unitsSnapshot = await getDocs(pinnedUnitsQuery);
+      
+      const unitsData = unitsSnapshot.docs.map(doc => ({
+        type: 'unit' as const, // Explicitly set the type
+        id: doc.id,
+        unitName: doc.data().homeName,
+        hubCode: doc.data().hubCode,
+        pinned: doc.data().pinned || false,
+        image: doc.data().image || NoImage,
+      }));
+  
+      setUnits(unitsData);
+    } catch (error) {
+      console.error('Error fetching units:', error);
+      setUnits([]);
     }
   };
 
   useEffect(() => {
-    if (isVisible) {
-      fetchUnits(); // Fetch units when the menu is opened
-    }
-  }, [isVisible, selectedHubCode]);
+    fetchUnits();
+  }, [selectedHubCode]);
+  
 
   // Handle pinning a unit
   const handleItemClick = async (unit: Unit) => {
     const db = getFirestore();
   
-    try {
-      const unitRef = doc(db, 'userHubs', unit.id);
-  
-      // Update the unit's pinned status in Firestore
-      await updateDoc(unitRef, { pinned: true });
-      console.log(`Unit ${unit.unitName} pinned successfully.`);
-  
-      // Notify the parent component that a unit has been pinned
-      onPinItem(unit);
-  
-      // Remove the pinned unit from the local state
-      setUnits((prevUnits) => prevUnits.filter((u) => u.id !== unit.id));
-  
-      // Refresh the pinned menu immediately
-      refreshPinnedMenu();
-    } catch (error) {
-      console.error('Error pinning unit:', error);
-    }
+    await updateDoc(doc(db, 'userHubs', unit.id), { 
+      pinned: true 
+    });
+    
+    // Add to pinned items
+    onPinItem({
+      type: 'unit',
+      id: unit.id,
+      unitName: unit.unitName,
+      hubCode: unit.hubCode,
+      pinned: true,
+      image: unit.image
+    });
   };
 
   if (!isVisible) return null;

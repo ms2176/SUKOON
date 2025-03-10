@@ -42,11 +42,6 @@ interface Home {
   hubCode: string;
 }
 
-interface HomepageProps {
-  selectedHomePass: Home | null;
-  onSelectHome: (home: Home) => void;
-}
-
 // Define the Room type
 interface Room {
   type: 'room';
@@ -135,8 +130,15 @@ const normalizeDeviceType = (deviceType: string): DeviceType => {
   }
 };
 
-const Homepage: React.FC<{ selectedHomePass: Home | null; onSelectHome: (home: Home) => void }> = ({ selectedHomePass, onSelectHome }) => {
-  const [username, setUsername] = useState<string>('guest');
+const Homepage: React.FC<{ selectedHomePass: Home | null; onHomeDelete:() => void; onHomeRename:(newHomes: Home[]) => void; onSelectHome: (home: Home) => void; onHomeAdded: (newHomes: Home[]) => void; homes: Home[] }> = ({
+  selectedHomePass,
+  onSelectHome,
+  onHomeAdded,
+  homes,
+  onHomeDelete,
+  onHomeRename
+}) => {  const [username, setUsername] = useState<string>('guest');
+  const [, setHomes] = useState<Home[]>([]);
   const [isPinnedMenuVisible, setPinnedMenuVisible] = useState(false);
   const [pinnedItems, setPinnedItems] = useState<PinnedItem[]>([]);
   const [isEditing, setIsEditing] = useState(false);
@@ -144,68 +146,40 @@ const Homepage: React.FC<{ selectedHomePass: Home | null; onSelectHome: (home: H
   const [isAddHomeVisible, setIsAddHomeVisible] = useState(false);
   const [isEditHomesVisible, setIsEditHomesVisible] = useState(false);
   const [selectedHome, setSelectedHome] = useState<Home | null>(null);
-  const [homes, setHomes] = useState<Home[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeDevicesCount, setActiveDevicesCount] = useState<number>(0); // State for active devices count
   const navigate = useNavigate();
 
+  
   useEffect(() => {
     const auth = getAuth();
     const db = getFirestore();
-
+  
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
-        const userId = user.uid;
-        const userDocRef = doc(db, 'users', userId);
-        const userDocSnap = await getDoc(userDocRef);
-
-        if (userDocSnap.exists()) {
-          const userData = userDocSnap.data();
-          setUsername(userData.username || 'guest');
+        // Get username from Firestore user document
+        const userDoc = await getDoc(doc(db, 'users', user.uid));
+        if (userDoc.exists()) {
+          setUsername(userDoc.data().username || user.email || 'User');
         } else {
-          setUsername('guest');
+          setUsername(user.email || 'User');
         }
-
-        const userHubsRef = collection(db, 'userHubs');
-        const q = query(userHubsRef, where('userId', '==', userId));
-
-        try {
-          const querySnapshot = await getDocs(q);
-          const hubs: Home[] = [];
-          querySnapshot.forEach((doc) => {
-            const data = doc.data();
-            hubs.push({
-              homeName: data.homeName,
-              homeType: data.homeType,
-              hubCode: data.hubCode,
-            });
-          });
-
-          setHomes(hubs);
-
-          const storedSelectedHome = localStorage.getItem('selectedHome');
-          if (storedSelectedHome) {
-            const selectedHome = JSON.parse(storedSelectedHome);
-            setSelectedHome(selectedHome);
-            onSelectHome(selectedHome);
-          } else if (hubs.length > 0) {
-            const firstHome = hubs[0];
-            setSelectedHome(firstHome);
-            onSelectHome(firstHome);
-          }
-        } catch (error) {
-          console.error('Error fetching user hubs:', error);
-        } finally {
-          setLoading(false);
+        
+        // Get selected home from localStorage if exists
+        const storedHome = localStorage.getItem('selectedHome');
+        if (storedHome) {
+          const parsedHome = JSON.parse(storedHome);
+          setSelectedHome(parsedHome);
+          onSelectHome(parsedHome);
         }
       } else {
         setUsername('guest');
-        setLoading(false);
       }
     });
-
+  
     return () => unsubscribe();
   }, []);
+
 
   const handleHubSelect = (home: Home) => {
     setSelectedHome(home);
@@ -238,7 +212,8 @@ const Homepage: React.FC<{ selectedHomePass: Home | null; onSelectHome: (home: H
     localStorage.setItem('selectedHome', JSON.stringify(home));
   };
 
-  const handleHomeRenamed = () => {
+  const handleHomeRenamed = (renamedHomes: Home[]) => {
+    onHomeRename(renamedHomes);
     fetchHomes();
   };
 
@@ -278,30 +253,29 @@ const Homepage: React.FC<{ selectedHomePass: Home | null; onSelectHome: (home: H
   
         // Fetch pinned units (tenant hubs) for admin hubs
         let pinnedUnits: Unit[] = [];
+        // In Homepage component's fetchPinnedItems
         if (selectedHome.homeType === 'admin') {
-          // Step 1: Get the admin hub document
+          // Fetch pinned tenant hubs
           const adminHubRef = doc(db, 'userHubs', selectedHome.hubCode);
           const adminHubDoc = await getDoc(adminHubRef);
-  
-          if (adminHubDoc.exists()) {
-            const adminHubData = adminHubDoc.data();
-            const unitHubCodes = adminHubData.units || []; // Array of hubCodes for managed units
-  
-            // Step 2: Fetch the tenant hubs with hubCodes in the units array
-            const userHubsRef = collection(db, 'userHubs');
-            const unitsQuery = query(userHubsRef, where('hubCode', 'in', unitHubCodes), where('pinned', '==', true));
-            const unitsSnapshot = await getDocs(unitsQuery);
-  
-            // Step 3: Map the tenant hubs to the Unit type
-            pinnedUnits = unitsSnapshot.docs.map((doc) => ({
-              type: 'unit',
-              id: doc.id,
-              unitName: doc.data().unitName,
-              hubCode: doc.data().hubCode,
-              pinned: doc.data().pinned,
-              image: doc.data().image || NoImage,
-            }));
-          }
+          const unitHubCodes = adminHubDoc.data().units || [];
+          
+          // Fetch pinned tenant hubs
+          const pinnedUnitsQuery = query(
+            collection(db, 'userHubs'),
+            where('hubCode', 'in', unitHubCodes),
+            where('pinned', '==', true)
+          );
+          
+          const pinnedUnitsSnapshot = await getDocs(pinnedUnitsQuery);
+          pinnedUnits = pinnedUnitsSnapshot.docs.map(doc => ({
+            type: 'unit',
+            id: doc.id,
+            unitName: doc.data().homeName,
+            hubCode: doc.data().hubCode,
+            pinned: true,
+            image: doc.data().image || NoImage,
+          }));
         }
   
         // Combine all pinned items
@@ -388,32 +362,7 @@ const Homepage: React.FC<{ selectedHomePass: Home | null; onSelectHome: (home: H
     }
   }, [isPinnedMenuVisible]);
 
-  const handleHomeAdded = () => {
-    const auth = getAuth();
-    const db = getFirestore();
-
-    const user = auth.currentUser;
-    if (user) {
-      const userId = user.uid;
-
-      const userHubsRef = collection(db, 'userHubs');
-      const q = query(userHubsRef, where('userId', '==', userId));
-
-      getDocs(q).then((querySnapshot) => {
-        const hubs: Home[] = [];
-        querySnapshot.forEach((doc) => {
-          const data = doc.data();
-          hubs.push({
-            homeName: data.homeName,
-            homeType: data.homeType,
-            hubCode: data.hubCode,
-          });
-        });
-
-        setHomes(hubs);
-      });
-    }
-  };
+  
 
   const fetchHomes = async () => {
     const auth = getAuth();
@@ -450,9 +399,12 @@ const Homepage: React.FC<{ selectedHomePass: Home | null; onSelectHome: (home: H
     fetchHomes();
   }, []);
 
-  const handleHomeDeleted = () => {
-    fetchHomes();
+  const handleHomeAdded = (newHomes: Home[]) => {
+    onHomeAdded(newHomes); // Update parent state
+    fetchHomes(); // Refresh local data if needed
   };
+
+  
 
   return (
     <div style={{ overflow: 'hidden' }}>
@@ -466,7 +418,7 @@ const Homepage: React.FC<{ selectedHomePass: Home | null; onSelectHome: (home: H
       {isEditHomesVisible && (
         <EditHomes
           closeEditHomes={toggleEditHomes}
-          onHomeDeleted={handleHomeDeleted}
+          onHomeDeleted={onHomeDelete}
           onHomeRenamed={handleHomeRenamed}
           homes={homes}
         />
@@ -486,11 +438,10 @@ const Homepage: React.FC<{ selectedHomePass: Home | null; onSelectHome: (home: H
           <Dropdown
             homes={homes}
             onSelect={(home) => {
-              onSelectHome(home);
               handleSelectHome(home);
-              handleHubSelect(home);
+              onSelectHome(home);
             }}
-            initialShow={selectedHome ? selectedHome.homeName : 'Choose Home...'}
+            initialShow={selectedHome?.homeName || 'Choose Home...'}
           />
           <Button bg={'transparent'} width={'auto'} height={'auto'} onClick={toggleAddHome}>
             <TbCirclePlusFilled color="#21334a" size={'50%'} />

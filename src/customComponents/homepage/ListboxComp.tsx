@@ -4,6 +4,7 @@ import { ListboxWrapper } from './ListboxWrapper.tsx'; // Adjust the path as nee
 import { getAuth, onAuthStateChanged, User } from "firebase/auth"; // Import User type
 import { getFirestore, collection, query, where, getDocs, QueryDocumentSnapshot } from "firebase/firestore"; // Import QueryDocumentSnapshot
 
+
 interface Home {
   homeName: string;
   homeType: string;
@@ -16,31 +17,25 @@ interface ListboxCompProps {
 }
 
 const ListboxComp: React.FC<ListboxCompProps> = ({ onSelectHome, homes }) => {
-  const [selectedHome, setSelectedHome] = useState<string | null>(null);
-
-  // Convert the homes array to a key-value object
-  const homesData = homes.reduce((acc, home, index) => {
-    acc[`Home${index + 1}`] = home.homeName;
-    return acc;
-  }, {} as { [key: string]: string });
+  // Convert homes to items with unique keys
+  const homeItems = homes.map((home, index) => ({
+    key: `home-${index}-${home.hubCode}`, // Unique key based on hubCode
+    name: home.homeName
+  }));
 
   const handleSelection = (key: string) => {
-    const homeName = homesData[key]; // Get the home name from the homesData object
-    setSelectedHome(homeName);
-    onSelectHome(homeName); // Pass the selected home name to the parent
+    const selected = homeItems.find(item => item.key === key);
+    if (selected) onSelectHome(selected.name);
   };
 
   return (
-    <div>
-      <ListboxWrapper>
-        <Listbox aria-label="Actions" onAction={(key) => handleSelection(key as string)}>
-          {/* Dynamically generate ListboxItem components */}
-          {Object.entries(homesData).map(([key, value]) => (
-            <ListboxItem key={key}>{value}</ListboxItem>
-          ))}
-        </Listbox>
-      </ListboxWrapper>
-    </div>
+    <ListboxWrapper>
+      <Listbox aria-label="Homes list" onAction={handleSelection}>
+        {homeItems.map((item) => (
+          <ListboxItem key={item.key}>{item.name}</ListboxItem>
+        ))}
+      </Listbox>
+    </ListboxWrapper>
   );
 };
 

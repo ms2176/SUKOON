@@ -70,7 +70,7 @@ const VerifyEmail = () => {
             });
 
             setTimeout(() => {
-              navigate("/home", { replace: true });
+              navigate("/initial", { replace: true });
             }, 2500);
           }
         } catch (error) {

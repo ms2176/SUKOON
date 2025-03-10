@@ -18,7 +18,7 @@ interface Home {
 interface EditHomesProps {
   closeEditHomes: () => void;
   onHomeDeleted: () => void; // Callback to notify parent component of a deleted home
-  onHomeRenamed: () => void;
+  onHomeRenamed: (renamedHomes: Home[]) => void;
   homes: Home[]; // Add the homes prop
 
 }
@@ -74,10 +74,7 @@ const EditHomes: React.FC<EditHomesProps> = ({ closeEditHomes, onHomeDeleted, on
       setSelectedHome(null);
       setError("");
 
-      // Notify the parent component that a home has been deleted
-      onHomeDeleted();
-
-      // Close the EditHomes modal
+      onHomeDeleted(); // This now triggers App's refresh
       closeEditHomes();
 
       alert("Home deleted successfully.");
@@ -119,20 +116,34 @@ const EditHomes: React.FC<EditHomesProps> = ({ closeEditHomes, onHomeDeleted, on
       const hubDoc = querySnapshot.docs[0];
       const hubRef = hubDoc.ref;
 
-      // Update the home name
-      await updateDoc(hubRef, {
-        homeName: newHomeName, // Set the new home name
-      });
-
-      // Clear the selected home and reset the state
-      setSelectedHome(null);
-      setNewHomeName("");
-      setError("");
-
-      // Notify the parent component that a home has been renamed
-      onHomeRenamed(); // Call the callback
-
-      alert("Home renamed successfully.");
+      try {
+        // Update home name in Firestore
+        await updateDoc(hubRef, { homeName: newHomeName });
+    
+        // Fetch updated homes list
+        const updatedHomesQuery = query(
+          collection(db, "userHubs"), 
+          where("userId", "==", user.uid)
+        );
+        const updatedSnapshot = await getDocs(updatedHomesQuery);
+        const updatedHomes = updatedSnapshot.docs.map(doc => ({
+          homeName: doc.data().homeName,
+          homeType: doc.data().homeType,
+          hubCode: doc.data().hubCode,
+        }));
+    
+        // Pass updated homes to parent
+        onHomeRenamed(updatedHomes);
+    
+        // Reset state and close
+        setSelectedHome(null);
+        setNewHomeName("");
+        setError("");
+        closeEditHomes();
+        
+      } catch (error) {
+        // ... error handling ...
+      }
     } catch (error) {
       console.error("Error renaming home:", error);
       setError("An error occurred. Please try again.");

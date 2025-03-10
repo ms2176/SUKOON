@@ -7,12 +7,22 @@ import { IoCloseCircleSharp } from "react-icons/io5";
 import { getAuth } from "firebase/auth"; // Import Firebase Auth
 import { getFirestore, collection, query, where, getDocs, updateDoc } from "firebase/firestore"; // Import Firestore functions
 
+interface Home {
+  homeName: string;
+  homeType: string;
+  hubCode: string;
+}
+
+
 interface AddHomeProps {
   closeAddHome: () => void;
   onHomeAdded: () => void; // Callback to notify parent component of a new home
 }
 
-const AddHome: React.FC<AddHomeProps> = ({ closeAddHome, onHomeAdded }) => {
+const AddHome: React.FC<{
+  closeAddHome: () => void;
+  onHomeAdded: (newHomes: Home[]) => void; // Correct prop type
+}> = ({ closeAddHome, onHomeAdded }) => {
   const [homeName, setHomeName] = useState(""); // State for home name
   const [hubCode, setHubCode] = useState(""); // State for hub link code
   const [error, setError] = useState(""); // State for error messages
@@ -21,62 +31,69 @@ const AddHome: React.FC<AddHomeProps> = ({ closeAddHome, onHomeAdded }) => {
   const linkHubToUser = async () => {
     const auth = getAuth();
     const user = auth.currentUser;
-
+  
     if (!user) {
       setError("User not logged in.");
       return;
     }
-
+  
     if (!homeName || !hubCode) {
       setError("Home name and hub code are required.");
       return;
     }
-
+  
     const db = getFirestore();
-
+  
     try {
       // Check if the hub code exists in the hubs collection
       const hubsRef = collection(db, "userHubs");
       const q = query(hubsRef, where("hubCode", "==", hubCode));
       const querySnapshot = await getDocs(q);
-
+  
       if (querySnapshot.empty) {
         setError("Invalid hub code.");
         return;
       }
-
+  
       // Get the hub document reference and data
       const hubDoc = querySnapshot.docs[0];
       const hubRef = hubDoc.ref;
-
+  
       // Check if the hub is already linked to the user
       if (hubDoc.data().userId === user.uid) {
         setError("You already have this hub linked to your account.");
         return;
       }
-
+  
       // Check if the user already has a home with the same name
       const userHubsRef = collection(db, "userHubs");
       const userHubsQuery = query(userHubsRef, where("userId", "==", user.uid), where("homeName", "==", homeName));
       const userHubsSnapshot = await getDocs(userHubsQuery);
-
+  
       if (!userHubsSnapshot.empty) {
         setError("You already have a home with this name.");
         return;
       }
-
+  
       // Update the hub's userId and homeName fields
       await updateDoc(hubRef, {
         userId: user.uid,
         homeName: homeName,
       });
+  
+      // Fetch the updated list of homes
+      const updatedHomesQuery = query(userHubsRef, where("userId", "==", user.uid));
+      const updatedHomesSnapshot = await getDocs(updatedHomesQuery);
+      const updatedHomes = updatedHomesSnapshot.docs.map((doc) => ({
+        homeName: doc.data().homeName,
+        homeType: doc.data().homeType,
+        hubCode: doc.data().hubCode,
+      }));
 
-      // Notify the parent component that a new home has been added
-      onHomeAdded();
-
-      // Close the add home modal
+      onHomeAdded(updatedHomes); // Update parent state
       closeAddHome();
-    } catch (error) {
+  }
+     catch (error) {
       console.error("Error linking hub:", error);
       setError("An error occurred. Please try again.");
     }
@@ -155,32 +172,6 @@ const AddHome: React.FC<AddHomeProps> = ({ closeAddHome, onHomeAdded }) => {
                 </FormControl>
               </Box>
             </Stack>
-
-            <HStack bg={"transparent"} justify={"center"} align={"center"}>
-              <Box bg={"black"} height={"1px"} width={"100%"} />
-              <Heading bg={"transparent"} color={"black"} fontSize={"50%"}>
-                OR
-              </Heading>
-              <Box bg={"black"} height={"1px"} width={"100%"} />
-            </HStack>
-
-            <Heading bg={"transparent"} color={"black"} fontSize={"80%"} textAlign={"center"}>
-              Scan your hub's QR code.
-            </Heading>
-
-            <Box
-              width={"100%"}
-              bg={"transparent"}
-              justifyContent={"center"}
-              alignContent={"center"}
-              display={"flex"}
-              alignItems={"center"}
-            >
-              <Button className={"addContainer"} borderRadius={"20px"} bg={"#6cc358"} width={"40%"} color={"white"}>
-                Scan
-                <FaCamera style={{ background: "transparent" }} />
-              </Button>
-            </Box>
 
             {/* Centered "Add +" Button */}
             <Box

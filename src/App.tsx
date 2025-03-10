@@ -1,5 +1,4 @@
-// App.tsx
-import { Route, Routes, useLocation } from 'react-router-dom'; // Import useLocation
+import { Route, Routes, useLocation } from 'react-router-dom';
 import Register from '@/customComponents/login/register.tsx';
 import Auth from '@/customComponents/login/auth.tsx';
 import Login from '@/customComponents/login/Login.tsx';
@@ -7,7 +6,7 @@ import QRWait from '@/customComponents/login/QRWait.tsx';
 import ResetPassword from '@/customComponents/login/ResetPassword.tsx';
 import OTP from '@/customComponents/login/OTP.tsx';
 import NewPass from '@/customComponents/login/NewPass.tsx';
-import Statistics from '@/customComponents/stats/stats_mainpage'; // Ensure the correct path to your Statistics component
+import Statistics from '@/customComponents/stats/stats_mainpage';
 import Homepage from './customComponents/homepage/Homepage';
 import NavbarTenant from './customComponents/navBar/NavbarTenant';
 import NavbarAdmin from './customComponents/navBar/NavbarAdmin';
@@ -18,18 +17,20 @@ import AccInfo from './customComponents/account/AccInfo';
 import DeviceControlPage from './customComponents/rooms/DeviceControlPage';
 import BeatiMain from './customComponents/beati/beatiMain';
 import MyGreenhouse from './customComponents/beati/myGreenhouse';
-import Rate from './customComponents/account/Rate'
+import Rate from './customComponents/account/Rate';
 import MoreTools from './customComponents/account/MoreTools';
 import ThirdPartyServices from './customComponents/account/ThirdPartyServices';
 import InitialView from './customComponents/homepage/InitialView';
 import SupportCenter from './customComponents/account/SupportCenter';
 import './index.css';
 import { useState } from 'react';
-import Verification_hold from './customComponents/login/verification_hold'
-import Alldevices from './customComponents/rooms/Alldevices'
+import Verification_hold from './customComponents/login/verification_hold';
+import Alldevices from './customComponents/rooms/Alldevices';
 import DeviceControlPageNoRoom from './customComponents/rooms/DeviceControlPageNoRoom';
 import UnitsList from './customComponents/rooms/unitsList';
-
+import { useEffect } from 'react';
+import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import { getFirestore, collection, query, where, getDocs, QueryDocumentSnapshot } from 'firebase/firestore';
 interface Home {
   homeName: string;
   homeType: string;
@@ -38,13 +39,15 @@ interface Home {
 
 interface AuthenticatedLayoutProps {
   children: React.ReactNode;
-  selectedHome?: Home | null; // Add selectedHome as an optional prop
+  selectedHome?: Home | null;
+  homes: Home[]; // Add homes prop
 }
+
 // Layout component that includes the Navbar
-const AuthenticatedLayout = ({ children, selectedHome }: AuthenticatedLayoutProps) => {
+const AuthenticatedLayout = ({ children, selectedHome, homes }: AuthenticatedLayoutProps) => {
   return (
     <>
-      {selectedHome?.homeType === 'admin' ? <NavbarAdmin /> : <NavbarTenant />}
+      {selectedHome?.homeType === 'admin' ? <NavbarAdmin /> : <NavbarTenant homes={homes} />}
       {children}
     </>
   );
@@ -52,145 +55,292 @@ const AuthenticatedLayout = ({ children, selectedHome }: AuthenticatedLayoutProp
 
 const App = () => {
   const location = useLocation();
+  const [selectedHome, setSelectedHome] = useState<Home | null>(null);
+  const [homes, setHomes] = useState<Home[]>([]); // Add homes state
 
   // Define the routes that require authentication
   const authenticatedRoutes = ['/Home', '/stats'];
-  const [selectedHome, setSelectedHome] = useState<Home | null>(null); // State for selected home
 
   // Check if the current route is an authenticated route
   const isAuthenticatedRoute = authenticatedRoutes.includes(location.pathname);
+
+  // Function to handle home selection
   const handleSelectHome = (home: Home) => {
     setSelectedHome(home);
   };
 
+  // Function to update the homes state
+  const handleHomeAdded = (newHomes: Home[]) => {
+    setHomes(newHomes); // Update the homes state
+  };
+
+  const handleHomeRename = (renamedHomes: Home[]) => {
+    setHomes(renamedHomes); // Update local state
+  };
+  
+
   console.log('Current path:', location.pathname); // Debugging
 
+  useEffect(() => {
+    const auth = getAuth();
+    const db = getFirestore();
+
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        const userId = user.uid;
+        const userHubsRef = collection(db, 'userHubs');
+        const q = query(userHubsRef, where('userId', '==', userId));
+
+        try {
+          const querySnapshot = await getDocs(q);
+          const hubs = querySnapshot.docs.map(doc => ({
+            homeName: doc.data().homeName,
+            homeType: doc.data().homeType,
+            hubCode: doc.data().hubCode,
+          }));
+          setHomes(hubs); // Update global homes state
+        } catch (error) {
+          console.error('Error fetching hubs:', error);
+        }
+      } else {
+        setHomes([]); // Clear homes if user logs out
+      }
+    });
+
+    
+
+    return () => unsubscribe();
+  }, []);
+
+  const fetchHomes = async () => {
+      const auth = getAuth();
+      const db = getFirestore();
+  
+      const user = auth.currentUser;
+      if (user) {
+        const userId = user.uid;
+  
+        const hubsRef = collection(db, 'userHubs');
+        const q = query(hubsRef, where('userId', '==', userId));
+  
+        try {
+          const querySnapshot = await getDocs(q);
+          const homesData: Home[] = [];
+  
+          querySnapshot.forEach((doc: QueryDocumentSnapshot) => {
+            const data = doc.data();
+            homesData.push({
+              homeName: data.homeName,
+              homeType: data.homeType,
+              hubCode: data.hubCode,
+            });
+          });
+  
+          setHomes(homesData);
+        } catch (error) {
+          console.error('Error fetching user hubs:', error);
+        }
+      }
+    };
+  
+    useEffect(() => {
+      fetchHomes();
+    }, []);
+
+  const handleHomeDeleted = async () => {
+    const auth = getAuth();
+    const user = auth.currentUser;
+    if (!user) return;
+
+    const db = getFirestore();
+    const userHubsRef = collection(db, 'userHubs');
+    const q = query(userHubsRef, where('userId', '==', user.uid));
+
+    try {
+      const querySnapshot = await getDocs(q);
+      const hubs = querySnapshot.docs.map(doc => ({
+        homeName: doc.data().homeName,
+        homeType: doc.data().homeType,
+        hubCode: doc.data().hubCode,
+      }));
+      setHomes(hubs);
+    } catch (error) {
+      console.error('Error refreshing homes:', error);
+    }
+  };
+
+  
+
+  
 
   return (
     <>
-        {isAuthenticatedRoute && (
-                selectedHome?.homeType === 'admin' ? <NavbarAdmin /> : <NavbarTenant />
-              )}      <Routes>
-        <Route path="/" element={<Auth />} />         {/* Home or Auth page */}
-        <Route path="/login" element={<Login />} />   {/* Login page */}
-        <Route path="/register" element={<Register />} /> {/* Register page */}
-        <Route path="/QRWait" element={<QRWait />} /> {/* QR Wait page */}
-        <Route path="/ResetPassword" element={<ResetPassword />} /> {/* Reset Password page */}
-        <Route path="/OTP" element={<OTP />} /> {/* OTP page */}
-        <Route path="/NewPass" element={<NewPass />} /> {/* New Password page */}
+      {isAuthenticatedRoute && (
+        selectedHome?.homeType === 'admin' ? <NavbarAdmin /> : <NavbarTenant homes={homes} />
+      )}
+      <Routes>
+        <Route path="/" element={<Auth />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/QRWait" element={<QRWait />} />
+        <Route path="/ResetPassword" element={<ResetPassword />} />
+        <Route path="/OTP" element={<OTP />} />
+        <Route path="/NewPass" element={<NewPass />} />
 
         {/* Actual App */}
-        <Route path="/Home" element={
-          <AuthenticatedLayout selectedHome={selectedHome}>
-            <Homepage onSelectHome={handleSelectHome} selectedHome={selectedHome}/>
-          </AuthenticatedLayout>
-        } /> {/* Homepage */}
+        <Route
+          path="/Home"
+          element={
+            <AuthenticatedLayout selectedHome={selectedHome} homes={homes}>
+              <Homepage onHomeRename={handleHomeRename} onHomeDelete={handleHomeDeleted} onSelectHome={handleSelectHome} selectedHome={selectedHome} onHomeAdded={handleHomeAdded} homes={homes}/>
+            </AuthenticatedLayout>
+          }
+        />
 
-<Route path="/initial" element={
-          <AuthenticatedLayout selectedHome={selectedHome}>
-            <InitialView />
-          </AuthenticatedLayout>
-        } /> {/* Homepage */}
+        <Route
+          path="/initial"
+          element={
+            <AuthenticatedLayout selectedHome={selectedHome} homes={homes}>
+              <InitialView onSelectHome={handleSelectHome} selectedHome={selectedHome} onHomeAdded={handleHomeAdded}/>
+            </AuthenticatedLayout>
+          }
+        />
 
+        <Route
+          path="/Rooms"
+          element={
+            <AuthenticatedLayout selectedHome={selectedHome} homes={homes}>
+              <RoomList selectedHome={selectedHome} />
+            </AuthenticatedLayout>
+          }
+        />
 
-<Route path="/Rooms" element={
-          <AuthenticatedLayout selectedHome={selectedHome}>
-            <RoomList selectedHome={selectedHome} />
-          </AuthenticatedLayout>
-        } /> {/* Rooms */}
+        <Route
+          path="/unitsList"
+          element={
+            <AuthenticatedLayout selectedHome={selectedHome} homes={homes}>
+              <UnitsList selectedHome={selectedHome} />
+            </AuthenticatedLayout>
+          }
+        />
 
-<Route path="/unitsList" element={
-          <AuthenticatedLayout selectedHome={selectedHome}>
-            <UnitsList selectedHome={selectedHome} />
-          </AuthenticatedLayout>
-        } /> {/* Rooms */}
+        <Route
+          path="/device/:deviceId"
+          element={
+            <AuthenticatedLayout selectedHome={selectedHome} homes={homes}>
+              <DeviceControlPageNoRoom />
+            </AuthenticatedLayout>
+          }
+        />
 
-      <Route
-        path="/device/:deviceId"
-        element={
-          <AuthenticatedLayout selectedHome={selectedHome}>
-            <DeviceControlPageNoRoom />
-          </AuthenticatedLayout>
-        }
-      />
+        <Route
+          path="/devices/:roomId/:deviceId"
+          element={
+            <AuthenticatedLayout selectedHome={selectedHome} homes={homes}>
+              <DeviceControlPage />
+            </AuthenticatedLayout>
+          }
+        />
 
-<Route path="/devices/:roomId/:deviceId" element={
-  <AuthenticatedLayout selectedHome={selectedHome}>
-    <DeviceControlPage />
-  </AuthenticatedLayout>
-} />
+        <Route
+          path="/devices/:roomId"
+          element={
+            <AuthenticatedLayout selectedHome={selectedHome} homes={homes}>
+              <Devices />
+            </AuthenticatedLayout>
+          }
+        />
 
-<Route path="/devices/:roomId" element={
-          <AuthenticatedLayout selectedHome={selectedHome}>
-            <Devices />
-          </AuthenticatedLayout>
-        } /> {/* Room page */}
+        <Route
+          path="/alldevices"
+          element={
+            <AuthenticatedLayout selectedHome={selectedHome} homes={homes}>
+              <Alldevices />
+            </AuthenticatedLayout>
+          }
+        />
 
-<Route path="/alldevices" element={
-          <AuthenticatedLayout selectedHome={selectedHome}>
-            <Alldevices />
-          </AuthenticatedLayout>
-        } /> {/* Statistics page */}
+        <Route
+          path="/verification_hold"
+          element={
+            <AuthenticatedLayout selectedHome={selectedHome} homes={homes}>
+              <Verification_hold />
+            </AuthenticatedLayout>
+          }
+        />
 
-<Route path="verification_hold" element={
-          <AuthenticatedLayout selectedHome={selectedHome}>
-            <Verification_hold />
-          </AuthenticatedLayout>
-        } /> {/* Room page */}
+        <Route
+          path="/stats"
+          element={
+            <AuthenticatedLayout selectedHome={selectedHome} homes={homes}>
+              <Statistics />
+            </AuthenticatedLayout>
+          }
+        />
 
-<Route path="/stats" element={
-          <AuthenticatedLayout selectedHome={selectedHome}>
-            <Statistics />
-          </AuthenticatedLayout>
-        } /> {/* Statistics page */}
+        <Route
+          path="/accountspage"
+          element={
+            <AuthenticatedLayout selectedHome={selectedHome} homes={homes}>
+              <AccountsPage />
+            </AuthenticatedLayout>
+          }
+        />
 
-      <Route path="/accountspage" element={
-          <AuthenticatedLayout selectedHome={selectedHome}>
-            <AccountsPage />
-          </AuthenticatedLayout>
-        } /> {/* Account page */}
+        <Route
+          path="/accinfo"
+          element={
+            <AuthenticatedLayout selectedHome={selectedHome} homes={homes}>
+              <AccInfo />
+            </AuthenticatedLayout>
+          }
+        />
 
-        <Route path="/accinfo" element={
-          <AuthenticatedLayout selectedHome={selectedHome}>
-            <AccInfo />
-          </AuthenticatedLayout>
-        } /> {/* AccountInfo page */}
+        <Route
+          path="/beati"
+          element={
+            <AuthenticatedLayout selectedHome={selectedHome} homes={homes}>
+              <BeatiMain />
+            </AuthenticatedLayout>
+          }
+        />
 
-        <Route path="/beati" element={
-          <AuthenticatedLayout selectedHome={selectedHome}>
-            <BeatiMain />
-          </AuthenticatedLayout>
-        } /> {/* beati page */}
+        <Route
+          path="/myGreenhouse"
+          element={
+            <AuthenticatedLayout selectedHome={selectedHome} homes={homes}>
+              <MyGreenhouse />
+            </AuthenticatedLayout>
+          }
+        />
 
-<Route path="/myGreenhouse" element={
-          <AuthenticatedLayout selectedHome={selectedHome}>
-            <MyGreenhouse />
-          </AuthenticatedLayout>
-        } /> {/* greenhouse page */}
+        <Route
+          path="/rate"
+          element={
+            <AuthenticatedLayout selectedHome={selectedHome} homes={homes}>
+              <Rate />
+            </AuthenticatedLayout>
+          }
+        />
 
-<Route path="/rate" element={
-          <AuthenticatedLayout selectedHome={selectedHome}>
-            <Rate />
-          </AuthenticatedLayout>
-        } /> {/* rate page */}
-      
-      <Route path="/tools" element={
-          <AuthenticatedLayout selectedHome={selectedHome}>
-            <MoreTools />
-          </AuthenticatedLayout>
-        } /> {/* tools page */}
+        <Route
+          path="/tools"
+          element={
+            <AuthenticatedLayout selectedHome={selectedHome} homes={homes}>
+              <MoreTools />
+            </AuthenticatedLayout>
+          }
+        />
 
-<Route path="/services" element={
-          <AuthenticatedLayout selectedHome={selectedHome}>
-            <ThirdPartyServices />
-          </AuthenticatedLayout>
-        } /> {/* TPS page */}
-
-      
+        <Route
+          path="/services"
+          element={
+            <AuthenticatedLayout selectedHome={selectedHome} homes={homes}>
+              <ThirdPartyServices />
+            </AuthenticatedLayout>
+          }
+        />
       </Routes>
-      
-
-      
     </>
   );
 };
