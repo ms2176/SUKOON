@@ -57,17 +57,21 @@ const AddHome: React.FC<{
   
       // Get the hub document reference and data
       const hubDoc = querySnapshot.docs[0];
-      const hubRef = hubDoc.ref;
+      const hubData = hubDoc.data();
   
-      // Check if the hub is already linked to the user
-      if (hubDoc.data().userId === user.uid) {
-        setError("You already have this hub linked to your account.");
+      // Check if the hub already has a userId (already linked to another user)
+      if (hubData.userId) {
+        setError("This hub is already linked to another account.");
         return;
       }
   
       // Check if the user already has a home with the same name
       const userHubsRef = collection(db, "userHubs");
-      const userHubsQuery = query(userHubsRef, where("userId", "==", user.uid), where("homeName", "==", homeName));
+      const userHubsQuery = query(
+        userHubsRef,
+        where("userId", "==", user.uid),
+        where("homeName", "==", homeName)
+      );
       const userHubsSnapshot = await getDocs(userHubsQuery);
   
       if (!userHubsSnapshot.empty) {
@@ -76,7 +80,7 @@ const AddHome: React.FC<{
       }
   
       // Update the hub's userId and homeName fields
-      await updateDoc(hubRef, {
+      await updateDoc(hubDoc.ref, {
         userId: user.uid,
         homeName: homeName,
       });
@@ -89,11 +93,10 @@ const AddHome: React.FC<{
         homeType: doc.data().homeType,
         hubCode: doc.data().hubCode,
       }));
-
+  
       onHomeAdded(updatedHomes); // Update parent state
       closeAddHome();
-  }
-     catch (error) {
+    } catch (error) {
       console.error("Error linking hub:", error);
       setError("An error occurred. Please try again.");
     }
