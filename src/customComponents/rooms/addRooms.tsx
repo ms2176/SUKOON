@@ -1,52 +1,93 @@
 import React, { useState } from 'react';
+import { doc, setDoc, collection } from 'firebase/firestore';
+import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import './addRooms.css';
+import { getFirestore } from 'firebase/firestore';
+import NoImage from '@/images/noImage.png';
 
 interface AddRoomProps {
   onClose: () => void;
-  onAddRoom: (newRoom: { name: string; image: string; devices: number }) => void;
 }
 
-const AddRoom: React.FC<AddRoomProps> = ({ onClose, onAddRoom }) => {
+const AddRoom: React.FC<AddRoomProps> = ({ onClose }) => {
   const [roomName, setRoomName] = useState('');
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-
-  const defaultImageUrl = 'https://via.placeholder.com/150?text=Room+Image'; // Default placeholder image
+  const [isUploading, setIsUploading] = useState(false);
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
       setImageFile(file);
-
-      // Generate a preview URL for the selected image
       const preview = URL.createObjectURL(file);
       setPreviewUrl(preview);
     }
   };
 
   const handleImageError = () => {
-    // Fallback to default image if uploaded image fails to load
-    setPreviewUrl(defaultImageUrl);
+    setPreviewUrl(NoImage);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!roomName) {
       alert('Please provide a room name before adding.');
       return;
     }
 
-    const newRoom = {
-      name: roomName,
-      image: previewUrl || defaultImageUrl, // Use previewUrl or fallback to default
-      devices: 0, // Default to 0 devices for a new room
-    };
+    setIsUploading(true);
 
-    onAddRoom(newRoom); // Add the new room dynamically
-    alert(`${roomName} has been successfully added.`);
-    setRoomName(''); // Reset the fields
-    setImageFile(null);
-    setPreviewUrl(null);
-    onClose(); // Close the modal
+    try {
+      const db = getFirestore();
+      const storage = getStorage();
+
+      // Get the selected home from localStorage
+      const selectedHome = localStorage.getItem('selectedHome')
+        ? JSON.parse(localStorage.getItem('selectedHome') as string)
+        : null;
+
+      if (!selectedHome || !selectedHome.hubCode) {
+        alert('No home selected. Please select a home first.');
+        return;
+      }
+
+      // Create a reference to a new document with a unique auto-generated ID
+      const newRoomRef = doc(collection(db, 'rooms'));
+
+      let imageUrl = null;
+
+      // Upload the image to Firebase Storage if a file is selected
+      if (imageFile) {
+        const storageRef = ref(storage, `room-images/${newRoomRef.id}`);
+        await uploadBytes(storageRef, imageFile);
+        imageUrl = await getDownloadURL(storageRef);
+      }
+
+      // Prepare the room data
+      const roomData = {
+        roomId: newRoomRef.id,
+        roomName: roomName,
+        devices: [],
+        hubCode: selectedHome.hubCode,
+        pinned: false,
+        image: imageUrl || NoImage,
+      };
+
+      // Add the new room document to Firestore
+      await setDoc(newRoomRef, roomData);
+
+      // Reset the form fields
+      setRoomName('');
+      setImageFile(null);
+      setPreviewUrl(null);
+
+      // Close the modal
+      onClose();
+    } catch (error) {
+      console.error('Error adding room:', error);
+      alert('An error occurred while adding the room. Please try again.');
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   return (
@@ -68,7 +109,7 @@ const AddRoom: React.FC<AddRoomProps> = ({ onClose, onAddRoom }) => {
             />
           </div>
           <div className="form-control">
-            <label>Upload Room Image</label>
+            <label>Upload Room Image (Optional)</label>
             <input
               type="file"
               accept="image/*"
@@ -76,9 +117,9 @@ const AddRoom: React.FC<AddRoomProps> = ({ onClose, onAddRoom }) => {
               style={{ color: '#333' }}
             />
             <img
-              src={previewUrl || defaultImageUrl} // Use uploaded image or default
+              src={previewUrl || NoImage}
               alt="Room Preview"
-              onError={handleImageError} // Handle image load failure
+              onError={handleImageError}
               style={{
                 width: '100%',
                 maxHeight: '200px',
@@ -90,8 +131,12 @@ const AddRoom: React.FC<AddRoomProps> = ({ onClose, onAddRoom }) => {
           </div>
         </div>
         <div className="modal-footer">
-          <button className="btn btn-primary" onClick={handleSubmit}>
-            Add Room
+          <button
+            className="btn btn-primary"
+            onClick={handleSubmit}
+            disabled={isUploading}
+          >
+            {isUploading ? 'Uploading...' : 'Add Room'}
           </button>
           <button className="btn btn-secondary" onClick={onClose}>
             Cancel
@@ -103,4 +148,3 @@ const AddRoom: React.FC<AddRoomProps> = ({ onClose, onAddRoom }) => {
 };
 
 export default AddRoom;
-

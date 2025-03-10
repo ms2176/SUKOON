@@ -1,47 +1,181 @@
-import { Box, Flex, Heading, HStack, Stack } from '@chakra-ui/react';
-import React, { useState } from 'react';
+import { Box, Flex, Heading, HStack, Stack, Image, Text, Grid } from '@chakra-ui/react';
+import React, { useState, useEffect } from 'react';
 import './pinnedMenu.css';
-import Dropdown from './Dropdown';
 import { VscClose } from 'react-icons/vsc';
-import Mockroom from './Mockroom';
-import roomsData from '@/JSONFiles/roomsdata.json'; // Import the JSON file
 import Dropdownpinned from './Dropdownpinned.tsx';
-import deviceData from '@/JSONFiles/devicesdata.json';
-import MockDevice from './MockDevice.tsx';
+import { getAuth } from 'firebase/auth';
+import { getFirestore, collection, query, where, getDocs, doc, updateDoc } from 'firebase/firestore';
+import NoImage from '@/images/noImage.png'; // Default image for rooms
+
+// Import device images
+import LightImg from '@/images/devicesIcons/lamp.png';
+import TvImg from '@/images/devicesIcons/tv.png';
+import AcImg from '@/images/devicesIcons/ac.png';
+import FanImg from '@/images/devicesIcons/fan.png';
+import WasherImg from '@/images/devicesIcons/washing-machine.png';
+import SpeakerImg from '@/images/devicesIcons/speaker.png';
+import ThermostatImg from '@/images/devicesIcons/thermostat.png';
+import DoorbellImg from '@/images/devicesIcons/smart-door.png';
+import HeatconvectorImg from '@/images/devicesIcons/heater-convector.png';
+import Dishwasher from '@/images/devicesIcons/dishwasher.png';
+
+// Define device types and their corresponding images
+type DeviceType =
+  | 'light'
+  | 'tv'
+  | 'ac'
+  | 'fan'
+  | 'washingMachine'
+  | 'speaker'
+  | 'thermostat'
+  | 'door'
+  | 'heatconvector'
+  | 'dishwasher';
+
+const deviceTypeToImage: Record<DeviceType, string> = {
+  light: LightImg,
+  tv: TvImg,
+  ac: AcImg,
+  fan: FanImg,
+  washingMachine: WasherImg,
+  speaker: SpeakerImg,
+  thermostat: ThermostatImg,
+  door: DoorbellImg,
+  heatconvector: HeatconvectorImg,
+  dishwasher: Dishwasher,
+};
 
 interface PinnedMenuProps {
   isVisible: boolean;
   onClose: () => void;
-  onPinItem: (item: Room | Device) => void; }
+  onPinItem: (item: Room | Device) => void;
+  selectedHubCode: string;
+  refreshPinnedMenu: () => void;
+}
 
 interface Room {
-    type: 'room';
-    roomName: string;
-    roomImage: string;
-    numDevices: number;
-  }
+  type: 'room';
+  id: string;
+  roomName: string;
+  hubCode: string;
+  pinned: boolean;
+  devices: string[];
+  image?: string; // Optional field for room image
+}
 
-  interface Device {
-    type: 'device';
-    deviceName: string;
-    deviceImage: string;
-  }
+interface Device {
+  type: 'device';
+  id: string;
+  deviceName: string;
+  deviceType: DeviceType;
+  hubCode: string;
+  pinned: boolean;
+}
 
-const PinnedMenu: React.FC<PinnedMenuProps> = ({ isVisible, onClose, onPinItem }) => {
-    const [selectedFilter, setSelectedFilter] = useState<'All' | 'Rooms' | 'Devices'>('All'); // Move this up
+const PinnedMenu: React.FC<PinnedMenuProps> = ({ isVisible, onClose, onPinItem, selectedHubCode, refreshPinnedMenu }) => {
+  const [selectedFilter, setSelectedFilter] = useState<'All' | 'Rooms' | 'Devices'>('All');
+  const [rooms, setRooms] = useState<Room[]>([]);
+  const [devices, setDevices] = useState<Device[]>([]);
 
-  if (!isVisible) return null;
+  // Fetch rooms and devices from Firestore
+  const fetchRoomsAndDevices = async () => {
+    const auth = getAuth();
+    const db = getFirestore();
 
+    const user = auth.currentUser;
+    if (user && selectedHubCode) {
+      try {
+        // Fetch all rooms associated with the selected hub that are not pinned
+        const roomsRef = collection(db, 'rooms');
+        const roomsQuery = query(
+          roomsRef,
+          where('hubCode', '==', selectedHubCode),
+          where('pinned', 'in', [false, null]) // Include items where pinned is false or undefined
+        );
+        const roomsSnapshot = await getDocs(roomsQuery);
 
-  const handleItemClick = (index: number, type: 'room' | 'device') => {
-    if (type === 'room') {
-      const room = roomsData[index]; // Get the full room object
-      onPinItem({ type: 'room', ...room }); // Pass the room object to the Homepage
-    } else {
-      const device = deviceData[index]; // Get the full device object
-      onPinItem({ type: 'device', ...device }); // Pass the device object to the Homepage
+        const roomsData: Room[] = [];
+        roomsSnapshot.forEach((doc) => {
+          const data = doc.data();
+          roomsData.push({
+            type: 'room',
+            id: doc.id,
+            roomName: data.roomName,
+            hubCode: data.hubCode,
+            pinned: data.pinned || false, // Default to false if pinned is undefined
+            devices: data.devices || [],
+            image: data.image || NoImage, // Use a default image if no image is provided
+          });
+        });
+        setRooms(roomsData);
+
+        // Fetch all devices associated with the selected hub that are not pinned
+        const devicesRef = collection(db, 'devices');
+        const devicesQuery = query(
+          devicesRef,
+          where('hubCode', '==', selectedHubCode),
+          where('pinned', 'in', [false, null]) // Include items where pinned is false or undefined
+        );
+        const devicesSnapshot = await getDocs(devicesQuery);
+
+        const devicesData: Device[] = [];
+        devicesSnapshot.forEach((doc) => {
+          const data = doc.data();
+          devicesData.push({
+            type: 'device',
+            id: doc.id,
+            deviceName: data.deviceName,
+            deviceType: data.deviceType as DeviceType, // Ensure deviceType matches DeviceType
+            hubCode: data.hubCode,
+            pinned: data.pinned || false, // Default to false if pinned is undefined
+          });
+        });
+        setDevices(devicesData);
+      } catch (error) {
+        console.error('Error fetching rooms and devices:', error);
+      }
     }
   };
+
+  useEffect(() => {
+    fetchRoomsAndDevices(); // Fetch all items when the component mounts or selectedHubCode changes
+  }, [selectedHubCode]);
+
+  useEffect(() => {
+    if (isVisible) {
+      fetchRoomsAndDevices(); // Re-fetch all items when the menu is opened
+    }
+  }, [isVisible]);
+
+  // Handle pinning an item (room or device)
+  const handleItemClick = async (item: Room | Device) => {
+    const db = getFirestore();
+
+    try {
+      const collectionName = item.type === 'room' ? 'rooms' : 'devices';
+      const itemRef = doc(db, collectionName, item.id);
+
+      // Update the item's pinned status in Firestore
+      await updateDoc(itemRef, { pinned: true });
+
+      // Notify the parent component that an item has been pinned
+      onPinItem(item);
+
+      // Remove the pinned item from the local state
+      if (item.type === 'room') {
+        setRooms((prevRooms) => prevRooms.filter((room) => room.id !== item.id));
+      } else {
+        setDevices((prevDevices) => prevDevices.filter((device) => device.id !== item.id));
+      }
+
+      // Refresh the pinned menu and re-fetch unpinned items
+      refreshPinnedMenu();
+    } catch (error) {
+      console.error('Error pinning item:', error);
+    }
+  };
+
+  if (!isVisible) return null;
 
   return (
     <div style={{ overflow: 'hidden' }}>
@@ -79,8 +213,10 @@ const PinnedMenu: React.FC<PinnedMenuProps> = ({ isVisible, onClose, onPinItem }
                 <Heading bg={'transparent'} className="pinType" whiteSpace={'nowrap'}>
                   Pin type:
                 </Heading>
-                <Dropdownpinned initialShow="All"
-                    onChange={(value) => setSelectedFilter(value as 'All' | 'Rooms' | 'Devices')}/>
+                <Dropdownpinned
+                  initialShow="All"
+                  onChange={(value) => setSelectedFilter(value as 'All' | 'Rooms' | 'Devices')}
+                />
               </HStack>
             </Stack>
 
@@ -98,34 +234,83 @@ const PinnedMenu: React.FC<PinnedMenuProps> = ({ isVisible, onClose, onPinItem }
               overflow={'hidden'}
             >
               <Box width={'100%'} height={'100%'} overflow={'scroll'}>
-                <Flex wrap="wrap" justify="start" display={'flex'} alignItems={'center'} alignContent={'center'} justifyContent={'center'} gapX={'10px'}>
-                {(selectedFilter === 'All' || selectedFilter === 'Rooms') &&
-                    roomsData.map((room, index) => (
-                      <Box key={`room-${index}`} width={'calc(45%)'}>
-                        <Mockroom
-                          style={{ width: 'calc(100%)' }}
-                          onClick={() => handleItemClick(index, 'room')}
-                          roomNum={`${index + 1}`}
-                          image={room.roomImage}
-                          roomName={room.roomName}
-                          numDevices={room.numDevices}
+                <Grid templateColumns="repeat(2, 1fr)" gap={4} p={4}>
+                  {/* Render rooms if "All" or "Rooms" is selected */}
+                  {(selectedFilter === 'All' || selectedFilter === 'Rooms') &&
+                    rooms.map((room) => (
+                      <Box
+                        key={room.id}
+                        borderRadius="20px"
+                        overflow="hidden"
+                        bg="white"
+                        p={3} // Reduced padding
+                        cursor="pointer"
+                        transition="all 0.3s ease-in-out"
+                        boxShadow="0px 5px 10px rgba(0, 0, 0, 0.05)"
+                        border="1px solid rgba(0, 0, 0, 0.08)"
+                        _hover={{
+                          transform: 'translateY(-5px)',
+                          boxShadow: '0px 10px 20px rgba(0, 0, 0, 0.1)',
+                          backgroundColor: '#f5f5f5',
+                        }}
+                        onClick={() => handleItemClick(room)}
+                        height="180px" // Slightly reduced height
+                      >
+                        <Image
+                          src={room.image || NoImage}
+                          alt={room.roomName}
+                          borderRadius="12px"
+                          objectFit="cover"
+                          width="100%"
+                          height="90px" // Reduced image height
                         />
+                        <Text fontWeight="bold" fontSize="md" mt={2} color="#6cce58"> {/* Reduced font size */}
+                          {room.roomName}
+                        </Text>
+                        <Text color="gray.500" fontSize="sm">
+                          {room.devices.length} devices
+                        </Text>
                       </Box>
                     ))}
 
                   {/* Render devices if "All" or "Devices" is selected */}
                   {(selectedFilter === 'All' || selectedFilter === 'Devices') &&
-                    deviceData.map((device, index) => (
-                      <Box key={`device-${index}`} width={'calc(45%)'}>
-                        <MockDevice
-                          style={{ width: 'calc(100%)' }}
-                          onClick={() => handleItemClick(index, 'device')}
-                          deviceName={device.deviceName}
-                          deviceImage={device.deviceImage}
+                    devices.map((device) => (
+                      <Box
+                        key={device.id}
+                        borderRadius="20px"
+                        overflow="hidden"
+                        bg="white"
+                        p={3} // Reduced padding
+                        cursor="pointer"
+                        transition="all 0.3s ease-in-out"
+                        boxShadow="0px 5px 10px rgba(0, 0, 0, 0.05)"
+                        border="1px solid rgba(0, 0, 0, 0.08)"
+                        _hover={{
+                          transform: 'translateY(-5px)',
+                          boxShadow: '0px 10px 20px rgba(0, 0, 0, 0.1)',
+                          backgroundColor: '#f5f5f5',
+                        }}
+                        onClick={() => handleItemClick(device)}
+                        height="180px" // Slightly reduced height
+                      >
+                        <Image
+                          src={deviceTypeToImage[device.deviceType] || LightImg} // Use device icon
+                          alt={device.deviceName}
+                          borderRadius="12px"
+                          objectFit="cover"
+                          width="100%"
+                          height="90px" // Reduced image height
                         />
+                        <Text fontWeight="bold" fontSize="md" mt={2} color="#6cce58"> {/* Reduced font size */}
+                          {device.deviceName}
+                        </Text>
+                        <Text color="gray.500" fontSize="sm">
+                          {device.deviceType}
+                        </Text>
                       </Box>
                     ))}
-                </Flex>
+                </Grid>
               </Box>
             </Box>
           </Stack>

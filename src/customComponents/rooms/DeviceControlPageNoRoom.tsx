@@ -16,8 +16,8 @@ interface Device {
   deviceType: string;
 }
 
-const DeviceControlPage = () => {
-  const { roomId, deviceId } = useParams<{ roomId: string; deviceId: string }>();
+const DeviceControlPageNoRoom = () => {
+  const { deviceId } = useParams<{ deviceId: string }>(); // Only deviceId is needed
   const [device, setDevice] = useState<Device | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -85,4 +85,4 @@ const DeviceControlPage = () => {
   }
 };
 
-export default DeviceControlPage;
+export default DeviceControlPageNoRoom;

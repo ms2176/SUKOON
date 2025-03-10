@@ -1,41 +1,41 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Listbox, ListboxItem } from '@heroui/react';
 import { ListboxWrapper } from './ListboxWrapper.tsx'; // Adjust the path as needed
+import { getAuth, onAuthStateChanged, User } from "firebase/auth"; // Import User type
+import { getFirestore, collection, query, where, getDocs, QueryDocumentSnapshot } from "firebase/firestore"; // Import QueryDocumentSnapshot
+
+
+interface Home {
+  homeName: string;
+  homeType: string;
+  hubCode: string;
+}
 
 interface ListboxCompProps {
   onSelectHome: (homeName: string) => void; // Callback to pass selected home name
+  homes: Home[]; // Add the homes prop
 }
 
-// Define the Homes object
-const Homes = {
-  Home1: 'Myhome1',
-  Home2: 'Myhome2',
-  Home3: 'Myhome3',
-  Home4: 'Myhome4',
-  Home5: 'Myhome5',
-  Home6: 'Myhome6',
-};
-
-const ListboxComp: React.FC<ListboxCompProps> = ({ onSelectHome }) => {
-  const [selectedHome, setSelectedHome] = useState<string | null>(null);
+const ListboxComp: React.FC<ListboxCompProps> = ({ onSelectHome, homes }) => {
+  // Convert homes to items with unique keys
+  const homeItems = homes.map((home, index) => ({
+    key: `home-${index}-${home.hubCode}`, // Unique key based on hubCode
+    name: home.homeName
+  }));
 
   const handleSelection = (key: string) => {
-    const homeName = Homes[key as keyof typeof Homes]; // Get the home name from the Homes object
-    setSelectedHome(homeName);
-    onSelectHome(homeName); // Pass the selected home name to the parent
+    const selected = homeItems.find(item => item.key === key);
+    if (selected) onSelectHome(selected.name);
   };
 
   return (
-    <div>
-      <ListboxWrapper>
-        <Listbox aria-label="Actions" onAction={(key) => handleSelection(key as string)}>
-          {/* Dynamically generate ListboxItem components */}
-          {Object.entries(Homes).map(([key, value]) => (
-            <ListboxItem key={key}>{value}</ListboxItem>
-          ))}
-        </Listbox>
-      </ListboxWrapper>
-    </div>
+    <ListboxWrapper>
+      <Listbox aria-label="Homes list" onAction={handleSelection}>
+        {homeItems.map((item) => (
+          <ListboxItem key={item.key}>{item.name}</ListboxItem>
+        ))}
+      </Listbox>
+    </ListboxWrapper>
   );
 };
 

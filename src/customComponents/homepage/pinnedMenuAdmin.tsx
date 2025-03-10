@@ -1,16 +1,24 @@
-import { Box, Flex, Heading, HStack, Stack } from '@chakra-ui/react';
-import React, { useState } from 'react';
+import { Box, Flex, Heading, HStack, Stack, Image, Text, Grid } from '@chakra-ui/react';
+import React, { useState, useEffect } from 'react';
 import './pinnedMenu.css';
+<<<<<<< HEAD
 import { VscClose, VscAdd } from 'react-icons/vsc'; // Import VscAdd for plus icon
 import Mockroom from './Mockroom';
 import roomsData from '@/JSONFiles/roomsdata.json'; // Import the JSON file
 import Dropdownpinned from './Dropdownpinned.tsx';
 import deviceData from '@/JSONFiles/devicesdata.json';
 import MockDevice from './MockDevice.tsx';
+=======
+import { VscClose } from 'react-icons/vsc';
+import { getFirestore, collection, query, where, getDocs, doc, updateDoc } from 'firebase/firestore';
+import { getAuth } from 'firebase/auth';
+import NoImage from '@/images/noImage.png';
+>>>>>>> zaid-fixedSettings
 
-interface PinnedMenuProps {
+interface PinnedMenuAdminProps {
   isVisible: boolean;
   onClose: () => void;
+<<<<<<< HEAD
   onPinItem: (item: Room | Device) => void; 
 }
 
@@ -46,7 +54,119 @@ const PinnedMenu: React.FC<PinnedMenuProps> = ({ isVisible, onClose, onPinItem }
   // Function to toggle the room list visibility when the plus button is clicked
   const handleAddRoomClick = () => {
     setShowRoomList(!showRoomList);
+=======
+  onPinItem: (item: Unit) => void;
+  selectedHubCode: string;
+  refreshPinnedMenu: () => void;
+}
+
+interface Unit {
+  type: 'unit';
+  id: string;
+  unitName: string;
+  hubCode: string;
+  pinned: boolean;
+  image?: string;
+}
+
+const PinnedMenuAdmin: React.FC<PinnedMenuAdminProps> = ({ isVisible, onClose, onPinItem, selectedHubCode, refreshPinnedMenu }) => {
+  const [units, setUnits] = useState<Unit[]>([]);
+
+  // Fetch units when the component mounts or selectedHubCode changes
+  useEffect(() => {
+    const fetchUnits = async () => {
+      if (!selectedHubCode) {
+        console.error('No selected hub code found');
+        return;
+      }
+  
+      const db = getFirestore();
+  
+      try {
+        // Query to find the admin hub document based on the selected hub code
+        const userHubsRef = collection(db, 'userHubs');
+        const q = query(userHubsRef, where('hubCode', '==', selectedHubCode));
+        const querySnapshot = await getDocs(q);
+  
+        if (querySnapshot.empty) {
+          console.error('Admin hub not found for the given hub code');
+          return;
+        }
+  
+        const adminHubDoc = querySnapshot.docs[0]; // Assume the first match is correct
+        const adminHubData = adminHubDoc.data();
+  
+        if (adminHubData.homeType !== 'admin') {
+          console.error('Selected hub is not an admin hub.');
+          return;
+        }
+  
+        // Ensure the admin hub contains a units array
+        const unitHubCodes: string[] = adminHubData.units || [];
+        if (unitHubCodes.length === 0) {
+          setUnits([]);
+          return;
+        }
+  
+        // Fetch all unit documents in parallel for better performance
+        const unitQueries = unitHubCodes.map((hubCode) => 
+          getDocs(query(userHubsRef, where('hubCode', '==', hubCode)))
+        );
+        const unitSnapshots = await Promise.all(unitQueries);
+  
+        const unitsData: Unit[] = [];
+        unitSnapshots.forEach((unitSnapshot, index) => {
+          if (!unitSnapshot.empty) {
+            const unitDoc = unitSnapshot.docs[0]; // Take the first document
+            const unitData = unitDoc.data();
+            unitsData.push({
+              type: 'unit',
+              id: unitDoc.id,
+              unitName: unitData.homeName || 'Unnamed Unit',
+              hubCode: unitHubCodes[index], // Use the original hub code
+              pinned: unitData.pinned || false,
+              image: unitData.image || NoImage,
+            });
+          } else {
+            console.error(`Unit hub with hubCode ${unitHubCodes[index]} not found`);
+          }
+        });
+  
+        setUnits(unitsData);
+      } catch (error) {
+        console.error('Error fetching units:', error);
+      }
+    };
+  
+    fetchUnits();
+  }, [selectedHubCode]);
+  
+
+  // Handle pinning a unit
+  const handleItemClick = async (unit: Unit) => {
+    const db = getFirestore();
+
+    try {
+      // Update the tenant hub's pinned status
+      await updateDoc(doc(db, 'userHubs', unit.id), {
+        pinned: true,
+      });
+
+      // Add the unit to the pinned items in the parent component
+      onPinItem(unit);
+
+      // Refresh the pinned menu
+      refreshPinnedMenu();
+
+      // Close the menu
+      onClose();
+    } catch (error) {
+      console.error('Error pinning unit:', error);
+    }
+>>>>>>> zaid-fixedSettings
   };
+
+  if (!isVisible) return null;
 
   return (
     <div style={{ overflow: 'hidden' }}>
@@ -97,6 +217,7 @@ const PinnedMenu: React.FC<PinnedMenuProps> = ({ isVisible, onClose, onPinItem }
               bg={'transparent'}
               mb={3}
             >
+<<<<<<< HEAD
               <VscAdd
                 size={30}
                 color="#6cce58"
@@ -106,6 +227,47 @@ const PinnedMenu: React.FC<PinnedMenuProps> = ({ isVisible, onClose, onPinItem }
               <Heading fontSize="xl" ml={3}>
                 Add Room
               </Heading>
+=======
+              <Box width={'100%'} height={'100%'} overflow={'scroll'}>
+                <Grid templateColumns="repeat(2, 1fr)" gap={4} p={4}>
+                  {units.map((unit) => (
+                    <Box
+                      key={unit.id}
+                      borderRadius="20px"
+                      overflow="hidden"
+                      bg="white"
+                      p={3}
+                      cursor="pointer"
+                      transition="all 0.3s ease-in-out"
+                      boxShadow="0px 5px 10px rgba(0, 0, 0, 0.05)"
+                      border="1px solid rgba(0, 0, 0, 0.08)"
+                      _hover={{
+                        transform: 'translateY(-5px)',
+                        boxShadow: '0px 10px 20px rgba(0, 0, 0, 0.1)',
+                        backgroundColor: '#f5f5f5',
+                      }}
+                      onClick={() => handleItemClick(unit)}
+                      height="180px"
+                    >
+                      <Image
+                        src={unit.image || NoImage}
+                        alt={unit.unitName}
+                        borderRadius="12px"
+                        objectFit="cover"
+                        width="100%"
+                        height="90px"
+                      />
+                      <Text fontWeight="bold" fontSize="md" mt={2} color="#6cce58">
+                        {unit.unitName}
+                      </Text>
+                      <Text color="gray.500" fontSize="sm">
+                        Unit
+                      </Text>
+                    </Box>
+                  ))}
+                </Grid>
+              </Box>
+>>>>>>> zaid-fixedSettings
             </Box>
 
             {/* Conditionally show the room list when the plus button is clicked */}

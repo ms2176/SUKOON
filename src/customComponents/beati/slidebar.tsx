@@ -1,7 +1,12 @@
 import React, { useState } from 'react';
 import './slidebar.css';
 
-const Slidebar: React.FC = () => {
+interface SlidebarProps {
+  title?: string; // Optional prop for the header
+  unit?: string; // Optional prop for the measurement unit, defaults to KW
+}
+
+const Slidebar: React.FC<SlidebarProps> = ({ title, unit = "KW" }) => {
   const [sliderValue, setSliderValue] = useState(50); // State to track the slider value
 
   // Function to handle slider value change
@@ -10,7 +15,8 @@ const Slidebar: React.FC = () => {
   };
 
   return (
-    <div>
+    <div style={{background: 'transparent'}}>
+      {title && <h3  style={{background: 'transparent'}} className="PB-range-slider-title">{title}</h3>} {/* Display title if provided */}
       <div className="PB-range-slider-div">
         <input
           type="range"
@@ -21,7 +27,7 @@ const Slidebar: React.FC = () => {
           id="myRange"
           onChange={handleSliderChange} // Update value on change
         />
-        <p className="PB-range-slidervalue">{sliderValue}KW</p> {/* Display updated value */}
+        <p className="PB-range-slidervalue">{sliderValue}{unit}</p> {/* Display updated value with unit */}
       </div>
     </div>
   );

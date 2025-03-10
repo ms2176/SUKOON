@@ -1,95 +1,341 @@
-import { Box, Button, Flex, Heading, HStack, Stack } from '@chakra-ui/react'
-import React, { useState } from 'react'
-import './Homepage.css'
-import { MdArrowDropDown } from "react-icons/md";
-import Dropdown from './Dropdown.tsx'
+import { Box, Button, Flex, Heading, HStack, Stack, Image, Text, Grid } from '@chakra-ui/react';
+import React, { useState, useRef, useEffect } from 'react';
+import './Homepage.css';
+import Dropdown from './Dropdown.tsx';
 import MiniDisplays from './miniDisplays.tsx';
-import { FcTwoSmartphones } from "react-icons/fc";
-import { FcPositiveDynamic } from "react-icons/fc";
-import { FcChargeBattery } from "react-icons/fc";
+import { useNavigate } from 'react-router-dom'; // Import useNavigate
 import Lottie from 'react-lottie-player';
-import PulseAnimationGreen from '@/images/animatedIcons/Animation - 1737092091343.json'
-import PulseAnimationBlue from '@/images/animatedIcons/Animation - 1738960096286.json'
-import { TbCirclePlusFilled } from "react-icons/tb";
+import PulseAnimationGreen from '@/images/animatedIcons/Animation - 1737092091343.json';
+import PulseAnimationBlue from '@/images/animatedIcons/Animation - 1738960096286.json';
+import { TbCirclePlusFilled } from 'react-icons/tb';
 import PinnedMenu from './pinnedMenu.tsx';
-import { useEffect } from 'react';
-import Mockroom from './Mockroom.tsx';
-import { MdOutlinePhoneAndroid } from "react-icons/md";
-import { BsGraphUpArrow } from "react-icons/bs";
-import { MdOutlineBatterySaver } from "react-icons/md";
-import { FaExpandAlt } from "react-icons/fa";
-import { AiOutlineShrink } from "react-icons/ai";
+import { MdOutlinePhoneAndroid } from 'react-icons/md';
+import { BsGraphUpArrow } from 'react-icons/bs';
+import { MdOutlineBatterySaver } from 'react-icons/md';
+import { FaExpandAlt } from 'react-icons/fa';
+import { AiOutlineShrink } from 'react-icons/ai';
 import AddHome from './AddHome.tsx';
-import EditHomes from './EditHomes.tsx'
-import MockDevice from './MockDevice.tsx';
-import homesdata from '@/JSONFiles/homesdata.json'
+import EditHomes from './EditHomes.tsx';
 import PinnedMenuAdmin from './pinnedMenuAdmin.tsx';
-import MockUnits from './MockUnits.tsx';
-import { MdOutlineEdit } from "react-icons/md";
+import { MdOutlineEdit } from 'react-icons/md';
+import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import { getFirestore, collection, query, where, getDocs, QueryDocumentSnapshot, doc, updateDoc, getDoc } from 'firebase/firestore';
+import NoImage from '@/images/noImage.png';
+// Import device images
+import LightImg from '@/images/devicesIcons/lamp.png';
+import TvImg from '@/images/devicesIcons/tv.png';
+import AcImg from '@/images/devicesIcons/ac.png';
+import FanImg from '@/images/devicesIcons/fan.png';
+import WasherImg from '@/images/devicesIcons/washing-machine.png';
+import SpeakerImg from '@/images/devicesIcons/speaker.png';
+import ThermostatImg from '@/images/devicesIcons/thermostat.png';
+import DoorbellImg from '@/images/devicesIcons/smart-door.png';
+import HeatconvectorImg from '@/images/devicesIcons/heater-convector.png';
+import Dishwasher from '@/images/devicesIcons/dishwasher.png';
 
 interface Home {
   homeName: string;
   homeType: string;
+  hubCode: string;
 }
 
-interface HomepageProps {
-  selectedHome: Home | null;
-  onSelectHome: (home: Home) => void;
+// Define the Room type
+interface Room {
+  type: 'room';
+  id: string;
+  roomName: string;
+  hubCode: string;
+  pinned: boolean;
+  devices: string[];
+  image?: string; // Optional field for room image
 }
 
-const Homepage: React.FC<HomepageProps> = ({ selectedHomePass, onSelectHome }) => {
-  const username = sessionStorage.getItem('username');
+// Define the Device type
+interface Device {
+  type: 'device';
+  id: string;
+  deviceName: string;
+  deviceType: string;
+  hubCode: string;
+  pinned: boolean;
+}
+
+// Define the Unit type
+interface Unit {
+  type: 'unit';
+  id: string;
+  unitName: string;
+  hubCode: string;
+  pinned: boolean;
+  image?: string;
+}
+
+// Define the PinnedItem type as a union of Room, Device, and Unit
+type PinnedItem = Room | Device | Unit;
+
+// Define device types and their corresponding images
+type DeviceType =
+  | 'light'
+  | 'tv'
+  | 'ac'
+  | 'fan'
+  | 'washingMachine'
+  | 'speaker'
+  | 'thermostat'
+  | 'door'
+  | 'heatconvector'
+  | 'dishwasher';
+
+const deviceTypeToImage: Record<DeviceType, string> = {
+  light: LightImg,
+  tv: TvImg,
+  ac: AcImg,
+  fan: FanImg,
+  washingMachine: WasherImg,
+  speaker: SpeakerImg,
+  thermostat: ThermostatImg,
+  door: DoorbellImg,
+  heatconvector: HeatconvectorImg,
+  dishwasher: Dishwasher,
+};
+
+const normalizeDeviceType = (deviceType: string): DeviceType => {
+  const normalizedType = deviceType.toLowerCase().replace(/\s+/g, ''); // Remove spaces and convert to lowercase
+  switch (normalizedType) {
+    case 'light':
+      return 'light';
+    case 'tv':
+      return 'tv';
+    case 'ac':
+      return 'ac';
+    case 'fan':
+      return 'fan';
+    case 'washingmachine':
+      return 'washingMachine';
+    case 'speaker':
+      return 'speaker';
+    case 'thermostat':
+      return 'thermostat';
+    case 'door':
+      return 'door';
+    case 'heatconvector':
+      return 'heatconvector';
+    case 'dishwasher':
+      return 'dishwasher';
+    default:
+      return 'light'; // Default to 'light' if the type is unknown
+  }
+};
+
+const Homepage: React.FC<{ selectedHomePass: Home | null; onHomeDelete:() => void; onHomeRename:(newHomes: Home[]) => void; onSelectHome: (home: Home) => void; onHomeAdded: (newHomes: Home[]) => void; homes: Home[] }> = ({
+  selectedHomePass,
+  onSelectHome,
+  onHomeAdded,
+  homes,
+  onHomeDelete,
+  onHomeRename
+}) => {  const [username, setUsername] = useState<string>('guest');
+  const [, setHomes] = useState<Home[]>([]);
   const [isPinnedMenuVisible, setPinnedMenuVisible] = useState(false);
-  const [pinnedItems, setPinnedItems] = useState<PinnedItem[]>([]); // Store both rooms and devices
-  const [isRemoveRoomVisibile, setRemoveRoomVisible] = useState(false);
+  const [pinnedItems, setPinnedItems] = useState<PinnedItem[]>([]);
   const [isEditing, setIsEditing] = useState(false);
-  const [isExpanded, setIsExpanded] = useState(false); // State for expanded mode
+  const [isExpanded, setIsExpanded] = useState(false);
   const [isAddHomeVisible, setIsAddHomeVisible] = useState(false);
   const [isEditHomesVisible, setIsEditHomesVisible] = useState(false);
-  const [selectedHome, setSelectedHome] = useState<Home | null>(null); // Track the selected home
-
-  const handleSelectHome = (home: Home) => {
-    setSelectedHome(home); // Update the selected home
-    setPinnedItems([]); // Clear the pinned items when a new home is selected
-
-  };
-
-  interface Room {
-    type: 'room';
-    roomName: string;
-    numDevices: number;
-    roomImage: string;
-  }
-
-  interface Device {
-    type: 'device'; // Add a type discriminator
-    deviceName: string;
-    deviceImage: string;
-  }
-
-  interface Unit {
-    type: 'unit';
-    unitName: string;
-    unitImage: string;
-  }
-
-  type PinnedItem = Room | Device | Unit; // Union type for pinned items
-
+  const [selectedHome, setSelectedHome] = useState<Home | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [activeDevicesCount, setActiveDevicesCount] = useState<number>(0); // State for active devices count
+  const navigate = useNavigate();
 
   
-  const handlePinItem = (item: Room | Device | Unit) => {
-    setPinnedItems((prev) => [...prev, item]); // Add the room object to the pinned list
+  useEffect(() => {
+    const auth = getAuth();
+    const db = getFirestore();
+  
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        // Get username from Firestore user document
+        const userDoc = await getDoc(doc(db, 'users', user.uid));
+        if (userDoc.exists()) {
+          setUsername(userDoc.data().username || user.email || 'User');
+        } else {
+          setUsername(user.email || 'User');
+        }
+        
+        // Get selected home from localStorage if exists
+        const storedHome = localStorage.getItem('selectedHome');
+        if (storedHome) {
+          const parsedHome = JSON.parse(storedHome);
+          setSelectedHome(parsedHome);
+          onSelectHome(parsedHome);
+        }
+      } else {
+        setUsername('guest');
+      }
+    });
+  
+    return () => unsubscribe();
+  }, []);
+
+
+  const fetchActiveDevicesCount = async (hubCode: string) => {
+    const db = getFirestore();
+    const devicesRef = collection(db, 'devices');
+    const q = query(devicesRef, where('hubCode', '==', hubCode), where('on', '==', true));
+
+    try {
+      const querySnapshot = await getDocs(q);
+      setActiveDevicesCount(querySnapshot.size); // Set the count of active devices
+    } catch (error) {
+      console.error('Error fetching active devices:', error);
+    }
+  };
+
+  // Update active devices count when selectedHome changes
+  useEffect(() => {
+    if (selectedHome) {
+      fetchActiveDevicesCount(selectedHome.hubCode);
+    }
+  }, [selectedHome]);
+
+  const handleSelectHome = (home: Home) => {
+    setSelectedHome(home);
+    setPinnedItems([]);
+    localStorage.setItem('selectedHome', JSON.stringify(home));
+  };
+
+  const handleHomeRenamed = (renamedHomes: Home[]) => {
+    onHomeRename(renamedHomes);
+    fetchHomes();
+  };
+
+  
+
+  const fetchPinnedItems = async () => {
+    const db = getFirestore();
+  
+    if (selectedHome) {
+      try {
+        // Fetch pinned rooms
+        const roomsRef = collection(db, 'rooms');
+        const roomsQuery = query(roomsRef, where('hubCode', '==', selectedHome.hubCode), where('pinned', '==', true));
+        const roomsSnapshot = await getDocs(roomsQuery);
+        const pinnedRooms: Room[] = roomsSnapshot.docs.map((doc) => ({
+          type: 'room',
+          id: doc.id,
+          roomName: doc.data().roomName,
+          hubCode: doc.data().hubCode,
+          pinned: doc.data().pinned,
+          devices: doc.data().devices || [],
+          image: doc.data().image || NoImage,
+        }));
+  
+        // Fetch pinned devices
+        const devicesRef = collection(db, 'devices');
+        const devicesQuery = query(devicesRef, where('hubCode', '==', selectedHome.hubCode), where('pinned', '==', true));
+        const devicesSnapshot = await getDocs(devicesQuery);
+        const pinnedDevices: Device[] = devicesSnapshot.docs.map((doc) => ({
+          type: 'device',
+          id: doc.id,
+          deviceName: doc.data().deviceName,
+          deviceType: doc.data().deviceType,
+          hubCode: doc.data().hubCode,
+          pinned: doc.data().pinned,
+        }));
+  
+        // Fetch pinned units (tenant hubs) for admin hubs
+        let pinnedUnits: Unit[] = [];
+        // In Homepage component's fetchPinnedItems
+        if (selectedHome.homeType === 'admin') {
+          // Fetch pinned tenant hubs
+          const adminHubRef = doc(db, 'userHubs', selectedHome.hubCode);
+          const adminHubDoc = await getDoc(adminHubRef);
+          const unitHubCodes = adminHubDoc.data()?.units || []; // Add optional chaining
+          
+          // Fetch pinned tenant hubs
+          const pinnedUnitsQuery = query(
+            collection(db, 'userHubs'),
+            where('hubCode', 'in', unitHubCodes),
+            where('pinned', '==', true)
+          );
+          
+          const pinnedUnitsSnapshot = await getDocs(pinnedUnitsQuery);
+          pinnedUnits = pinnedUnitsSnapshot.docs.map(doc => ({
+            type: 'unit',
+            id: doc.id,
+            unitName: doc.data().homeName,
+            hubCode: doc.data().hubCode,
+            pinned: true,
+            image: doc.data().image || NoImage,
+          }));
+        }
+  
+        // Combine all pinned items
+        const pinnedItems = [...pinnedRooms, ...pinnedDevices, ...pinnedUnits];
+        setPinnedItems(pinnedItems);
+      } catch (error) {
+        console.error('Error fetching pinned items:', error);
+      }
+    }
+  };
+
+  useEffect(() => {
+    console.log('Pinned Items:', pinnedItems);
+  }, [pinnedItems]);
+
+  const handlePinItem = (item: PinnedItem) => {
+    setPinnedItems((prev) => [...prev, item]); // Immediately add the new pinned item to the state
+    fetchPinnedItems(); // Fetch the latest pinned items from Firestore to ensure consistency
+  };
+
+  const refreshPinnedMenu = () => {
+    fetchPinnedItems();
+  };
+
+  useEffect(() => {
+    fetchPinnedItems();
+  }, [selectedHome]);
+
+  const handleUnpinItem = async (item: PinnedItem) => {
+    const db = getFirestore();
+  
+    try {
+      let collectionName: string;
+      switch (item.type) {
+        case 'room':
+          collectionName = 'rooms';
+          break;
+        case 'device':
+          collectionName = 'devices';
+          break;
+        case 'unit':
+          collectionName = 'userHubs'; // Correct collection name for units
+          break;
+        default:
+          throw new Error('Invalid item type.');
+      }
+  
+      const itemRef = doc(db, collectionName, item.id);
+      await updateDoc(itemRef, { pinned: false }); // Set pinned to false
+  
+      // Remove the unpinned item from the local state
+      setPinnedItems((prev) => prev.filter((i) => i.id !== item.id));
+  
+      // Refresh the pinned items from Firestore
+      refreshPinnedMenu();
+    } catch (error) {
+      console.error('Error unpinning item:', error);
+    }
   };
 
   const toggleAddHome = () => {
-    setIsAddHomeVisible(!isAddHomeVisible); // Toggle the info card visibility
-  }; 
-  
-  const toggleEditHomes = () => {
-    setIsEditHomesVisible(!isEditHomesVisible); // Toggle the info card visibility
+    setIsAddHomeVisible(!isAddHomeVisible);
   };
 
-  // Disable editing mode if there are no pinned items
+  const toggleEditHomes = () => {
+    setIsEditHomesVisible(!isEditHomesVisible);
+  };
+
   useEffect(() => {
     if (pinnedItems.length === 0) {
       setIsEditing(false);
@@ -97,17 +343,13 @@ const Homepage: React.FC<HomepageProps> = ({ selectedHomePass, onSelectHome }) =
   }, [pinnedItems]);
 
   useEffect(() => {
-    // Disable scrolling when pinnedMenu is open
     document.body.style.overflow = 'hidden';
-
-    // Clean up and allow scrolling again when component unmounts
     return () => {
       document.body.style.overflow = 'auto';
     };
   }, []);
 
   useEffect(() => {
-    // Disable scrolling when pinnedMenu is open
     if (isPinnedMenuVisible) {
       document.body.style.overflow = 'hidden';
     } else {
@@ -115,14 +357,72 @@ const Homepage: React.FC<HomepageProps> = ({ selectedHomePass, onSelectHome }) =
     }
   }, [isPinnedMenuVisible]);
 
+  
+
+  const fetchHomes = async () => {
+    const auth = getAuth();
+    const db = getFirestore();
+
+    const user = auth.currentUser;
+    if (user) {
+      const userId = user.uid;
+
+      const hubsRef = collection(db, 'userHubs');
+      const q = query(hubsRef, where('userId', '==', userId));
+
+      try {
+        const querySnapshot = await getDocs(q);
+        const homesData: Home[] = [];
+
+        querySnapshot.forEach((doc: QueryDocumentSnapshot) => {
+          const data = doc.data();
+          homesData.push({
+            homeName: data.homeName,
+            homeType: data.homeType,
+            hubCode: data.hubCode,
+          });
+        });
+
+        setHomes(homesData);
+      } catch (error) {
+        console.error('Error fetching user hubs:', error);
+      }
+    }
+  };
+
+  useEffect(() => {
+    fetchHomes();
+  }, []);
+
+  const handleHomeAdded = (newHomes: Home[]) => {
+    onHomeAdded(newHomes); // Update parent state
+    fetchHomes(); // Refresh local data if needed
+  };
+
+  
+
   return (
     <div style={{ overflow: 'hidden' }}>
-      {isAddHomeVisible && <AddHome closeAddHome={toggleAddHome}/>}
-      {isEditHomesVisible && <EditHomes closeEditHomes={toggleEditHomes}/>}
-      <Stack className='homepageContainer' position={'relative'} display={'flex'} overflow={'hidden'}>
-        <Box className='homepageHeader' bg={selectedHome?.homeType === 'admin' ? '#0b13b0' : '#6cce58'}>
-          <Heading bg={'transparent'} ml={'20px'} mt={'20px'} mb={'20px'} fontWeight={'extrabold'} className='introHomepage'>
-            Ya Halla, <span className='guestIntro'>{username || 'guest'}</span>
+      {isAddHomeVisible && (
+        <AddHome
+          closeAddHome={() => setIsAddHomeVisible(false)}
+          onHomeAdded={handleHomeAdded}
+        />
+      )}
+
+      {isEditHomesVisible && (
+        <EditHomes
+          closeEditHomes={toggleEditHomes}
+          onHomeDeleted={onHomeDelete}
+          onHomeRenamed={handleHomeRenamed}
+          homes={homes}
+        />
+      )}
+
+      <Stack className="homepageContainer" position={'relative'} display={'flex'} overflow={'hidden'}>
+        <Box className="homepageHeader" bg={selectedHome?.homeType === 'admin' ? '#0b13b0' : '#6cce58'}>
+          <Heading bg={'transparent'} ml={'20px'} mt={'20px'} mb={'20px'} fontWeight={'extrabold'} className="introHomepage">
+            Ya Halla, <span className="guestIntro">{username}</span>
           </Heading>
         </Box>
 
@@ -130,65 +430,106 @@ const Homepage: React.FC<HomepageProps> = ({ selectedHomePass, onSelectHome }) =
           <Heading color={'#454545'} bg={'transparent'}>
             Homes:
           </Heading>
-          <Dropdown homes={homesdata} onSelect={(home) => {
+          <Dropdown
+            homes={homes}
+            onSelect={(home) => {
+              handleSelectHome(home);
               onSelectHome(home);
-              handleSelectHome(home); 
-            }} initialShow='Choose Home...'>
-
-          </Dropdown>
+            }}
+            initialShow={selectedHome?.homeName || 'Choose Home...'}
+          />
           <Button bg={'transparent'} width={'auto'} height={'auto'} onClick={toggleAddHome}>
-            <TbCirclePlusFilled color='#21334a' size={'50%'} />  
+            <TbCirclePlusFilled color="#21334a" size={'50%'} />
           </Button>
-          
-          <Box bg={'white'} width={'50%'} height={'25px'} justifyContent={'center'} alignItems={'center'} alignContent={'center'} display={'flex'} borderRadius={20} onClick={toggleEditHomes}>
-            <MdOutlineEdit color='#21334a' size={'100%'} style={{background:'transparent'}}/>
+
+          <Box
+            bg={'white'}
+            width={'50%'}
+            height={'25px'}
+            justifyContent={'center'}
+            alignItems={'center'}
+            alignContent={'center'}
+            display={'flex'}
+            borderRadius={20}
+            onClick={toggleEditHomes}
+          >
+            <MdOutlineEdit color="#21334a" size={'100%'} style={{ background: 'transparent' }} />
           </Box>
         </HStack>
 
         <Flex display={'flex'} justifyContent={'center'} alignItems={'center'} alignContent={'center'} mt={'25px'} zIndex={1} bg={'transparent'}>
           <HStack spaceX={'-5%'} justifyContent={'center'} alignItems={'center'} alignContent={'center'} bg={'transparent'}>
-            <MiniDisplays Icon={MdOutlinePhoneAndroid} title="Active devices:" value="8"></MiniDisplays>
-            <MiniDisplays Icon={BsGraphUpArrow} title="Home Status:" value="Good"></MiniDisplays>
-            <MiniDisplays Icon={MdOutlineBatterySaver} title="Energy Generation:" value="50KW/h"></MiniDisplays>
+            <MiniDisplays Icon={MdOutlinePhoneAndroid} title="Active devices:" value={activeDevicesCount.toString()} />
+            <MiniDisplays Icon={BsGraphUpArrow} title="Home Status:" value="Good" />
+            <MiniDisplays Icon={MdOutlineBatterySaver} title="Energy Generation:" value="50KW/h" />
           </HStack>
         </Flex>
 
-        <Flex className='pulseBoxContainer'>
-          <Lottie loop animationData={selectedHome?.homeType === 'admin' ? PulseAnimationBlue : PulseAnimationGreen} play className='pulseAnimation' style={{background: 'transparent'}}/>
-          <Box className='pulseBox' bg={selectedHome?.homeType === 'admin' ? '#0b13b0' : '#05FF02'}>
-            <Heading bg={'transparent'} fontWeight={'bold'} className='totalConsShow'>
+        <Flex className="pulseBoxContainer">
+          <Lottie
+            loop
+            animationData={selectedHome?.homeType === 'admin' ? PulseAnimationBlue : PulseAnimationGreen}
+            play
+            className="pulseAnimation"
+            style={{ background: 'transparent' }}
+          />
+          <Box className="pulseBox" bg={selectedHome?.homeType === 'admin' ? '#0b13b0' : '#05FF02'}>
+            <Heading bg={'transparent'} fontWeight={'bold'} className="totalConsShow">
               50.1KW/h
             </Heading>
           </Box>
         </Flex>
 
         <Flex zIndex={1} display={'flex'} alignItems={'center'} justifyContent={'center'}>
-          <Heading color={selectedHome?.homeType === 'admin' ? '#0b13b0' : '#05FF02'} textDecor={'underline'} className='totConsHeading'>
+          <Heading color={selectedHome?.homeType === 'admin' ? '#0b13b0' : '#05FF02'} textDecor={'underline'} className="totConsHeading">
             Total Consumption
           </Heading>
         </Flex>
 
-        <Flex className='shadowPinned'>
-          <HStack ml="20px" zIndex={1} spaceX={'20%'} display={'flex'} mt={'20px'} className='pinnedinfoContainer'>
-            <Heading fontSize={'220%'} className='pinnedHeader'>
+        <Flex className="shadowPinned">
+          <HStack ml="20px" zIndex={1} spaceX={'20%'} display={'flex'} mt={'20px'} className="pinnedinfoContainer">
+            <Heading fontSize={'220%'} className="pinnedHeader">
               Pinned
             </Heading>
 
             <HStack display={'flex'} bg={'transparent'} transform={'translateX(-5%)'}>
-              <Box bg={'#E4E4E7'} width={'70%'} height={'25px'} justifyContent={'center'} alignItems={'center'} alignContent={'center'} display={'flex'} borderRadius={20} onClick={() => setIsEditing(!isEditing)}>
-                <Heading className='editHeader' fontSize={'100%'} bg={'transparent'} justifyContent={'center'} alignItems={'center'} alignContent={'center'} mt={'2px'}>
-                  Edit
-                </Heading>
-              </Box>
+              <Flex
+                bg={selectedHome?.homeType === 'admin' ? '#0b13b0' : '#6cce58'} // Change background color based on homeType
+                borderRadius="full"
+                overflow="hidden"
+                alignItems="center"
+                height={'3vh'}
+              >
+                <Button
+                  bg="transparent"
+                  color="white"
+                  px={6}
+                  py={2}
+                  fontSize="md"
+                  _hover={{ bg: selectedHome?.homeType === 'admin' ? '#0a0f8f' : '#5bb046' }} // Change hover color based on homeType
+                  onClick={() => setPinnedMenuVisible(true)}
+                >
+                  +
+                </Button>
+                <Button
+                  bg="transparent"
+                  color="white"
+                  px={6}
+                  py={2}
+                  fontSize="md"
+                  _hover={{ bg: selectedHome?.homeType === 'admin' ? '#0a0f8f' : '#5bb046' }} // Change hover color based on homeType
+                  onClick={() => setIsEditing(!isEditing)}
+                >
+                  -
+                </Button>
+              </Flex>
 
               <FaExpandAlt
-                color='#21334a'
+                color="#21334a"
                 size={'15%'}
-                onClick={() => setIsExpanded(!isExpanded)} 
+                onClick={() => setIsExpanded(!isExpanded)}
                 style={{ cursor: 'pointer' }}
               />
-              <TbCirclePlusFilled color='#21334a' size={'20%'} onClick={() => setPinnedMenuVisible(true)} />
-
             </HStack>
           </HStack>
         </Flex>
@@ -199,20 +540,20 @@ const Homepage: React.FC<HomepageProps> = ({ selectedHomePass, onSelectHome }) =
             width={isExpanded ? '100vw' : '95%'}
             height={isExpanded ? '100vh' : '300px'}
             overflow={'scroll'}
-            position={isExpanded ? 'fixed' : 'static'} 
+            position={isExpanded ? 'fixed' : 'static'}
             top={isExpanded ? '0' : 'auto'}
             left={isExpanded ? '0' : 'auto'}
-            zIndex={isExpanded ? 1000 : 'auto'} 
+            zIndex={isExpanded ? 1000 : 'auto'}
             mb={'20%'}
           >
             {isExpanded && (
               <Box
                 position="absolute"
-                top="20px" 
+                top="20px"
                 right="20px"
-                zIndex={1001} 
+                zIndex={1001}
                 cursor="pointer"
-                onClick={() => setIsExpanded(false)} 
+                onClick={() => setIsExpanded(false)}
                 bg={'transparent'}
               >
                 <AiOutlineShrink size={24} color="#21334a" />
@@ -222,11 +563,11 @@ const Homepage: React.FC<HomepageProps> = ({ selectedHomePass, onSelectHome }) =
             {isExpanded && (
               <Box
                 position="absolute"
-                top="20px" 
-                left="50%" 
-                transform="translateX(-50%)" y
-                zIndex={1001} 
-                textAlign="center" 
+                top="20px"
+                left="50%"
+                transform="translateX(-50%)"
+                zIndex={1001}
+                textAlign="center"
                 overflowY={'scroll'}
               >
                 <Heading fontSize="2xl" color="#21334a" bg={'transparent'}>
@@ -235,70 +576,97 @@ const Homepage: React.FC<HomepageProps> = ({ selectedHomePass, onSelectHome }) =
               </Box>
             )}
 
-            <Flex
-              wrap="wrap"
-              gap={'10px'}
-              display={'flex'}
-              alignItems={'center'}
-              alignContent={'center'}
-              justifyContent={'center'}
-              pt={isExpanded ? '80px' : '0'} 
-            >
-              {pinnedItems.map((item, index) => (
-              <Box width={'calc(45%)'} key={index}>
-                {item.type === 'room' ? (
-                  <Mockroom
-                    style={{ width: 'calc(100%)' }}
-                    roomNum={`${index + 1}`} // Optional: You can pass the index or room ID
-                    roomName={item.roomName} // Use `item` instead of `room`
-                    numDevices={item.numDevices} // Use `item` instead of `room`
-                    image={item.roomImage} // Use `item` instead of `room`
-                    isEditing={isEditing && pinnedItems.length > 0}
-                    onRemove={() => {
-                      setPinnedItems((prev) => prev.filter((_, i) => i !== index));
-                    }}
+            <Grid templateColumns="repeat(2, 1fr)" gap={4} p={4}>
+              {pinnedItems.map((item) => (
+                <Box
+                  key={item.id}
+                  borderRadius="20px"
+                  overflow="hidden"
+                  bg="white"
+                  p={3}
+                  cursor="pointer"
+                  transition="all 0.3s ease-in-out"
+                  boxShadow="0px 5px 10px rgba(0, 0, 0, 0.05)"
+                  border={`1px solid ${isEditing ? 'red' : 'rgba(0, 0, 0, 0.08)'}`}
+                  _hover={{
+                    transform: 'translateY(-5px)',
+                    boxShadow: '0px 10px 20px rgba(0, 0, 0, 0.1)',
+                    backgroundColor: '#f5f5f5',
+                  }}
+                  onClick={() => {
+                    if (isEditing) {
+                      handleUnpinItem(item);
+                    } else {
+                      if (item.type === 'room') {
+                        navigate(`/devices/${item.id}`);
+                      } else if (item.type === 'device') {
+                        navigate(`/device/${item.id}`);
+                      } else if (item.type === 'unit') {
+                        navigate(`/unit/${item.id}`);
+                      }
+                    }
+                  }}
+                  height="180px"
+                >
+                  <Image
+                    src={
+                      item.type === 'room'
+                        ? (item as Room).image || NoImage
+                        : item.type === 'device'
+                        ? deviceTypeToImage[normalizeDeviceType((item as Device).deviceType)] || LightImg
+                        : (item as Unit).image || NoImage // Handle units
+                    }
+                    alt={
+                      item.type === 'room'
+                        ? (item as Room).roomName
+                        : item.type === 'device'
+                        ? (item as Device).deviceName
+                        : (item as Unit).unitName
+                    }
+                    borderRadius="12px"
+                    objectFit="cover"
+                    width="100%"
+                    height="90px"
                   />
-                ) : item.type === 'device' ? (
-                  <MockDevice
-                    style={{ width: 'calc(100%)' }}
-                    deviceName={item.deviceName}
-                    deviceImage={item.deviceImage}
-                    isEditing={isEditing && pinnedItems.length > 0}
-                    onRemove={() => {
-                      setPinnedItems((prev) => prev.filter((_, i) => i !== index));
-                    }}
-                  />
-                ) : item.type === 'unit' ? (
-                  <MockUnits
-                    style={{ width: 'calc(100%)' }}
-                    unitName={item.unitName}
-                    image={item.unitImage}
-                    isEditing={isEditing && pinnedItems.length > 0}
-                    onRemove={() => {
-                      setPinnedItems((prev) => prev.filter((_, i) => i !== index));
-                    }}
-                  />
-                ) : null} {/* Add a fallback (null) for unexpected types */}
-              </Box>
-            ))}
-            </Flex>
+                  <Text fontWeight="bold" fontSize="md" mt={2} color="#6cce58">
+                    {item.type === 'room'
+                      ? (item as Room).roomName
+                      : item.type === 'device'
+                      ? (item as Device).deviceName
+                      : (item as Unit).unitName}
+                  </Text>
+                  <Text color="gray.500" fontSize="sm">
+                    {item.type === 'room'
+                      ? `${(item as Room).devices.length} devices`
+                      : item.type === 'device'
+                      ? (item as Device).deviceType
+                      : 'Unit'}
+                  </Text>
+                </Box>
+              ))}
+            </Grid>
           </Box>
         </Flex>
       </Stack>
 
       {selectedHome?.homeType === 'admin' ? (
-        <PinnedMenuAdmin
+          <PinnedMenuAdmin
           isVisible={isPinnedMenuVisible}
           onClose={() => setPinnedMenuVisible(false)}
-          onPinItem={handlePinItem}
+          onPinItem={handlePinItem} // Pass the handlePinItem function
+          selectedHubCode={selectedHome?.hubCode || ''}
+          refreshPinnedMenu={refreshPinnedMenu}
         />
       ) : (
         <PinnedMenu
           isVisible={isPinnedMenuVisible}
           onClose={() => setPinnedMenuVisible(false)}
           onPinItem={handlePinItem}
+          selectedHubCode={selectedHome?.hubCode || ''}
+          refreshPinnedMenu={refreshPinnedMenu}
         />
-      )}    </div>
+      )}
+    </div>
   );
 };
 

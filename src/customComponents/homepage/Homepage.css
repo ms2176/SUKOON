@@ -134,7 +134,20 @@ body {
     .pinnedinfoContainer {
         gap: 200px;
     }
+<<<<<<< HEAD
 }
+=======
+
+    .pinnedHeader, .editHeader {
+        font-family: 'SpotifyFont', sans-serif;
+        color: #21334a;
+    }
+
+    .shadowPinned {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+>>>>>>> zaid-fixedSettings
 
 
         

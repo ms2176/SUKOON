@@ -1,0 +1,16 @@
+.setting-item {
+    padding: 10px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background-color 0.3s, color 0.3s;
+  }
+  
+  .setting-item.active {
+    background-color: #6cc358; /* Green background for active setting */
+    color: white; /* White text for better contrast */
+  }
+  
+  .setting-item.active .setting-name,
+  .setting-item.active .setting-description {
+    color: white; /* Ensure text is white when active */
+  }
