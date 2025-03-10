@@ -33,68 +33,67 @@ const PinnedMenuAdmin: React.FC<PinnedMenuAdminProps> = ({ isVisible, onClose, o
         console.error('No selected hub code found');
         return;
       }
-  
+
       const db = getFirestore();
-  
+
       try {
-        // Query to find the admin hub document based on the selected hub code
+        // Query the userHubs collection to find the admin hub document
         const userHubsRef = collection(db, 'userHubs');
         const q = query(userHubsRef, where('hubCode', '==', selectedHubCode));
         const querySnapshot = await getDocs(q);
-  
-        if (querySnapshot.empty) {
-          console.error('Admin hub not found for the given hub code');
-          return;
-        }
-  
-        const adminHubDoc = querySnapshot.docs[0]; // Assume the first match is correct
-        const adminHubData = adminHubDoc.data();
-  
-        if (adminHubData.homeType !== 'admin') {
-          console.error('Selected hub is not an admin hub.');
-          return;
-        }
-  
-        // Ensure the admin hub contains a units array
-        const unitHubCodes: string[] = adminHubData.units || [];
-        if (unitHubCodes.length === 0) {
-          setUnits([]);
-          return;
-        }
-  
-        // Fetch all unit documents in parallel for better performance
-        const unitQueries = unitHubCodes.map((hubCode) => 
-          getDocs(query(userHubsRef, where('hubCode', '==', hubCode)))
-        );
-        const unitSnapshots = await Promise.all(unitQueries);
-  
-        const unitsData: Unit[] = [];
-        unitSnapshots.forEach((unitSnapshot, index) => {
-          if (!unitSnapshot.empty) {
-            const unitDoc = unitSnapshot.docs[0]; // Take the first document
-            const unitData = unitDoc.data();
-            unitsData.push({
-              type: 'unit',
-              id: unitDoc.id,
-              unitName: unitData.homeName || 'Unnamed Unit',
-              hubCode: unitHubCodes[index], // Use the original hub code
-              pinned: unitData.pinned || false,
-              image: unitData.image || NoImage,
-            });
-          } else {
-            console.error(`Unit hub with hubCode ${unitHubCodes[index]} not found`);
+
+        if (!querySnapshot.empty) {
+          const adminHubDoc = querySnapshot.docs[0];
+          const adminHubData = adminHubDoc.data();
+
+          // Ensure the selected hub is an admin hub
+          if (adminHubData.homeType !== 'admin') {
+            console.error('Selected hub is not an admin hub.');
+            return;
           }
-        });
-  
-        setUnits(unitsData);
+
+          // Get the units array from the admin hub document
+          const unitHubCodes = adminHubData.units || [];
+
+          // If no units are available, return early
+          if (unitHubCodes.length === 0) {
+            setUnits([]);
+            return;
+          }
+
+          // Fetch details for each unit hub
+          const unitsData: Unit[] = [];
+          for (const hubCode of unitHubCodes) {
+            const unitQuery = query(userHubsRef, where('hubCode', '==', hubCode));
+            const unitSnapshot = await getDocs(unitQuery);
+
+            if (!unitSnapshot.empty) {
+              const unitDoc = unitSnapshot.docs[0];
+              const unitData = unitDoc.data();
+              unitsData.push({
+                type: 'unit',
+                id: unitDoc.id,
+                unitName: unitData.homeName || 'Unnamed Unit',
+                hubCode: hubCode,
+                pinned: unitData.pinned || false,
+                image: unitData.image || NoImage,
+              });
+            } else {
+              console.error(`Unit hub with hubCode ${hubCode} not found`);
+            }
+          }
+
+          setUnits(unitsData);
+        } else {
+          console.error('Admin hub not found');
+        }
       } catch (error) {
         console.error('Error fetching units:', error);
       }
     };
-  
+
     fetchUnits();
   }, [selectedHubCode]);
-  
 
   // Handle pinning a unit
   const handleItemClick = async (unit: Unit) => {
