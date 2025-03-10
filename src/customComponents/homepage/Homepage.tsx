@@ -9,7 +9,6 @@ import PulseAnimationGreen from '@/images/animatedIcons/Animation - 173709209134
 import PulseAnimationBlue from '@/images/animatedIcons/Animation - 1738960096286.json';
 import { TbCirclePlusFilled } from 'react-icons/tb';
 import PinnedMenu from './pinnedMenu.tsx';
-import Mockroom from './Mockroom.tsx';
 import { MdOutlinePhoneAndroid } from 'react-icons/md';
 import { BsGraphUpArrow } from 'react-icons/bs';
 import { MdOutlineBatterySaver } from 'react-icons/md';
@@ -17,9 +16,7 @@ import { FaExpandAlt } from 'react-icons/fa';
 import { AiOutlineShrink } from 'react-icons/ai';
 import AddHome from './AddHome.tsx';
 import EditHomes from './EditHomes.tsx';
-import MockDevice from './MockDevice.tsx';
 import PinnedMenuAdmin from './pinnedMenuAdmin.tsx';
-import MockUnits from './MockUnits.tsx';
 import { MdOutlineEdit } from 'react-icons/md';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { getFirestore, collection, query, where, getDocs, QueryDocumentSnapshot, doc, updateDoc, getDoc } from 'firebase/firestore';
@@ -181,11 +178,6 @@ const Homepage: React.FC<{ selectedHomePass: Home | null; onHomeDelete:() => voi
   }, []);
 
 
-  const handleHubSelect = (home: Home) => {
-    setSelectedHome(home);
-    onSelectHome(home);
-  };
-
   const fetchActiveDevicesCount = async (hubCode: string) => {
     const db = getFirestore();
     const devicesRef = collection(db, 'devices');
@@ -258,7 +250,7 @@ const Homepage: React.FC<{ selectedHomePass: Home | null; onHomeDelete:() => voi
           // Fetch pinned tenant hubs
           const adminHubRef = doc(db, 'userHubs', selectedHome.hubCode);
           const adminHubDoc = await getDoc(adminHubRef);
-          const unitHubCodes = adminHubDoc.data().units || [];
+          const unitHubCodes = adminHubDoc.data()?.units || []; // Add optional chaining
           
           // Fetch pinned tenant hubs
           const pinnedUnitsQuery = query(
@@ -306,7 +298,7 @@ const Homepage: React.FC<{ selectedHomePass: Home | null; onHomeDelete:() => voi
 
   const handleUnpinItem = async (item: PinnedItem) => {
     const db = getFirestore();
-
+  
     try {
       let collectionName: string;
       switch (item.type) {
@@ -317,16 +309,19 @@ const Homepage: React.FC<{ selectedHomePass: Home | null; onHomeDelete:() => voi
           collectionName = 'devices';
           break;
         case 'unit':
-          collectionName = 'units';
+          collectionName = 'userHubs'; // Correct collection name for units
           break;
         default:
           throw new Error('Invalid item type.');
       }
-
+  
       const itemRef = doc(db, collectionName, item.id);
-      await updateDoc(itemRef, { pinned: false });
-
+      await updateDoc(itemRef, { pinned: false }); // Set pinned to false
+  
+      // Remove the unpinned item from the local state
       setPinnedItems((prev) => prev.filter((i) => i.id !== item.id));
+  
+      // Refresh the pinned items from Firestore
       refreshPinnedMenu();
     } catch (error) {
       console.error('Error unpinning item:', error);

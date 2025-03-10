@@ -2,14 +2,14 @@ import { Box, Flex, Heading, HStack, Stack, Image, Text, Grid } from '@chakra-ui
 import React, { useState, useEffect } from 'react';
 import './pinnedMenu.css';
 import { VscClose } from 'react-icons/vsc';
-import { getFirestore, collection, query, where, getDocs, doc, updateDoc, getDoc } from 'firebase/firestore';
+import { getFirestore, collection, query, where, getDocs, doc, updateDoc } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
-import NoImage from '@/images/noImage.png'; // Default image for units
+import NoImage from '@/images/noImage.png';
 
 interface PinnedMenuAdminProps {
   isVisible: boolean;
   onClose: () => void;
-  onPinItem: (item: Unit) => void; // Accepts a Unit object
+  onPinItem: (item: Unit) => void;
   selectedHubCode: string;
   refreshPinnedMenu: () => void;
 }
@@ -20,66 +20,78 @@ interface Unit {
   unitName: string;
   hubCode: string;
   pinned: boolean;
-  image?: string; // Optional field for unit image
+  image?: string;
 }
 
 const PinnedMenuAdmin: React.FC<PinnedMenuAdminProps> = ({ isVisible, onClose, onPinItem, selectedHubCode, refreshPinnedMenu }) => {
-  const [units, setUnits] = useState<Unit[]>([]); // State to store units 
+  const [units, setUnits] = useState<Unit[]>([]);
 
-  
-
-  // Fetch all units attached to the selected admin hub
-  const fetchUnits = async () => {
-    const auth = getAuth();
-    const db = getFirestore();
-  
-    if (!selectedHubCode) return;
-  
-    try {
-      // Get admin hub document
-      const adminHubRef = doc(db, 'userHubs', selectedHubCode);
-      const adminHubDoc = await getDoc(adminHubRef);
-  
-      if (!adminHubDoc.exists() || adminHubDoc.data()?.homeType !== 'admin') {
-        setUnits([]);
-        return;
-      }
-      
-      const unitHubCodes = adminHubDoc.data().units || [];
-      
-      // Exit if no units available
-      if (unitHubCodes.length === 0) {
-        setUnits([]);
-        return;
-      }
-  
-      // Fetch tenant hubs using hubCodes
-      const userHubsRef = collection(db, 'userHubs');
-      const pinnedUnitsQuery = query(
-        collection(db, 'userHubs'),
-        where('hubCode', 'in', unitHubCodes),
-        where('pinned', '==', false)
-      );
-  
-      const unitsSnapshot = await getDocs(pinnedUnitsQuery);
-      
-      const unitsData = unitsSnapshot.docs.map(doc => ({
-        type: 'unit' as const, // Explicitly set the type
-        id: doc.id,
-        unitName: doc.data().homeName,
-        hubCode: doc.data().hubCode,
-        pinned: doc.data().pinned || false,
-        image: doc.data().image || NoImage,
-      }));
-  
-      setUnits(unitsData);
-    } catch (error) {
-      console.error('Error fetching units:', error);
-      setUnits([]);
-    }
-  };
-
+  // Fetch units when the component mounts or selectedHubCode changes
   useEffect(() => {
+    const fetchUnits = async () => {
+      if (!selectedHubCode) {
+        console.error('No selected hub code found');
+        return;
+      }
+  
+      const db = getFirestore();
+  
+      try {
+        // Query to find the admin hub document based on the selected hub code
+        const userHubsRef = collection(db, 'userHubs');
+        const q = query(userHubsRef, where('hubCode', '==', selectedHubCode));
+        const querySnapshot = await getDocs(q);
+  
+        if (querySnapshot.empty) {
+          console.error('Admin hub not found for the given hub code');
+          return;
+        }
+  
+        const adminHubDoc = querySnapshot.docs[0]; // Assume the first match is correct
+        const adminHubData = adminHubDoc.data();
+  
+        if (adminHubData.homeType !== 'admin') {
+          console.error('Selected hub is not an admin hub.');
+          return;
+        }
+  
+        // Ensure the admin hub contains a units array
+        const unitHubCodes: string[] = adminHubData.units || [];
+        if (unitHubCodes.length === 0) {
+          setUnits([]);
+          return;
+        }
+  
+        // Fetch all unit documents in parallel for better performance
+        const unitQueries = unitHubCodes.map((hubCode) => 
+          getDocs(query(userHubsRef, where('hubCode', '==', hubCode)))
+        );
+        const unitSnapshots = await Promise.all(unitQueries);
+  
+        const unitsData: Unit[] = [];
+        unitSnapshots.forEach((unitSnapshot, index) => {
+          if (!unitSnapshot.empty) {
+            const unitDoc = unitSnapshot.docs[0]; // Take the first document
+            const unitData = unitDoc.data();
+            unitsData.push({
+              type: 'unit',
+              id: unitDoc.id,
+              unitName: unitData.homeName || 'Unnamed Unit',
+              hubCode: unitHubCodes[index], // Use the original hub code
+              pinned: unitData.pinned || false,
+              image: unitData.image || NoImage,
+            });
+          } else {
+            console.error(`Unit hub with hubCode ${unitHubCodes[index]} not found`);
+          }
+        });
+  
+        setUnits(unitsData);
+      } catch (error) {
+        console.error('Error fetching units:', error);
+      }
+    };
+  
     fetchUnits();
   }, [selectedHubCode]);
   
@@ -87,20 +99,24 @@ const PinnedMenuAdmin: React.FC<PinnedMenuAdminProps> = ({ isVisible, onClose, o
   // Handle pinning a unit
   const handleItemClick = async (unit: Unit) => {
     const db = getFirestore();
-  
-    await updateDoc(doc(db, 'userHubs', unit.id), { 
-      pinned: true 
-    });
-    
-    // Add to pinned items
-    onPinItem({
-      type: 'unit',
-      id: unit.id,
-      unitName: unit.unitName,
-      hubCode: unit.hubCode,
-      pinned: true,
-      image: unit.image
-    });
+
+    try {
+      // Update the tenant hub's pinned status
+      await updateDoc(doc(db, 'userHubs', unit.id), {
+        pinned: true,
+      });
+
+      // Add the unit to the pinned items in the parent component
+      onPinItem(unit);
+
+      // Refresh the pinned menu
+      refreshPinnedMenu();
+
+      // Close the menu
+      onClose();
+    } catch (error) {
+      console.error('Error pinning unit:', error);
+    }
   };
 
   if (!isVisible) return null;
@@ -157,7 +173,7 @@ const PinnedMenuAdmin: React.FC<PinnedMenuAdminProps> = ({ isVisible, onClose, o
                       borderRadius="20px"
                       overflow="hidden"
                       bg="white"
-                      p={3} // Reduced padding
+                      p={3}
                       cursor="pointer"
                       transition="all 0.3s ease-in-out"
                       boxShadow="0px 5px 10px rgba(0, 0, 0, 0.05)"
@@ -168,7 +184,7 @@ const PinnedMenuAdmin: React.FC<PinnedMenuAdminProps> = ({ isVisible, onClose, o
                         backgroundColor: '#f5f5f5',
                       }}
                       onClick={() => handleItemClick(unit)}
-                      height="180px" // Slightly reduced height
+                      height="180px"
                     >
                       <Image
                         src={unit.image || NoImage}
@@ -176,9 +192,9 @@ const PinnedMenuAdmin: React.FC<PinnedMenuAdminProps> = ({ isVisible, onClose, o
                         borderRadius="12px"
                         objectFit="cover"
                         width="100%"
-                        height="90px" // Reduced image height
+                        height="90px"
                       />
-                      <Text fontWeight="bold" fontSize="md" mt={2} color="#6cce58"> {/* Reduced font size */}
+                      <Text fontWeight="bold" fontSize="md" mt={2} color="#6cce58">
                         {unit.unitName}
                       </Text>
                       <Text color="gray.500" fontSize="sm">
