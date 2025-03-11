@@ -50,3 +50,15 @@
     font-weight: 600;
     color: #000000;
   }
+
+  .PB-range-slidervalue-input {
+    width: 60px; /* Fixed width */
+    text-align: center; /* Center the text */
+    border: 1px solid #ccc; /* Add a border */
+    border-radius: 4px; /* Rounded corners */
+    padding: 4px; /* Add some padding */
+    font-size: 16px; /* Set font size */
+    margin-left: 10px; /* Add some margin */
+    color: black; /* Ensure text is visible */
+    background-color: white; /* Ensure background is visible */
+  }

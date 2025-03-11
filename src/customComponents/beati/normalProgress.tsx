@@ -7,10 +7,13 @@ const ProgressBar = ({ progress }) => {
 
   return (
     <div className="progress-bar-container">
-      <div
-        className="progress-bar-fill"
-        style={{ width: `${clampedProgress}%` }}
-      ></div>
+      <div className="progress-bar-wrapper">
+        <div
+          className="progress-bar-fill"
+          style={{ width: `${clampedProgress}%` }}
+        ></div>
+      </div>
+      <span className="progress-bar-text">{clampedProgress}%</span>
     </div>
   );
 };

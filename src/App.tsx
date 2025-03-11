@@ -31,6 +31,7 @@ import UnitsList from './customComponents/rooms/unitsList';
 import { useEffect } from 'react';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { getFirestore, collection, query, where, getDocs, QueryDocumentSnapshot } from 'firebase/firestore';
+
 interface Home {
   homeName: string;
   homeType: string;
@@ -220,6 +221,15 @@ const App = () => {
           element={
             <AuthenticatedLayout selectedHome={selectedHome} homes={homes}>
               <UnitsList selectedHome={selectedHome} />
+            </AuthenticatedLayout>
+          }
+        />
+
+        <Route
+          path="/support"
+          element={
+            <AuthenticatedLayout selectedHome={selectedHome} homes={homes}>
+              <SupportCenter selectedHome={selectedHome} />
             </AuthenticatedLayout>
           }
         />

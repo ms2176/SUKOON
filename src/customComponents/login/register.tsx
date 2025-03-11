@@ -41,12 +41,12 @@ const Register = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
+  
     // Reset errors
     setEmailError("");
     setPasswordError("");
     setUsernameError("");
-
+  
     // Validate inputs
     if (!username) {
       setUsernameError("Username is required.");
@@ -64,37 +64,53 @@ const Register = () => {
       setPasswordError("Passwords do not match.");
       return;
     }
-
+  
     const result = await registerWithEmail(email, password);
     if (result.success) {
       sessionStorage.setItem("userEmail", email);
-       // Get the user ID from the result
-       const userId = result.user?.uid;
-      
-       if (userId) {
+      // Get the user ID from the result
+      const userId = result.user?.uid;
+  
+      if (userId) {
         sessionStorage.setItem("userId", userId);
+  
+        // Initialize Firestore
+        const db = getFirestore();
+  
+        // Create a new document in the 'users' collection with the user ID as the document ID
+        await setDoc(doc(db, "users", userId), {
+          email: email,
+          username: username,
+          userId: userId,
+          dailyGoal: "", // Default empty string
+          dailyGoalProgress: "", // Default empty string
+          phoneNumber: "", // Default empty string
+          plants: {
+            roses: false,
+            sunflower: false,
+            daisy: false,
+            cactus: false,
+            bonsai: false,
+            VFtrap: false,
+          }, // Default all plants to false
+          profilePhoto: "", // Default empty string
+          totalCarbonSavingGoal: 0, // Default empty string
+          totalEnergySavingGoal: 0, // Default empty string
+          totalCostGoal: 0, // Default empty string
+          totalCarbonSavingGoalProgress: 0,
+          totalEnergySavingGoalProgress: 0,
+          totalCostGoalProgress: 0,
+        });
+  
+        // Navigate to the verification hold page
+        navigate("/verification_hold");
+      } else {
+        setEmailError("User ID not found.");
       }
-
-       if (userId) {
-         // Initialize Firestore
-         const db = getFirestore();
- 
-         // Create a new document in the 'users' collection with the user ID as the document ID
-         await setDoc(doc(db, "users", userId), {
-           email: email,
-           username: username,
-           userId: userId,
-         });
- 
-         // Navigate to the verification hold page
-         navigate("/verification_hold");
-       } else {
-         setEmailError("User ID not found.");
-       }
-     } else {
-       setEmailError(result.error);
-     }
-   };
+    } else {
+      setEmailError(result.error);
+    }
+  };
 
   return (
     <div style={{ overflow: "auto" }}>
