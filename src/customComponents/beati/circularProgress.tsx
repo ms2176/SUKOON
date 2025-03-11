@@ -56,6 +56,7 @@ const CircularProgressBar = ({
             strokeDashoffset: offset,
             transition: 'stroke-dashoffset 0.35s ease-out',
           }}
+          onClick={onImageClick}
         />
 
         {/* Rotating text inside the progress bar */}
@@ -86,6 +87,7 @@ const CircularProgressBar = ({
           r={radius - strokeWidth * 1.5} // Adjust radius to position text inside the progress bar
           fill="transparent"
           stroke="transparent"
+          onClick={onImageClick}
         />
       </svg>
 
@@ -114,6 +116,7 @@ const CircularProgressBar = ({
               height: '100%',
               objectFit: 'cover', // Cover the area without distorting the image
             }}
+            onClick={onImageClick}
           />
         </div>
       )}
