@@ -15,43 +15,71 @@ import {
   AccordionButton,
   AccordionPanel,
   AccordionIcon,
-} from '@chakra-ui/accordion'; // Correct import
+} from '@chakra-ui/accordion';
 import { useNavigate } from 'react-router-dom';
-import { FiArrowLeft, FiMessageSquare } from 'react-icons/fi';
-import { IoChevronBack } from "react-icons/io5";
+import { FiMessageSquare } from 'react-icons/fi';
+import { IoChevronBack } from 'react-icons/io5';
+import { getFirestore, collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { getAuth } from 'firebase/auth';
 
 const SupportCenter = () => {
   const navigate = useNavigate();
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
   const [feedback, setFeedback] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const auth = getAuth();
+  const db = getFirestore();
 
   const faqs = [
     {
-      question: "How do I reset my password?",
-      answer: "Go to the Accounts page and click 'Forgot Password'. Follow the instructions sent to your email."
+      question: 'How do I reset my password?',
+      answer: "Go to the Accounts page and click 'Forgot Password'. Follow the instructions sent to your email.",
     },
     {
-      question: "Can I change my email address?",
-      answer: "Yes, navigate to Account Information and update your email in the email field."
+      question: 'Can I change my email address?',
+      answer: 'Yes, navigate to Account Information and update your email in the email field.',
     },
     {
-      question: "How do I contact support?",
-      answer: "Use this support center page or email us directly at support@example.com"
-    }
+      question: 'How do I contact support?',
+      answer: 'Use this support center page or email us directly at sukoon-services8@gmail.com',
+    },
   ];
 
-  const handleSubmitFeedback = () => {
-    console.log('Feedback submitted:', feedback);
-    // Add your submission logic here
-    setIsFeedbackOpen(false);
-    setFeedback('');
+  const handleSubmitFeedback = async () => {
+    if (!feedback.trim()) {
+      
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      // Add document to Firestore
+      await addDoc(collection(db, 'feedback'), {
+        userId: auth.currentUser?.uid || 'anonymous',
+        email: auth.currentUser?.email || 'guest@example.com',
+        message: feedback,
+        createdAt: serverTimestamp(),
+        status: 'new',
+      });
+
+      
+
+      setIsFeedbackOpen(false);
+      setFeedback('');
+    } catch (error) {
+      console.error('Error submitting feedback:', error);
+      
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
     <Box minH="100vh" bg="gray.100">
       <Box p={0} m={0}>
-        <Box 
-          as="header" 
+        <Box
+          as="header"
           bgColor="white"
           p={4}
           textAlign="center"
@@ -69,7 +97,7 @@ const SupportCenter = () => {
               aria-label="Back"
               onClick={() => navigate('/accountspage')}
             >
-              <IoChevronBack color="balck" style={{background: 'transparent'}}/>
+              <IoChevronBack color="black" style={{ background: 'transparent' }} />
             </Button>
             <Heading size="lg" flex="1" color="black">
               Support Center
@@ -78,7 +106,7 @@ const SupportCenter = () => {
           </HStack>
 
           {/* Feedback Section */}
-          <Box 
+          <Box
             mt={8}
             mx={4}
             p={6}
@@ -92,7 +120,9 @@ const SupportCenter = () => {
           >
             <Flex align="center">
               <Icon as={FiMessageSquare} boxSize={8} color="green.500" mr={4} />
-              <Text fontSize="xl" fontWeight="semibold" color={'black'}>Send Feedback</Text>
+              <Text fontSize="xl" fontWeight="semibold" color={'black'}>
+                Send Feedback
+              </Text>
             </Flex>
           </Box>
 
@@ -111,7 +141,9 @@ const SupportCenter = () => {
               maxW="500px"
               zIndex={2}
             >
-              <Heading size="md" mb={4} color={'black'} >Your Feedback</Heading>
+              <Heading size="md" mb={4} color={'black'}>
+                Your Feedback
+              </Heading>
               <Textarea
                 value={feedback}
                 color={'black'}
@@ -132,11 +164,12 @@ const SupportCenter = () => {
                 </Button>
                 <Button
                   pl={4}
-                  pr={4}               
+                  pr={4}
                   bg="#43eb7f"
                   color="white"
                   _hover={{ bg: '#3ad073' }}
-                  onClick={handleSubmitFeedback}                  
+                  onClick={handleSubmitFeedback}
+                  loadingText="Submitting..."
                 >
                   Send
                 </Button>
@@ -146,13 +179,17 @@ const SupportCenter = () => {
 
           {/* FAQ Section */}
           <Box mt={8} mx={4} flex={1}>
-            <Heading size="lg" mb={6} color="gray.700">Frequently Asked Questions</Heading>
+            <Heading size="lg" mb={6} color="gray.700">
+              Frequently Asked Questions
+            </Heading>
             <Accordion allowToggle>
               {faqs.map((faq, index) => (
                 <AccordionItem key={index} mb={4} border="none" bg="green" borderRadius="xl">
                   <AccordionButton _hover={{ bg: 'gray.50' }} p={4}>
                     <Box flex="1" textAlign="left">
-                      <Text color={'black'} fontWeight="semibold">{faq.question}</Text>
+                      <Text color={'black'} fontWeight="semibold">
+                        {faq.question}
+                      </Text>
                     </Box>
                     <AccordionIcon />
                   </AccordionButton>

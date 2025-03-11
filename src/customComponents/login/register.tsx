@@ -100,6 +100,7 @@ const Register = () => {
           totalCarbonSavingGoalProgress: 0,
           totalEnergySavingGoalProgress: 0,
           totalCostGoalProgress: 0,
+          darkMode: false,
         });
   
         // Navigate to the verification hold page

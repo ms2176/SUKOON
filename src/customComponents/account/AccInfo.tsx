@@ -4,19 +4,18 @@ import {
   Heading,
   Flex,
   HStack,
-  Icon,
   Input,
   Button,
-  defineStyle,
   Text,
-  IconButton,
 } from '@chakra-ui/react';
 import { FormControl } from '@chakra-ui/form-control';
-import { Avatar } from "@/components/ui/avatar";
-import { FiSettings, FiUser, FiPhone, FiEdit } from 'react-icons/fi';
+import { FiSettings, FiUser, FiPhone, FiEdit, FiKey } from 'react-icons/fi';
 import { MdOutlineEmail } from 'react-icons/md';
-import { IoChevronBack } from "react-icons/io5";
+import { IoChevronBack } from 'react-icons/io5';
 import { useNavigate } from 'react-router-dom';
+import { getAuth } from 'firebase/auth';
+import { getFirestore, doc, updateDoc, getDoc } from 'firebase/firestore';
+import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 const AccInfo = () => {
   const navigate = useNavigate();
@@ -24,58 +23,55 @@ const AccInfo = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
-  const [emailError, setEmailError] = useState('');
   const [avatarSrc, setAvatarSrc] = useState('https://via.placeholder.com/150');
-  
-  // Load saved data from sessionStorage on mount
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  // Use a default masked password value.
+  const [passwordPlaceholder, setPasswordPlaceholder] = useState('********');
+  const auth = getAuth();
+  const db = getFirestore();
+  const storage = getStorage();
+
+  // Load user data from Firestore
   useEffect(() => {
-    const savedData = sessionStorage.getItem('profileData');
-    if (savedData) {
-      const { name, email, phone, avatar } = JSON.parse(savedData);
-      setName(name);
-      setEmail(email);
-      setPhone(phone);
-      if (avatar) setAvatarSrc(avatar);
-    }
-  }, []);
+    const fetchUserData = async () => {
+      const user = auth.currentUser;
+      if (user) {
+        const userDocRef = doc(db, 'users', user.uid);
+        const userDoc = await getDoc(userDocRef);
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          setName(userData.username || '');
+          setEmail(userData.email || '');
+          setPhone(userData.phoneNumber || '');
+          if (userData.profilePhoto) setAvatarSrc(userData.profilePhoto);
+          // Optionally update passwordPlaceholder if you have that data.
+        }
+      }
+    };
+    fetchUserData();
+  }, [auth, db]);
 
   const handlePhoneChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const value = event.target.value.replace(/\D/g, ''); // Remove non-digits
+    const value = event.target.value.replace(/\D/g, '');
     setPhone(value);
   };
 
-  const validateEmail = (email: string) => {
-    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!regex.test(email)) {
-      setEmailError('Invalid email address');
-      return false;
-    }
-    setEmailError('');
-    return true;
-  };
-
-  // Avatar editing functionality
   const handleAvatarEdit = () => {
     fileInputRef.current?.click();
   };
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const goToResetPassword = () => {
+    navigate("/ResetPassword");
+  };
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (file) {
-      if (!file.type.startsWith('image/')) {
-        alert('Please upload an image file');
-        return;
-      }
-      
+    if (file && file.type.startsWith('image/')) {
+      setImageFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
         if (typeof reader.result === 'string') {
           setAvatarSrc(reader.result);
-          // Save to session storage
-          const savedData = sessionStorage.getItem('profileData');
-          const profileData = savedData ? JSON.parse(savedData) : {};
-          sessionStorage.setItem('profileData', 
-            JSON.stringify({ ...profileData, avatar: reader.result }));
         }
       };
       reader.readAsDataURL(file);
@@ -86,108 +82,110 @@ const AccInfo = () => {
     setName(event.target.value);
   };
 
-  const handleEmailChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const value = event.target.value;
-    setEmail(value);
-    validateEmail(value);
+  const handleSave = async () => {
+    const user = auth.currentUser;
+    if (!user) return;
+
+    try {
+      let profilePhotoUrl = avatarSrc;
+
+      // Upload new image if exists
+      if (imageFile) {
+        const storageRef = ref(storage, `profile-photos/${user.uid}`);
+        await uploadBytes(storageRef, imageFile);
+        profilePhotoUrl = await getDownloadURL(storageRef);
+      }
+
+      // Update Firestore document with the full URL
+      const userDocRef = doc(db, 'users', user.uid);
+      await updateDoc(userDocRef, {
+        username: name,
+        phoneNumber: phone,
+        profilePhoto: profilePhotoUrl,
+      });
+
+      // Update local state with the new URL
+      setAvatarSrc(profilePhotoUrl);
+      navigate('/accountspage');
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      alert('Error updating profile');
+    }
   };
-
-
-
-  const handleSave = () => {
-    if (!validateEmail(email)) return;
-    
-    const profileData = { 
-      name, 
-      email, 
-      phone,
-      avatar: avatarSrc
-    };
-    sessionStorage.setItem('profileData', JSON.stringify(profileData));
-    navigate('/accountspage');
-  };
-
 
   const handleCancel = () => {
-    // Reset to original saved values or empty
-    const savedData = sessionStorage.getItem('profileData');
-    if (savedData) {
-      const { name, email, phone, avatar } = JSON.parse(savedData);
-      setName(name);
-      setEmail(email);
-      setPhone(phone);
-      setAvatarSrc(avatar || 'https://via.placeholder.com/150'); // Reset avatar
-    } else {
-      setName('');
-      setEmail('');
-      setPhone('');
-      setAvatarSrc('https://via.placeholder.com/150'); // Reset to default
-    }
     navigate('/accountspage');
   };
-  const ringCss = defineStyle({
-    outlineWidth: "2px",
-    outlineColor: "colorPalette.500",
-    outlineOffset: "2px",
-    outlineStyle: "solid",
-  });
+
+  const handleResetPassword = () => {
+    // Implement your reset password functionality here
+    alert('Reset password clicked');
+  };
 
   return (
     <Box minH="100vh" bg="gray.100">
       <Box p={0} m={0}>
-        <Box 
-          as="header" 
-          bgColor="white"
-          p={4}
-          textAlign="center"
-          position="relative"
-          minH="100vh"
-        >
+        <Box as="header" bg="white" p={4} textAlign="center" minH="100vh">
           <HStack justify="space-between" px={2}>
             <Button
               borderRadius="full"
               width="30px"
               height="40px"
               bg="#43eb7f"
-              boxShadow="0 4px 8px rgba(0, 0, 0, 0.2)"
+              boxShadow="0 4px 8px rgba(0,0,0,0.2)"
               aria-label="Back"
               onClick={() => navigate('/accountspage')}
             >
-              <IoChevronBack color="white" style={{background: 'transparent'}}/>
+              <IoChevronBack color="white" style={{ background: 'transparent' }} />
             </Button>
             <Heading size="lg" flex="1" color="black">
               Profile Edit
             </Heading>
-            <Icon boxSize={6} as={FiSettings} style={{background: 'transparent'}}/>
+            <Box boxSize={6} as={FiSettings} color="black" />
           </HStack>
 
           <Flex align="center" direction="column" mt={6} pt={9}>
-          <Box position="relative">
-              <Avatar
-                p={12}
-                size="2xl"
-                src={avatarSrc}
-                name="Profile"
-                colorPalette="green"
-                css={defineStyle({
-                  outlineWidth: "2px",
-                  outlineColor: "colorPalette.500",
-                  outlineOffset: "2px",
-                  outlineStyle: "solid",
-                })}
-              />
-              <IconButton
-                aria-label="Edit profile picture"
-                icon={<FiEdit />}
+            <Box position="relative">
+              {/* Box with the profile image */}
+              <Box
+                borderWidth="4px"
+                borderColor="green.500"
                 borderRadius="full"
+                width="150px"
+                height="150px"
+                overflow="hidden"
+                mx="auto"
+              >
+                <img
+                  src={
+                    (avatarSrc.startsWith('data:') || avatarSrc.includes('?'))
+                      ? avatarSrc
+                      : `${avatarSrc}?${Date.now()}`
+                  }
+                  alt={name || 'Profile'}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                  }}
+                  onError={(e) => {
+                    e.currentTarget.src = 'https://via.placeholder.com/150';
+                  }}
+                />
+              </Box>
+              {/* Clickable edit icon */}
+              <Box
                 position="absolute"
                 bottom="2"
                 right="2"
                 bg="white"
-                boxShadow="md"
-                size="sm"
+                borderRadius="full"
+                p={1}
+                cursor="pointer"
                 onClick={handleAvatarEdit}
-              />
+              >
+                <FiEdit size={16} color="black" />
+              </Box>
               <input
                 type="file"
                 ref={fileInputRef}
@@ -197,8 +195,11 @@ const AccInfo = () => {
               />
             </Box>
 
+            <Text fontSize="xl" fontWeight="bold" mt={4} color="black">
+              {name}
+            </Text>
+
             <Box width="90%" mt={8}>
-              {/* Name Input */}
               <FormControl mb={8}>
                 <Box position="relative">
                   <Input
@@ -224,18 +225,16 @@ const AccInfo = () => {
                 </Box>
               </FormControl>
 
-              {/* Email Input with Error */}
-              <FormControl mb={8} isInvalid={!!emailError}>
+              <FormControl mb={8}>
                 <Box position="relative">
                   <Input
                     placeholder="Email"
                     value={email}
-                    onChange={handleEmailChange}
+                    disabled
                     pl={12}
                     height="50px"
                     borderRadius="xl"
-                    borderColor={emailError ? 'red.500' : 'gray.200'}
-                    _focus={{ borderColor: emailError ? 'red.500' : 'green.500' }}
+                    borderColor="gray.200"
                     color="gray.800"
                   />
                   <Box
@@ -248,14 +247,8 @@ const AccInfo = () => {
                     <MdOutlineEmail size={24} />
                   </Box>
                 </Box>
-                {emailError && (
-                  <Text color="red.500" fontSize="sm" mt={1}>
-                    {emailError}
-                  </Text>
-                )}
               </FormControl>
 
-              {/* Phone Input */}
               <FormControl mb={8}>
                 <Box position="relative">
                   <Input
@@ -268,8 +261,8 @@ const AccInfo = () => {
                     borderColor="gray.200"
                     _focus={{ borderColor: 'green.500' }}
                     color="gray.800"
-                    type="tel"  // Mobile-friendly number input
-                    pattern="[0-9]*"  // Enforce numbers on mobile
+                    type="tel"
+                    pattern="[0-9]*"
                   />
                   <Box
                     position="absolute"
@@ -282,6 +275,41 @@ const AccInfo = () => {
                   </Box>
                 </Box>
               </FormControl>
+
+              {/* New disabled password input */}
+              <FormControl mb={2}>
+                <Box position="relative">
+                  <Input
+                    placeholder="Password"
+                    value={passwordPlaceholder}
+                    disabled
+                    pl={12}
+                    height="50px"
+                    borderRadius="xl"
+                    borderColor="gray.200"
+                    color="gray.800"
+                  />
+                  <Box
+                    position="absolute"
+                    left={4}
+                    top="50%"
+                    transform="translateY(-50%)"
+                    color="gray.500"
+                  >
+                    <FiKey size={24} />
+                  </Box>
+                </Box>
+              </FormControl>
+              {/* Reset password link */}
+              <Text
+                color="red.500"
+                textDecoration="underline"
+                cursor="pointer"
+                mb={8}
+                onClick={goToResetPassword}
+              >
+                Reset Password
+              </Text>
             </Box>
 
             <Flex width="90%" justify="space-between" mt={8}>
