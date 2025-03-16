@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Box, Button, Heading, HStack, Input, Stack, Text } from "@chakra-ui/react";
 import { FormControl } from '@chakra-ui/form-control';
 import './AddHome.css';
@@ -27,6 +27,18 @@ const EditHomes: React.FC<EditHomesProps> = ({ closeEditHomes, onHomeDeleted, on
   const [selectedHome, setSelectedHome] = useState<string | null>(null); // State for selected home name
   const [newHomeName, setNewHomeName] = useState(""); // State for new home name input
   const [error, setError] = useState(""); // State for error messages
+  const modalRef = useRef<HTMLDivElement | null>(null);
+// close the modal 
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
+        closeEditHomes();
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [closeEditHomes]);
+
 
   // Handle selecting a home from the Listbox
   const handleSelectHome = (homeName: string) => {
@@ -153,6 +165,7 @@ const EditHomes: React.FC<EditHomesProps> = ({ closeEditHomes, onHomeDeleted, on
   return (
     <div>
       <Box
+        ref={modalRef} // Attach the modal reference here
         className="addContainer"
         width={"80%"}
         position={"absolute"}
@@ -257,3 +270,5 @@ const EditHomes: React.FC<EditHomesProps> = ({ closeEditHomes, onHomeDeleted, on
 };
 
 export default EditHomes;
+
+
