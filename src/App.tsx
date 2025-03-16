@@ -21,7 +21,7 @@ import Rate from './customComponents/account/Rate';
 import MoreTools from './customComponents/account/MoreTools';
 import ThirdPartyServices from './customComponents/account/ThirdPartyServices';
 import InitialView from './customComponents/homepage/InitialView';
-import SupportCenter from './customComponents/account/SupportCenter';
+import ChatApp from '@/customComponents/stats/ChatApp';
 import './index.css';
 import { useState } from 'react';
 import Verification_hold from './customComponents/login/verification_hold';
@@ -225,14 +225,7 @@ const App = () => {
           }
         />
 
-        <Route
-          path="/support"
-          element={
-            <AuthenticatedLayout selectedHome={selectedHome} homes={homes}>
-              <SupportCenter selectedHome={selectedHome} />
-            </AuthenticatedLayout>
-          }
-        />
+      
 
         <Route
           path="/device/:deviceId"
@@ -351,6 +344,8 @@ const App = () => {
           }
         />
       </Routes>
+
+      <ChatApp /> {/* Add the ChatApp component here */}
     </>
   );
 };
