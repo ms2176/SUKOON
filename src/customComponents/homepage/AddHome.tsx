@@ -155,6 +155,10 @@ const AddHome: React.FC<{
             Add Home
           </Heading>
 
+<Text bg={"transparent"} textAlign={"center"} color={"gray.600"} fontSize={"sm"} mt={2}>
+  Enter a unique home name and the hub code. You can find the hub code on the back of your hub device.
+</Text>
+
           <Stack width={"100%"} bg={"transparent"} height={"auto"} mt={"8%"}>
             <Stack>
               <Heading bg={"transparent"} fontSize={"80%"} color={"black"} whiteSpace={"nowrap"}>

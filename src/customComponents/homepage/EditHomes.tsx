@@ -164,107 +164,101 @@ const EditHomes: React.FC<EditHomesProps> = ({ closeEditHomes, onHomeDeleted, on
 
   return (
     <div>
-      <Box
-        ref={modalRef} // Attach the modal reference here
-        className="addContainer"
-        width={"80%"}
-        position={"absolute"}
-        bg={"white"}
-        height={"auto"}
-        display={"flex"}
-        justifyContent={"center"}
-        alignItems={"center"}
-        alignContent={"center"}
-        transform={"translate(-50%, -50%)"}
-        top={"50%"}
-        left={"50%"}
-        zIndex={100}
-      >
-        <Stack margin={"5% 5% 5% 5%"}>
-          <Button
-            position={"absolute"}
-            top={"5%"}
-            right={"5%"}
-            width={"auto"}
-            height={"auto"}
-            onClick={closeEditHomes}
-          >
-            <IoCloseCircleSharp style={{ background: "transparent" }} size={"20%"} />
-          </Button>
+<Box
+  ref={modalRef}
+  className="addContainer"
+  width={"80%"}
+  position={"absolute"}
+  bg={"white"}
+  height={"auto"}
+  display={"flex"}
+  justifyContent={"center"}
+  alignItems={"center"}
+  alignContent={"center"}
+  transform={"translate(-50%, -50%)"}
+  top={"50%"}
+  left={"50%"}
+  zIndex={100}
+  borderRadius={"15px"}
+  padding={"3%"}
+  boxShadow={"0 4px 10px rgba(0, 0, 0, 0.1)"}
+>
+  <Stack spacing={6} width={"100%"}>
+    <Button
+      position={"absolute"}
+      top={"2%"}
+      right={"2%"}
+      width={"auto"}
+      height={"auto"}
+      onClick={closeEditHomes}
+      bg={"transparent"}
+    >
+      <IoCloseCircleSharp style={{ background: "transparent" }} size={"25px"} />
+    </Button>
 
-          <Heading bg={"transparent"} textAlign={"center"} color={"black"} className="edithomes">
-            Edit Homes
-          </Heading>
+    <Heading textAlign={"center"} color={"black"} fontSize={"xl"} mb={4}>
+      Edit Homes
+    </Heading>
 
-          <HStack bg={"transparent"} spaceX={"20%"}>
-            {/* Listbox to select a home */}
-            <ListboxComp onSelectHome={handleSelectHome} homes={homes}/>
+    <Stack spacing={4} alignItems={"center"}>
+      <ListboxComp onSelectHome={handleSelectHome} homes={homes} />
+      
+      <Stack spacing={2} width={"80%"} textAlign={"left"}>
+        <Text fontSize={"sm"} fontWeight={"bold"}>Your home:</Text>
+        <Text
+          bg={"gray.100"}
+          padding={2}
+          borderRadius={"10px"}
+          fontSize={"sm"}
+        >
+          {selectedHome || "No home selected"}
+        </Text>
+      </Stack>
 
-            <Stack bg={"transparent"}>
-              {/* Display the selected home */}
-              <Stack spaceY={"-3%"} bg={"transparent"}>
-                <Heading color={"black"} bg={"transparent"} className="yourhome">
-                  Your home:
-                </Heading>
-                <Heading color={"black"} fontSize={"80%"} bg={"transparent"} lineHeight={1}>
-                  {selectedHome || "No home selected"}
-                </Heading>
-              </Stack>
+      <Stack spacing={2} width={"80%"}>
+        <Text fontSize={"sm"} fontWeight={"bold"}>Change home name:</Text>
+        <Input
+          placeholder="New home name..."
+          value={newHomeName}
+          onChange={(e) => setNewHomeName(e.target.value)}
+          bg={"gray.100"}
+          borderRadius={"10px"}
+          boxShadow={"inset 0 0 3px rgba(0, 0, 0, 0.1)"}
+          padding={2}
+        />
+      </Stack>
 
-              {/* Input for renaming the home */}
-              <Stack bg={"transparent"} spaceY={"-3%"}>
-                <Heading color={"black"} fontSize={"80%"} lineHeight={1}>
-                  Change home name:
-                </Heading>
-                <Input
-                  color={"black"}
-                  width={"80%"}
-                  height={"150%"}
-                  placeholder="New home name..."
-                  value={newHomeName}
-                  onChange={(e) => setNewHomeName(e.target.value)}
-                />
-              </Stack>
+      <HStack spacing={4} mt={4} width={"80%"} justifyContent={"space-between"}>
+        <Button
+          width={"45%"}
+          bg={"red.500"}
+          color={"white"}
+          _hover={{ bg: "red.600" }}
+          onClick={handleDeleteHome}
+        >
+          Delete
+        </Button>
 
-              {/* Delete and Apply buttons */}
-              <HStack>
-                <Button
-                  borderRadius={"8px"}
-                  width={"50%"}
-                  height={"auto"}
-                  bg={"#ba0707"}
-                  textAlign={"center"}
-                  color={"white"}
-                  className="editButton"
-                  onClick={handleDeleteHome}
-                >
-                  Delete
-                </Button>
+        <Button
+          width={"45%"}
+          bg={"#6cc358"}
+          color={"white"}
+          _hover={{ bg: "green.600" }}
+          onClick={handleRenameHome}
+        >
+          Apply
+        </Button>
+      </HStack>
 
-                <Button
-                  borderRadius={"8px"}
-                  width={"50%"}
-                  height={"auto"}
-                  bg={"#6cc358"}
-                  textAlign={"center"}
-                  color={"white"}
-                  className="editButton"
-                  onClick={handleRenameHome}
-                >
-                  Apply
-                </Button>
-              </HStack>
+      {error && (
+        <Text color="red.500" textAlign="center" mt={2}>
+          {error}
+        </Text>
+      )}
+    </Stack>
+  </Stack>
+</Box>
 
-              {/* Error message */}
-              {error && (
-                <Text color="red.500" textAlign="center" mt={2}>
-                  {error}
-                </Text>
-              )}
-            </Stack>
-          </HStack>
-        </Stack>
-      </Box>
     </div>
   );
 };
