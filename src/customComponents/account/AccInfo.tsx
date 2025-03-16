@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from "react";
 import {
   Box,
   Heading,
@@ -7,26 +7,27 @@ import {
   Input,
   Button,
   Text,
-} from '@chakra-ui/react';
-import { FormControl } from '@chakra-ui/form-control';
-import { FiSettings, FiUser, FiPhone, FiEdit, FiKey } from 'react-icons/fi';
-import { MdOutlineEmail } from 'react-icons/md';
-import { IoChevronBack } from 'react-icons/io5';
-import { useNavigate } from 'react-router-dom';
-import { getAuth } from 'firebase/auth';
-import { getFirestore, doc, updateDoc, getDoc } from 'firebase/firestore';
-import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+} from "@chakra-ui/react";
+import { FormControl } from "@chakra-ui/form-control";
+import { FiSettings, FiUser, FiPhone, FiEdit, FiKey } from "react-icons/fi";
+import { MdOutlineEmail } from "react-icons/md";
+import { IoChevronBack } from "react-icons/io5";
+import { useNavigate } from "react-router-dom";
+import { getAuth } from "firebase/auth";
+import { getFirestore, doc, updateDoc, getDoc } from "firebase/firestore";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import DefualtAvatar from "@/images/defaultAvatar.png";
 
 const AccInfo = () => {
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
-  const [avatarSrc, setAvatarSrc] = useState('https://via.placeholder.com/150');
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [avatarSrc, setAvatarSrc] = useState(DefualtAvatar);
   const [imageFile, setImageFile] = useState<File | null>(null);
   // Use a default masked password value.
-  const [passwordPlaceholder, setPasswordPlaceholder] = useState('********');
+  const [passwordPlaceholder, setPasswordPlaceholder] = useState("********");
   const auth = getAuth();
   const db = getFirestore();
   const storage = getStorage();
@@ -36,13 +37,13 @@ const AccInfo = () => {
     const fetchUserData = async () => {
       const user = auth.currentUser;
       if (user) {
-        const userDocRef = doc(db, 'users', user.uid);
+        const userDocRef = doc(db, "users", user.uid);
         const userDoc = await getDoc(userDocRef);
         if (userDoc.exists()) {
           const userData = userDoc.data();
-          setName(userData.username || '');
-          setEmail(userData.email || '');
-          setPhone(userData.phoneNumber || '');
+          setName(userData.username || "");
+          setEmail(userData.email || "");
+          setPhone(userData.phoneNumber || "");
           if (userData.profilePhoto) setAvatarSrc(userData.profilePhoto);
           // Optionally update passwordPlaceholder if you have that data.
         }
@@ -52,7 +53,7 @@ const AccInfo = () => {
   }, [auth, db]);
 
   const handlePhoneChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const value = event.target.value.replace(/\D/g, '');
+    const value = event.target.value.replace(/\D/g, "");
     setPhone(value);
   };
 
@@ -64,13 +65,15 @@ const AccInfo = () => {
     navigate("/ResetPassword");
   };
 
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const file = event.target.files?.[0];
-    if (file && file.type.startsWith('image/')) {
+    if (file && file.type.startsWith("image/")) {
       setImageFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
-        if (typeof reader.result === 'string') {
+        if (typeof reader.result === "string") {
           setAvatarSrc(reader.result);
         }
       };
@@ -97,7 +100,7 @@ const AccInfo = () => {
       }
 
       // Update Firestore document with the full URL
-      const userDocRef = doc(db, 'users', user.uid);
+      const userDocRef = doc(db, "users", user.uid);
       await updateDoc(userDocRef, {
         username: name,
         phoneNumber: phone,
@@ -106,20 +109,20 @@ const AccInfo = () => {
 
       // Update local state with the new URL
       setAvatarSrc(profilePhotoUrl);
-      navigate('/accountspage');
+      navigate("/accountspage");
     } catch (error) {
-      console.error('Error updating profile:', error);
-      alert('Error updating profile');
+      console.error("Error updating profile:", error);
+      alert("Error updating profile");
     }
   };
 
   const handleCancel = () => {
-    navigate('/accountspage');
+    navigate("/accountspage");
   };
 
   const handleResetPassword = () => {
     // Implement your reset password functionality here
-    alert('Reset password clicked');
+    alert("Reset password clicked");
   };
 
   return (
@@ -134,9 +137,12 @@ const AccInfo = () => {
               bg="#43eb7f"
               boxShadow="0 4px 8px rgba(0,0,0,0.2)"
               aria-label="Back"
-              onClick={() => navigate('/accountspage')}
+              onClick={() => navigate("/accountspage")}
             >
-              <IoChevronBack color="white" style={{ background: 'transparent' }} />
+              <IoChevronBack
+                color="white"
+                style={{ background: "transparent" }}
+              />
             </Button>
             <Heading size="lg" flex="1" color="black">
               Profile Edit
@@ -158,18 +164,18 @@ const AccInfo = () => {
               >
                 <img
                   src={
-                    (avatarSrc.startsWith('data:') || avatarSrc.includes('?'))
+                    avatarSrc.startsWith("data:") || avatarSrc.includes("?")
                       ? avatarSrc
                       : `${avatarSrc}?${Date.now()}`
                   }
-                  alt={name || 'Profile'}
+                  alt={name || "Profile"}
                   style={{
-                    width: '100%',
-                    height: '100%',
-                    objectFit: 'cover',
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "cover",
                   }}
                   onError={(e) => {
-                    e.currentTarget.src = 'https://via.placeholder.com/150';
+                    e.currentTarget.src = DefualtAvatar;
                   }}
                 />
               </Box>
@@ -189,7 +195,7 @@ const AccInfo = () => {
               <input
                 type="file"
                 ref={fileInputRef}
-                style={{ display: 'none' }}
+                style={{ display: "none" }}
                 accept="image/*"
                 onChange={handleFileUpload}
               />
@@ -210,7 +216,7 @@ const AccInfo = () => {
                     height="50px"
                     borderRadius="xl"
                     borderColor="gray.200"
-                    _focus={{ borderColor: 'green.500' }}
+                    _focus={{ borderColor: "green.500" }}
                     color="gray.800"
                   />
                   <Box
@@ -259,7 +265,7 @@ const AccInfo = () => {
                     height="50px"
                     borderRadius="xl"
                     borderColor="gray.200"
-                    _focus={{ borderColor: 'green.500' }}
+                    _focus={{ borderColor: "green.500" }}
                     color="gray.800"
                     type="tel"
                     pattern="[0-9]*"
@@ -329,7 +335,7 @@ const AccInfo = () => {
                 borderRadius="xl"
                 width="48%"
                 height="50px"
-                _hover={{ bg: '#3ad073' }}
+                _hover={{ bg: "#3ad073" }}
                 onClick={handleSave}
               >
                 Save
