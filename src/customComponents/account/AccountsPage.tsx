@@ -11,7 +11,7 @@ import {
   Stack,
 } from "@chakra-ui/react";
 import { Switch } from "@chakra-ui/react";
-import HeaderBg from "@/images/green.jpg";
+import HeaderBg from "@/images/green_back.jpg";
 import {
   FiUser,
   FiStar,

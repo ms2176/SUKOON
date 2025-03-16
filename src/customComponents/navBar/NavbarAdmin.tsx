@@ -73,7 +73,7 @@ const NavbarAdmin = () => {
   return (
     <Box
       position="fixed"  // Keeps it fixed on the screen
-      bottom="-4"        // Moves it to the bottom
+      bottom="0"        // Moves it to the bottom
       width="100%"
       bg="white"     // Temporary color for visibility
       color="white"

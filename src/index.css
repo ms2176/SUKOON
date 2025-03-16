@@ -1,7 +1,11 @@
+/* Global Styles */
 body {
   background-color: white;
   font-family: 'spotifyFontLight', sans-serif;
   font-weight: bold;
+  margin: 0;
+  padding: 0;
+  height: 100%;
 }
 
 * {
@@ -10,6 +14,31 @@ body {
   font-weight: bold;
 }
 
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+#root {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Ensure the content section expands to fill remaining space */
+.main-content {
+  flex: 1;
+  overflow: auto;  /* Allows scrolling when content is long */
+}
+
+/* Ensure the Navbar stays at the bottom */
+.navbar {
+  position: relative;
+  margin-top: auto;
+}
+
+/* Fonts and styling for specific elements */
 .Sukoon-logo {
   font-family: 'BrooklynFont', sans-serif;
 }
@@ -38,6 +67,7 @@ body {
   color: black;
 }
 
+/* Universal Reset for Margin/Padding */
 *,
 *::before,
 *::after {
@@ -46,16 +76,7 @@ body {
   box-sizing: border-box;
 }
 
-html, body {
-  height: 100%;
-}
-
-#root {
-  min-height: 100%;
-  display: flex;
-  flex-direction: column;
-}
-
+/* Responsive Typography */
 .introGuest,
 .totalConsShow,
 .totConsHeading,
