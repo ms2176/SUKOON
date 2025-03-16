@@ -19,8 +19,21 @@ import { FiEye } from "react-icons/fi";
 import { FiEyeOff } from "react-icons/fi";
 import { FormControl } from "@chakra-ui/form-control";
 import { IoChevronBack } from "react-icons/io5";
-import { getFirestore, doc, setDoc } from "firebase/firestore"; // Import Firestore functions
-import { registerWithEmail } from "@/utilities/firebase_auth_functions";
+import {
+  getFirestore,
+  doc,
+  setDoc,
+  getDoc,
+  getDocs,
+  collection,
+  query,
+  where,
+} from "firebase/firestore"; // Import Firestore functions
+import {
+  registerWithEmail,
+  signInWithGoogle,
+} from "@/utilities/firebase_auth_functions";
+import { getAuth, fetchSignInMethodsForEmail } from "firebase/auth";
 
 const Register = () => {
   const navigate = useNavigate(); // Initialize navigate function
@@ -41,12 +54,12 @@ const Register = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-  
+
     // Reset errors
     setEmailError("");
     setPasswordError("");
     setUsernameError("");
-  
+
     // Validate inputs
     if (!username) {
       setUsernameError("Username is required.");
@@ -64,19 +77,19 @@ const Register = () => {
       setPasswordError("Passwords do not match.");
       return;
     }
-  
+
     const result = await registerWithEmail(email, password);
     if (result.success) {
       sessionStorage.setItem("userEmail", email);
       // Get the user ID from the result
       const userId = result.user?.uid;
-  
+
       if (userId) {
         sessionStorage.setItem("userId", userId);
-  
+
         // Initialize Firestore
         const db = getFirestore();
-  
+
         // Create a new document in the 'users' collection with the user ID as the document ID
         await setDoc(doc(db, "users", userId), {
           email: email,
@@ -102,7 +115,7 @@ const Register = () => {
           totalCostGoalProgress: 0,
           darkMode: false,
         });
-  
+
         // Navigate to the verification hold page
         navigate("/verification_hold");
       } else {
@@ -110,6 +123,96 @@ const Register = () => {
       }
     } else {
       setEmailError(result.error);
+    }
+  };
+  const checkUserHubs = async (userId: string) => {
+    const db = getFirestore();
+    const userHubsRef = collection(db, "userHubs");
+    const q = query(userHubsRef, where("userId", "==", userId));
+
+    try {
+      const querySnapshot = await getDocs(q);
+      return !querySnapshot.empty; // Return true if hubs exist, false otherwise
+    } catch (error) {
+      console.error("Error checking user hubs:", error);
+      return false;
+    }
+  };
+  const handleGoogleSignIn = async () => {
+    try {
+      // First check if email is already registered with email/password
+      const auth = getAuth();
+      const result = await signInWithGoogle();
+
+      if (result.success && result.user) {
+        const userEmail = result.user.email || "";
+
+        try {
+          // Check if this email is used with email/password auth
+          const methods = await fetchSignInMethodsForEmail(auth, userEmail);
+
+          if (methods.includes("password")) {
+            // Email already registered with password
+            setEmailError(
+              "An account with this email already exists. Please sign in with your email and password."
+            );
+            return;
+          }
+
+          // Check if user document already exists
+          const db = getFirestore();
+          const userDocRef = doc(db, "users", result.user.uid);
+          const userDoc = await getDoc(userDocRef);
+
+          // Only create document if it doesn't already exist
+          if (!userDoc.exists()) {
+            // Extract username from email (everything before @)
+            const username = userEmail.split("@")[0];
+
+            // Create user document with same structure as email registration
+            await setDoc(userDocRef, {
+              email: userEmail,
+              username: username,
+              userId: result.user.uid,
+              dailyGoal: "",
+              dailyGoalProgress: "",
+              phoneNumber: "",
+              plants: {
+                roses: false,
+                sunflower: false,
+                daisy: false,
+                cactus: false,
+                bonsai: false,
+                VFtrap: false,
+              },
+              profilePhoto: result.user.photoURL || "",
+              totalCarbonSavingGoal: 0,
+              totalEnergySavingGoal: 0,
+              totalCostGoal: 0,
+              totalCarbonSavingGoalProgress: 0,
+              totalEnergySavingGoalProgress: 0,
+              totalCostGoalProgress: 0,
+              darkMode: false,
+            });
+          }
+
+          // Navigate to home page after successful authentication
+          const hasHubs = await checkUserHubs(result.user.uid);
+          if (hasHubs) {
+            navigate("/home");
+          } else {
+            navigate("/initial");
+          }
+        } catch (error) {
+          console.error("Error checking sign-in methods:", error);
+          setEmailError("Authentication error. Please try again.");
+        }
+      } else {
+        setEmailError(result.error || "Google sign-in failed");
+      }
+    } catch (error) {
+      console.error("Error during Google sign-in:", error);
+      setEmailError("An error occurred during authentication");
     }
   };
 
@@ -302,7 +405,7 @@ const Register = () => {
               Continue with Apple
             </span>
           </div>
-          <div className="google-login-button">
+          <div className="google-login-button" onClick={handleGoogleSignIn}>
             <svg
               stroke="currentColor"
               fill="currentColor"

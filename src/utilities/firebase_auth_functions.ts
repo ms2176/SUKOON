@@ -1,5 +1,5 @@
-import { 
-  createUserWithEmailAndPassword, 
+import {
+  createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signInWithPopup,
   GoogleAuthProvider,
@@ -8,25 +8,29 @@ import {
   sendEmailVerification,
   onAuthStateChanged,
   fetchSignInMethodsForEmail,
-  User
-} from 'firebase/auth';
-import { auth } from '@/config/firebase_conf';
+  User,
+} from "firebase/auth";
+import { auth } from "@/config/firebase_conf";
 
 // Register new user
 export const registerWithEmail = async (email: string, password: string) => {
   try {
-    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    const userCredential = await createUserWithEmailAndPassword(
+      auth,
+      email,
+      password
+    );
     // Send verification email immediately after registration
     await sendEmailVerification(userCredential.user);
     return {
       success: true,
       user: userCredential.user,
-      verified: false
+      verified: false,
     };
   } catch (error: any) {
     return {
       success: false,
-      error: error.message
+      error: error.message,
     };
   }
 };
@@ -34,22 +38,28 @@ export const registerWithEmail = async (email: string, password: string) => {
 // Email/Password Login
 export const loginWithEmail = async (email: string, password: string) => {
   try {
-    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    const userCredential = await signInWithEmailAndPassword(
+      auth,
+      email,
+      password
+    );
     return {
       success: true,
       user: userCredential.user,
-      verified: userCredential.user.emailVerified
+      verified: userCredential.user.emailVerified,
     };
   } catch (error: any) {
     return {
       success: false,
-      error: error.message
+      error: error.message,
     };
   }
 };
 
 // Check verification status
-export const checkVerificationStatus = (callback: (isVerified: boolean) => void) => {
+export const checkVerificationStatus = (
+  callback: (isVerified: boolean) => void
+) => {
   return onAuthStateChanged(auth, (user) => {
     if (user) {
       callback(user.emailVerified);
@@ -65,19 +75,19 @@ export const resendVerificationEmail = async () => {
   if (!user) {
     return {
       success: false,
-      error: 'No user is currently signed in'
+      error: "No user is currently signed in",
     };
   }
 
   try {
     await sendEmailVerification(user);
     return {
-      success: true
+      success: true,
     };
   } catch (error: any) {
     return {
       success: false,
-      error: error.message
+      error: error.message,
     };
   }
 };
@@ -90,33 +100,33 @@ export const signInWithGoogle = async () => {
     return {
       success: true,
       user: result.user,
-      verified: result.user.emailVerified
+      verified: result.user.emailVerified,
     };
   } catch (error: any) {
     return {
       success: false,
-      error: error.message
+      error: error.message,
     };
   }
 };
 
 // Apple Sign In
 export const signInWithApple = async () => {
-  const provider = new OAuthProvider('apple.com');
-  provider.addScope('email');
-  provider.addScope('name');
-  
+  const provider = new OAuthProvider("apple.com");
+  provider.addScope("email");
+  provider.addScope("name");
+
   try {
     const result = await signInWithPopup(auth, provider);
     return {
       success: true,
       user: result.user,
-      verified: result.user.emailVerified
+      verified: result.user.emailVerified,
     };
   } catch (error: any) {
     return {
       success: false,
-      error: error.message
+      error: error.message,
     };
   }
 };
@@ -126,12 +136,12 @@ export const resetPassword = async (email: string) => {
   try {
     await sendPasswordResetEmail(auth, email);
     return {
-      success: true
+      success: true,
     };
   } catch (error: any) {
     return {
       success: false,
-      error: error.message
+      error: error.message,
     };
   }
 };
