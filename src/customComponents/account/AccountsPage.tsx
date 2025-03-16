@@ -95,19 +95,22 @@ const AccountsPage = () => {
       const hubsSnapshot = await getDocs(hubsQuery);
       const hubCodes = hubsSnapshot.docs.map((doc) => doc.data().hubCode);
 
-      // 2. Delete home/unit images from Storage
+      // 2. Delete unit images from Storage (fixing the path)
       for (const hubDoc of hubsSnapshot.docs) {
         try {
-          // Delete home/unit image if it exists
-          const storageRef = ref(storage, `home-images/${hubDoc.id}`);
+          // Delete unit image if it exists - using the correct path
+          const storageRef = ref(storage, `unit-images/${hubDoc.id}`);
           await deleteObject(storageRef).catch((err) => {
             // Ignore 'object-not-found' errors
-            if (err.code !== "storage/object-not-found") {
-              console.error("Error deleting home image:", err);
+            if (
+              err.code !== "storage/object-not-found" &&
+              err.code !== "storage/unauthorized"
+            ) {
+              console.error("Error deleting unit image:", err);
             }
           });
         } catch (err) {
-          console.error("Error handling home image deletion:", err);
+          console.error("Error handling unit image deletion:", err);
         }
       }
 
@@ -136,8 +139,11 @@ const AccountsPage = () => {
           try {
             const roomStorageRef = ref(storage, `room-images/${roomDoc.id}`);
             await deleteObject(roomStorageRef).catch((err) => {
-              // Ignore 'object-not-found' errors
-              if (err.code !== "storage/object-not-found") {
+              // Ignore 'object-not-found' errors and unauthorized errors
+              if (
+                err.code !== "storage/object-not-found" &&
+                err.code !== "storage/unauthorized"
+              ) {
                 console.error("Error deleting room image:", err);
               }
             });
@@ -168,8 +174,11 @@ const AccountsPage = () => {
       try {
         const profilePhotoRef = ref(storage, `profile-photos/${user.uid}`);
         await deleteObject(profilePhotoRef).catch((err) => {
-          // Ignore 'object-not-found' errors
-          if (err.code !== "storage/object-not-found") {
+          // Ignore 'object-not-found' errors and unauthorized errors
+          if (
+            err.code !== "storage/object-not-found" &&
+            err.code !== "storage/unauthorized"
+          ) {
             console.error("Error deleting profile photo:", err);
           }
         });
@@ -177,34 +186,60 @@ const AccountsPage = () => {
         console.error("Error handling profile photo deletion:", err);
       }
 
-      // Reauthentication
-      if (!user.email) {
-        throw new Error(
-          "Email is required for account deletion. Please ensure your account has an email address."
-        );
-      }
-
-      const password = prompt(
-        "Please enter your password to confirm deletion:"
-      );
-      if (!password) {
-        throw new Error("Password is required for account deletion.");
-      }
-
-      const credential = EmailAuthProvider.credential(user.email, password);
-      await reauthenticateWithCredential(user, credential);
-
       // 6. Delete user document
       const userDocRef = doc(db, "users", user.uid);
       batch.delete(userDocRef);
 
-      // Commit all batch operations
+      // 7. Commit all batch operations
       await batch.commit();
 
-      // 7. Delete auth user
+      // 8. Reauthentication and account deletion based on provider
+      // Check the provider the user signed in with
+      const providerData = user.providerData;
+      let isPasswordUser = false;
+
+      for (const provider of providerData) {
+        if (provider.providerId === "password") {
+          isPasswordUser = true;
+          break;
+        }
+      }
+
+      if (isPasswordUser) {
+        // For email/password users, require password reauthentication
+        if (!user.email) {
+          throw new Error(
+            "Email is required for account deletion. Please ensure your account has an email address."
+          );
+        }
+
+        const password = prompt(
+          "Please enter your password to confirm deletion:"
+        );
+        if (!password) {
+          throw new Error("Password is required for account deletion.");
+        }
+
+        const credential = EmailAuthProvider.credential(user.email, password);
+        await reauthenticateWithCredential(user, credential);
+      } else {
+        // For OAuth users (Google, Apple, etc.)
+        if (
+          !window.confirm(
+            "Your account will be permanently deleted. This cannot be undone. Are you sure you want to continue?"
+          )
+        ) {
+          throw new Error("Account deletion cancelled by user.");
+        }
+
+        // OAuth users don't need reauthentication as they're already authenticated
+        // The deleteUser call below will work directly for them
+      }
+
+      // 9. Delete auth user
       await deleteUser(user);
 
-      // Navigate to home
+      // 10. Navigate to home
       navigate("/");
     } catch (error) {
       console.error("Error deleting account:", error);
