@@ -4,16 +4,15 @@ import { toaster } from "@/components/ui/toaster";
 import { useNavigate } from 'react-router-dom';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { getFirestore, collection, query, where, getDocs } from 'firebase/firestore';
-import './stats_mainpage.css';
+import './Stats.css';
 import DownloadButton from './DownloadButton';
 
 // Import the JSON data
 import energyStatsData from './hub-rooms-main-view.json';
 
-const Statistics = () => {
+const StatsAdmin = () => {
   const navigate = useNavigate();
   const [energyData, setEnergyData] = useState([]);
-  const [isAdmin, setIsAdmin] = useState(false); // State to track if user is admin
   const [selectedHome, setSelectedHome] = useState(null);
   const [loading, setLoading] = useState(true);
   const [timeFilter, setTimeFilter] = useState('monthly'); // Default filter
@@ -25,7 +24,6 @@ const Statistics = () => {
     if (storedSelectedHome) {
       const homeData = JSON.parse(storedSelectedHome);
       setSelectedHome(homeData);
-      setIsAdmin(homeData.homeType === 'admin');
     }
   }, []);
 
@@ -193,7 +191,7 @@ const Statistics = () => {
   return (
     <div className="homepageContainer" style={{ overflowX: 'hidden' }}>
       {/* Header */}
-      <Box className="homepageHeader" bg={isAdmin ? '#0b13b0' : '#6cce58'}>
+      <Box className="homepageHeader" bg='#0b13b0'>
         <Flex justifyContent="space-between" alignItems="center" px="20px" py="20px">
           <Heading bg="transparent" fontWeight="extrabold" className="introHomepage" color="black">
             Your Statistics
@@ -212,50 +210,51 @@ const Statistics = () => {
           {/* Energy Consumption Chart */}
           <Box className="shadowPinned" mt="20px" mx="20px" borderRadius="10px" bg="white">
             <Flex direction="column" width="100%" p="15px">
-              <Flex justifyContent="space-between" alignItems="center" mb="15px">
+              <Flex direction="column" mb="15px">
                 <Heading 
                   textAlign="left" 
                   fontSize="xl" 
                   className="pinnedHeader" 
                   color="#21334a"
+                  mb="10px"
                 >
-                  Energy Consumed: <Text as="span" color={isAdmin ? '#0b13b0' : '#6cce58'} display="inline" fontsize="6">
-                  {getTimePeriodLabel()}</Text>
+                  Energy Consumed:
                 </Heading>
-                <ButtonGroup size="sm" isAttached variant="outline">
-  <Button 
-    colorScheme={timeFilter === 'daily' ? (isAdmin ? 'blue' : 'green') : 'gray'} 
-    onClick={() => setTimeFilter('daily')}
-    color="#21334a"
-    _hover={{ bg: isAdmin ? '#e6e9ff' : '#e6ffe6', color: isAdmin ? '#0b13b0' : '#6cce58' }}
-  >
-    Daily
-  </Button>
-  <Button 
-    colorScheme={timeFilter === 'weekly' ? (isAdmin ? 'blue' : 'green') : 'gray'} 
-    onClick={() => setTimeFilter('weekly')}
-    color="#21334a"
-    _hover={{ bg: isAdmin ? '#e6e9ff' : '#e6ffe6', color: isAdmin ? '#0b13b0' : '#6cce58' }}
-  >
-    Weekly
-  </Button>
-  <Button 
-    colorScheme={timeFilter === 'monthly' ? (isAdmin ? 'blue' : 'green') : 'gray'} 
-    onClick={() => setTimeFilter('monthly')}
-    color="#21334a"
-    _hover={{ bg: isAdmin ? '#e6e9ff' : '#e6ffe6', color: isAdmin ? '#0b13b0' : '#6cce58' }}
-  >
-    Monthly
-  </Button>
-  <Button 
-    colorScheme={timeFilter === 'yearly' ? (isAdmin ? 'blue' : 'green') : 'gray'} 
-    onClick={() => setTimeFilter('yearly')}
-    color="#21334a"
-    _hover={{ bg: isAdmin ? '#e6e9ff' : '#e6ffe6', color: isAdmin ? '#0b13b0' : '#6cce58' }}
-  >
-    Yearly
-  </Button>
-</ButtonGroup>
+                <Text color="#0b13b0" fontWeight="medium" mb="15px">{getTimePeriodLabel()}</Text>
+                <ButtonGroup size="sm" isAttached variant="outline" alignSelf="flex-start">
+                  <Button 
+                    colorScheme={timeFilter === 'daily' ? 'blue' : 'gray'} 
+                    onClick={() => setTimeFilter('daily')}
+                    color="#21334a"
+                    className="admin-filter-btn"
+                  >
+                    Daily
+                  </Button>
+                  <Button 
+                    colorScheme={timeFilter === 'weekly' ? 'blue' : 'gray'} 
+                    onClick={() => setTimeFilter('weekly')}
+                    color="#21334a"
+                    className="admin-filter-btn"
+                  >
+                    Weekly
+                  </Button>
+                  <Button 
+                    colorScheme={timeFilter === 'monthly' ? 'blue' : 'gray'} 
+                    onClick={() => setTimeFilter('monthly')}
+                    color="#21334a"
+                    className="admin-filter-btn"
+                  >
+                    Monthly
+                  </Button>
+                  <Button 
+                    colorScheme={timeFilter === 'yearly' ? 'blue' : 'gray'} 
+                    onClick={() => setTimeFilter('yearly')}
+                    color="#21334a"
+                    className="admin-filter-btn"
+                  >
+                    Yearly
+                  </Button>
+                </ButtonGroup>
               </Flex>
               <Box height="300px" width="100%">
                 {energyData.length > 0 ? (
@@ -263,16 +262,19 @@ const Statistics = () => {
                     <BarChart data={energyData}>
                       <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
                       <XAxis 
-  dataKey="name" 
-  tick={{ fill: '#21334a', fontSize: 6 }} 
-  height={60}
-  tickLine={false}
-  angle={-45}
-  textAnchor="end"
-/>                      <YAxis tick={{ fill: '#21334a', fontSize: 12 }} />
+                        dataKey="name" 
+                        tick={{ fill: '#21334a', fontSize: 10 }} 
+                        height={60}
+                        tickLine={false}
+                        angle={-45}
+                        textAnchor="end"
+                        scale="point"
+                        interval={0}
+                      />
+                      <YAxis tick={{ fill: '#21334a', fontSize: 12 }} />
                       <Tooltip />
                       <Legend />
-                      <Bar dataKey="energy" fill={isAdmin ? '#0b13b0' : '#6cce58'} name="Energy (kWh)" />
+                      <Bar dataKey="energy" fill='#0b13b0' name="Energy (kWh)" />
                     </BarChart>
                   </ResponsiveContainer>
                 ) : (
@@ -300,29 +302,29 @@ const Statistics = () => {
                 <SimpleGrid columns={1} gap={3}>
                   {energyData.map((item, index) => (
                     <Flex 
-                    key={index} 
-                    bg="white" // Changed from #f5f5f5 to white to match card background
-                    p={3} 
-                    borderRadius="md" 
-                    justifyContent="space-between" 
-                    alignItems="center"
-                    boxShadow="0 2px 4px rgba(0, 0, 0, 0.05)"
-                  >
-                    <Box>
-                      <Text fontWeight="medium" color="#21334a">{item.name}</Text>
-                      <Text fontSize="sm" color="#666">{item.devices} devices</Text>
-                    </Box>
-                    <Text 
-                      bg={isAdmin ? '#5764f7' : '#43eb7f'} 
-                      px={3} 
-                      py={1} 
-                      borderRadius="full" 
-                      fontSize="sm"
-                      color="white"
+                      key={index} 
+                      bg="white"
+                      p={3} 
+                      borderRadius="md" 
+                      justifyContent="space-between" 
+                      alignItems="center"
+                      boxShadow="0 2px 4px rgba(0, 0, 0, 0.05)"
                     >
-                      {item.energy} kWh
-                    </Text>
-                  </Flex>
+                      <Box>
+                        <Text fontWeight="medium" color="#21334a">{item.name}</Text>
+                        <Text fontSize="sm" color="#666">{item.devices} devices</Text>
+                      </Box>
+                      <Text 
+                        bg='#5764f7'
+                        px={3} 
+                        py={1} 
+                        borderRadius="full" 
+                        fontSize="sm"
+                        color="white"
+                      >
+                        {item.energy} kWh
+                      </Text>
+                    </Flex>
                   ))}
                 </SimpleGrid>
               ) : (
@@ -338,4 +340,4 @@ const Statistics = () => {
   );
 };
 
-export default Statistics;
+export default StatsAdmin;

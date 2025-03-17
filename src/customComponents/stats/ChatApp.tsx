@@ -1,5 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import styled from 'styled-components';
+import mainview from './hub-rooms-main-view.json';
+import exampleroom from './kitchen.json';
 
 // Button Component
 const Button = ({ onClick }) => {
@@ -238,7 +240,10 @@ const ChatApp = () => {
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [messages, setMessages] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-  const apikey = "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";
+  const apikey = "fake";
+
+  // Combine the JSON data into a single string
+  const jsonContext = JSON.stringify({ mainview, exampleroom });
 
   const openChat = () => {
     setIsChatOpen(true);
@@ -264,7 +269,7 @@ const ChatApp = () => {
         messages: [
           {
             role: 'system',
-            content: 'You are a helpful assistant.',
+            content: `You are an AI assistant for a smart home energy management system. be consice - atmost use 3 lines of text at once. Your primary role is to help users understand and optimize their home's energy usage based on real-time and historical data provided in the additional context. You will analyze the energy data, provide personalized recommendations to reduce costs, explain energy consumption patterns, troubleshoot issues, and suggest energy-saving routines. Use the data from the additional context to provide accurate, context-specific responses. Be concise, conversational, and focus on practical advice. Highlight potential savings, explain technical concepts in plain language, and respect user privacy. Do not use bold or italic text. Always prioritize actionable insights and long-term energy efficiency strategies. Additional context: ${jsonContext}`,
           },
           {
             role: 'user',
@@ -286,7 +291,7 @@ const ChatApp = () => {
           messages: [
             {
               role: 'system',
-              content: 'You are an AI assistant for a smart home energy management system helping users optimize energy usage, reduce costs, and create a sustainable living environment by providing real-time consumption data, personalized energy-saving tips based on usage patterns, explaining billing details, troubleshooting device connectivity, scheduling energy-saving routines, alerting unusual consumption, providing educational content, assisting with device setup, comparing usage with historical data, and recommending optimal times for high-energy activities while being conversational yet concise, accurate with energy data, recognizing urgency, using plain language for technical concepts, addressing users by name when known, offering immediate solutions and long-term recommendations, respecting privacy and data security, acknowledging information needs, focusing on practical advice, highlighting potential savings, connecting with APIs for device controls, explaining limitations when necessary, and maintaining an encouraging tone without judgment. Dont use bold or italic text. Use short answers and be concise.',
+              content: `You are an AI assistant for a smart home energy management system. be consice - atmost use 3 lines of text at once. Your primary role is to help users understand and optimize their home's energy usage based on real-time and historical data provided in the additional context. You will analyze the energy data, provide personalized recommendations to reduce costs, explain energy consumption patterns, troubleshoot issues, and suggest energy-saving routines. Use the data from the additional context to provide accurate, context-specific responses. Be concise, conversational, and focus on practical advice. Highlight potential savings, explain technical concepts in plain language, and respect user privacy. Do not use bold or italic text. Always prioritize actionable insights and long-term energy efficiency strategies. Additional context: ${jsonContext}`,
             },
             {
               role: 'user',
