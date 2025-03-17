@@ -739,21 +739,21 @@ const Homepage: React.FC<{
               </Box>
             )}
 
-            {isExpanded && (
-              <Box
-                position="absolute"
-                top="20px"
-                left="50%"
-                transform="translateX(-50%)"
-                zIndex={1001}
-                textAlign="center"
-                overflowY={"scroll"}
-              >
-                <Heading fontSize="2xl" color="#21334a" bg={"transparent"}>
-                  Pinned Items
-                </Heading>
-              </Box>
-            )}
+{isExpanded && (
+  <Box
+    textAlign="center"
+    mb={4}
+    position="sticky"  // Makes the heading stick at the top while scrolling
+    top={0}  // Sticks to the very top of the scrollable area
+    zIndex={1}  // Keeps it above the images when scrolling
+    bg="white"  // Background color to avoid overlap visibility issues
+    py={2}  // Adds some padding for better aesthetics
+  >
+    <Heading fontSize="2xl" color="#21334a" bg={"transparent"}>
+      Pinned Items
+    </Heading>
+  </Box>
+)}
 
             <Grid templateColumns="repeat(2, 1fr)" gap={4} p={4}>
               {pinnedItems.map((item) => (
