@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Box, Grid, GridItem, Text, VStack, Center, Spinner, Image, HStack, Heading } from '@chakra-ui/react';
+import { Box, Grid, GridItem, Text, VStack, Center, Spinner, Image, HStack, Heading, Button } from '@chakra-ui/react';
 import { Link, useNavigate } from 'react-router-dom';
-import { getFirestore, collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
+import { getFirestore, collection, query, where, getDocs } from 'firebase/firestore';
+import LinkDevice from './LinkDevice';
 
 // Import device images
 import LightImg from '@/images/devicesIcons/lamp.png';
@@ -13,7 +14,7 @@ import SpeakerImg from '@/images/devicesIcons/speaker.png';
 import ThermostatImg from '@/images/devicesIcons/thermostat.png';
 import DoorbellImg from '@/images/devicesIcons/smart-door.png';
 import HeatconvectorImg from '@/images/devicesIcons/heater-convector.png';
-import Dishwasher from '@/images/devicesIcons/dishwasher.png'
+import Dishwasher from '@/images/devicesIcons/dishwasher.png';
 
 // Define the Device type
 type DeviceType =
@@ -47,7 +48,7 @@ const deviceTypeToImage: Record<DeviceType, string> = {
   thermostat: ThermostatImg,
   door: DoorbellImg,
   heatconvector: HeatconvectorImg,
-  dishwasher: Dishwasher
+  dishwasher: Dishwasher,
 };
 
 // Normalize device type to match the keys in deviceTypeToImage
@@ -67,6 +68,7 @@ const normalizeDeviceType = (deviceType: string): DeviceType => {
 const AllDevices = () => {
   const [devices, setDevices] = useState<Device[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showLinkDevice, setShowLinkDevice] = useState(false);
   const navigate = useNavigate();
 
   // Get the selected home from localStorage
@@ -75,39 +77,39 @@ const AllDevices = () => {
     : null;
 
   // Fetch all devices attached to the hub
-  useEffect(() => {
-    const fetchDevices = async () => {
-      if (selectedHome) {
-        const db = getFirestore();
+  const fetchDevices = async () => {
+    if (selectedHome) {
+      const db = getFirestore();
 
-        try {
-          // Fetch devices with the same hubCode as the selected home
-          const devicesRef = collection(db, 'devices');
-          const devicesQuery = query(devicesRef, where('hubCode', '==', selectedHome.hubCode));
-          const devicesSnapshot = await getDocs(devicesQuery);
+      try {
+        // Fetch devices with the same hubCode as the selected home
+        const devicesRef = collection(db, 'devices');
+        const devicesQuery = query(devicesRef, where('hubCode', '==', selectedHome.hubCode));
+        const devicesSnapshot = await getDocs(devicesQuery);
 
-          const devicesData: Device[] = [];
-          devicesSnapshot.forEach((doc) => {
-            const data = doc.data();
-            const deviceType = normalizeDeviceType(data.deviceType || 'light'); // Normalize the device type
-            devicesData.push({
-              id: doc.id,
-              name: data.deviceName || 'Unnamed Device',
-              isOn: data.on || false, // Use the 'on' field from Firestore
-              deviceType: deviceType,
-              hubCode: data.hubCode, // Include hubCode
-            });
+        const devicesData: Device[] = [];
+        devicesSnapshot.forEach((doc) => {
+          const data = doc.data();
+          const deviceType = normalizeDeviceType(data.deviceType || 'light'); // Normalize the device type
+          devicesData.push({
+            id: doc.id,
+            name: data.deviceName || 'Unnamed Device',
+            isOn: data.on || false, // Use the 'on' field from Firestore
+            deviceType: deviceType,
+            hubCode: data.hubCode, // Include hubCode
           });
+        });
 
-          setDevices(devicesData);
-        } catch (error) {
-          console.error('Error fetching devices:', error);
-        } finally {
-          setLoading(false);
-        }
+        setDevices(devicesData);
+      } catch (error) {
+        console.error('Error fetching devices:', error);
+      } finally {
+        setLoading(false);
       }
-    };
+    }
+  };
 
+  useEffect(() => {
     fetchDevices();
   }, [selectedHome]);
 
@@ -126,6 +128,19 @@ const AllDevices = () => {
 
   return (
     <Box bg="white" minH="100vh" p={4} overflowY={'scroll'} pb={'20%'}>
+      {/* LinkDevice Modal */}
+      {showLinkDevice && (
+        <LinkDevice
+          closeLinkDevice={() => setShowLinkDevice(false)}
+          onDeviceLinked={() => {
+            // Re-fetch devices to reflect the newly linked device
+            setLoading(true);
+            fetchDevices();
+          }}
+          currentHubCode={selectedHome?.hubCode || ''}
+        />
+      )}
+
       {/* Header */}
       <Box
         bg="#6CCE58"
@@ -144,9 +159,17 @@ const AllDevices = () => {
             All Devices {/* Display the title */}
           </Heading>
 
-          <Heading fontSize="2xl" fontWeight="bold" color="white" bg="transparent">
-            
-          </Heading>
+          <Button
+            onClick={() => setShowLinkDevice(true)}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              color: 'white',
+              fontSize: '1.5rem',
+            }}
+          >
+            +
+          </Button>
         </HStack>
       </Box>
 
@@ -154,7 +177,8 @@ const AllDevices = () => {
       <Grid templateColumns={{ base: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' }} gap={4}>
         {devices.map((device) => (
           <GridItem key={device.id}>
-            <Link to={`/device/${device.id}`} state={{ fromAllDevices: true }}> {/* Navigate to the device's page */}
+            <Link to={`/device/${device.id}`} state={{ fromAllDevices: true }}>
+              {/* Navigate to the device's page */}
               <VStack
                 p={4}
                 bg="white"
