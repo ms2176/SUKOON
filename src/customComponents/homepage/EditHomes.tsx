@@ -200,7 +200,7 @@ const EditHomes: React.FC<EditHomesProps> = ({ closeEditHomes, onHomeDeleted, on
       Edit Homes
     </Heading>
 
-    <Stack spacing={4} alignItems={"center"}>
+    <Stack spacing={4} alignItems={"center"} >
       <ListboxComp onSelectHome={handleSelectHome} homes={homes} />
       
       <Stack spacing={2} width={"80%"} textAlign={"left"}>

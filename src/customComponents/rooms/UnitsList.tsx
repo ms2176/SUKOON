@@ -184,7 +184,7 @@ const UnitsList: React.FC = () => {
             px={6}
             py={2}
             fontSize="md"
-            _hover={{ bg: '#5bb046' }}
+            _hover={{ bg: '#4a6fe3' }}
             onClick={() => setShowAddUnit(true)}
           >
             +
@@ -195,7 +195,7 @@ const UnitsList: React.FC = () => {
             px={6}
             py={2}
             fontSize="md"
-            _hover={{ bg: '#5bb046' }}
+            _hover={{ bg: '#4a6fe3' }}
             onClick={() => setDeleteMode(!deleteMode)}
           >
             -
@@ -219,7 +219,7 @@ const UnitsList: React.FC = () => {
             _hover={{
               transform: 'translateY(-5px)',
               boxShadow: '0px 10px 20px rgba(0, 0, 0, 0.1)',
-              backgroundColor: '#f5f5f5',
+              //backgroundColor: '#f5f5f5',
             }}
             onClick={() => {
               if (deleteMode) {

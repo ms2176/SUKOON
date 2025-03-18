@@ -38,7 +38,7 @@
 
 /* Modal Container */
 .modal-container {
-  background-color: #fff;
+ /* background-color: #fff;*/
   width: 400px;
   border-radius: 12px;
   /*box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);*/
@@ -131,7 +131,7 @@
 }
 
 .modal-footer .btn-primary:hover {
-  background-color: #45a049;
+  background-color: #6cc358;
   transform: translateY(-2px);
 }
 

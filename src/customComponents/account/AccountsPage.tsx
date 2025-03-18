@@ -291,7 +291,7 @@ const AccountsPage = () => {
           </HStack>
 
           {/* Profile Section */}
-          <Flex align="center" direction="column" mt={6} bg={"transparent"}>
+          <Flex align="center" direction="column" mt={2} bg={"transparent"}>
             <Box
               borderWidth="4px"
               borderColor="green.500"
