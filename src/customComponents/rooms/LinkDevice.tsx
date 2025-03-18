@@ -1,9 +1,24 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Box, Button, Heading, HStack, Input, Stack, Text } from "@chakra-ui/react";
-import { FormControl } from '@chakra-ui/form-control';
+import React, { useState, useEffect, useRef } from "react";
+import {
+  Box,
+  Button,
+  Heading,
+  HStack,
+  Input,
+  Stack,
+  Text,
+} from "@chakra-ui/react";
+import { FormControl } from "@chakra-ui/form-control";
 import { IoCloseCircleSharp } from "react-icons/io5";
 import { getAuth } from "firebase/auth";
-import { getFirestore, collection, query, where, getDocs, updateDoc } from "firebase/firestore";
+import {
+  getFirestore,
+  collection,
+  query,
+  where,
+  getDocs,
+  updateDoc,
+} from "firebase/firestore";
 
 interface LinkDeviceProps {
   closeLinkDevice: () => void;
@@ -11,7 +26,11 @@ interface LinkDeviceProps {
   currentHubCode: string;
 }
 
-const LinkDevice: React.FC<LinkDeviceProps> = ({ closeLinkDevice, onDeviceLinked, currentHubCode }) => {
+const LinkDevice: React.FC<LinkDeviceProps> = ({
+  closeLinkDevice,
+  onDeviceLinked,
+  currentHubCode,
+}) => {
   const [deviceLinkCode, setDeviceLinkCode] = useState("");
   const [error, setError] = useState("");
   const modalRef = useRef<HTMLDivElement | null>(null);
@@ -23,9 +42,9 @@ const LinkDevice: React.FC<LinkDeviceProps> = ({ closeLinkDevice, onDeviceLinked
   };
 
   useEffect(() => {
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
 
@@ -48,7 +67,7 @@ const LinkDevice: React.FC<LinkDeviceProps> = ({ closeLinkDevice, onDeviceLinked
     try {
       // Check if device exists
       const devicesRef = collection(db, "devices");
-      const q = query(devicesRef, where("deviceId", "==", deviceLinkCode));
+      const q = query(devicesRef, where("linkCode", "==", deviceLinkCode));
       const querySnapshot = await getDocs(q);
 
       if (querySnapshot.empty) {
@@ -106,24 +125,44 @@ const LinkDevice: React.FC<LinkDeviceProps> = ({ closeLinkDevice, onDeviceLinked
             height={"auto"}
             onClick={closeLinkDevice}
           >
-            <IoCloseCircleSharp style={{ background: "transparent" }} size={"20%"} />
+            <IoCloseCircleSharp
+              style={{ background: "transparent" }}
+              size={"20%"}
+            />
           </Button>
 
           <Heading bg={"transparent"} textAlign={"center"} color={"black"}>
             Link Device
           </Heading>
 
-          <Text bg={"transparent"} textAlign={"center"} color={"gray.600"} fontSize={"sm"} mt={2}>
+          <Text
+            bg={"transparent"}
+            textAlign={"center"}
+            color={"gray.600"}
+            fontSize={"sm"}
+            mt={2}
+          >
             Enter the device link code found on the device or its packaging.
           </Text>
 
           <Stack width={"100%"} bg={"transparent"} height={"auto"} mt={"8%"}>
             <Stack>
-              <Heading bg={"transparent"} fontSize={"80%"} color={"black"} whiteSpace={"nowrap"}>
+              <Heading
+                bg={"transparent"}
+                fontSize={"80%"}
+                color={"black"}
+                whiteSpace={"nowrap"}
+              >
                 Device Link Code:
               </Heading>
 
-              <Box width="100%" display="flex" flexDirection="column" p={0} m={0}>
+              <Box
+                width="100%"
+                display="flex"
+                flexDirection="column"
+                p={0}
+                m={0}
+              >
                 <FormControl width={"100%"}>
                   <Box className="OuterInputBox">
                     <Input
