@@ -1,0 +1,109 @@
+{
+  "room_id": "CtMtNH3CVTVJg3GLEDbQ",
+  "room_name": "bathroom1",
+  "hub_id": "222iii",
+  "energy_data": {
+    "daily": {
+      "total_energy": 11.2,
+      "unit": "kWh",
+      "date": "2025-03-18",
+      "devices": {
+        "7GfKZceIqnXsEYBD8oyx": {
+          "device_id": "7GfKZceIqnXsEYBD8oyx",
+          "device_name": "bathroom1 TV",
+          "device_type": "tv",
+          "energy_value": 1,
+          "unit": "kWh",
+          "usage_hours": 10,
+          "hourly_rate": 0.1
+        },
+        "ObxGjjradT22j2Wg2cv7": {
+          "device_id": "ObxGjjradT22j2Wg2cv7",
+          "device_name": "bathroom1 Ceiling Light",
+          "device_type": "light",
+          "energy_value": 0.6,
+          "unit": "kWh",
+          "usage_hours": 10,
+          "hourly_rate": 0.06
+        }
+      }
+    },
+    "weekly": {
+      "total_energy": 9.8,
+      "unit": "kWh",
+      "week": "11",
+      "year": "2025",
+      "devices": {
+        "7GfKZceIqnXsEYBD8oyx": {
+          "device_id": "7GfKZceIqnXsEYBD8oyx",
+          "device_name": "bathroom1 TV",
+          "device_type": "tv",
+          "energy_value": 5.6,
+          "unit": "kWh",
+          "usage_hours": 56,
+          "hourly_rate": 0.1
+        },
+        "ObxGjjradT22j2Wg2cv7": {
+          "device_id": "ObxGjjradT22j2Wg2cv7",
+          "device_name": "bathroom1 Ceiling Light",
+          "device_type": "light",
+          "energy_value": 4.2,
+          "unit": "kWh",
+          "usage_hours": 70,
+          "hourly_rate": 0.06
+        }
+      }
+    },
+    "monthly": {
+      "total_energy": 42,
+      "unit": "kWh",
+      "month": "03",
+      "year": "2025",
+      "devices": {
+        "7GfKZceIqnXsEYBD8oyx": {
+          "device_id": "7GfKZceIqnXsEYBD8oyx",
+          "device_name": "bathroom1 TV",
+          "device_type": "tv",
+          "energy_value": 24,
+          "unit": "kWh",
+          "usage_hours": 240,
+          "hourly_rate": 0.1
+        },
+        "ObxGjjradT22j2Wg2cv7": {
+          "device_id": "ObxGjjradT22j2Wg2cv7",
+          "device_name": "bathroom1 Ceiling Light",
+          "device_type": "light",
+          "energy_value": 18,
+          "unit": "kWh",
+          "usage_hours": 300,
+          "hourly_rate": 0.06
+        }
+      }
+    },
+    "yearly": {
+      "total_energy": 511,
+      "unit": "kWh",
+      "year": "2025",
+      "devices": {
+        "7GfKZceIqnXsEYBD8oyx": {
+          "device_id": "7GfKZceIqnXsEYBD8oyx",
+          "device_name": "bathroom1 TV",
+          "device_type": "tv",
+          "energy_value": 292,
+          "unit": "kWh",
+          "usage_hours": 2920,
+          "hourly_rate": 0.1
+        },
+        "ObxGjjradT22j2Wg2cv7": {
+          "device_id": "ObxGjjradT22j2Wg2cv7",
+          "device_name": "bathroom1 Ceiling Light",
+          "device_type": "light",
+          "energy_value": 219,
+          "unit": "kWh",
+          "usage_hours": 3650,
+          "hourly_rate": 0.06
+        }
+      }
+    }
+  }
+}

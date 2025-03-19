@@ -141,7 +141,7 @@ const RoomList: React.FC<RoomListProps> = () => {
             _hover={{
               transform: 'translateY(-5px)',
               boxShadow: '0px 10px 20px rgba(0, 0, 0, 0.1)',
-              backgroundColor: '#f5f5f5',
+             // backgroundColor: '#f5f5f5',
             }}
             onClick={() => {
               if (deleteMode) {

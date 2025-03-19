@@ -21,16 +21,19 @@ import Rate from './customComponents/account/Rate';
 import MoreTools from './customComponents/account/MoreTools';
 import ThirdPartyServices from './customComponents/account/ThirdPartyServices';
 import InitialView from './customComponents/homepage/InitialView';
-import SupportCenter from './customComponents/account/SupportCenter';
+import ChatApp from '@/customComponents/stats/ChatApp';
 import './index.css';
 import { useState } from 'react';
 import Verification_hold from './customComponents/login/verification_hold';
 import Alldevices from './customComponents/rooms/Alldevices';
 import DeviceControlPageNoRoom from './customComponents/rooms/DeviceControlPageNoRoom';
 import UnitsList from './customComponents/rooms/unitsList';
+import StatsAdmin from './customComponents/stats/StatsAdmin';
+import StatsTenant from './customComponents/stats/StatsTenant';
 import { useEffect } from 'react';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { getFirestore, collection, query, where, getDocs, QueryDocumentSnapshot } from 'firebase/firestore';
+
 interface Home {
   homeName: string;
   homeType: string;
@@ -224,6 +227,8 @@ const App = () => {
           }
         />
 
+      
+
         <Route
           path="/device/:deviceId"
           element={
@@ -269,14 +274,34 @@ const App = () => {
           }
         />
 
-        <Route
-          path="/stats"
-          element={
-            <AuthenticatedLayout selectedHome={selectedHome} homes={homes}>
-              <Statistics />
-            </AuthenticatedLayout>
-          }
-        />
+<Route
+  path="/statsadmin"
+  element={
+    <AuthenticatedLayout selectedHome={selectedHome} homes={homes}>
+      <StatsAdmin />
+    </AuthenticatedLayout>
+  }
+/>
+
+<Route
+  path="/statstenant"
+  element={
+    <AuthenticatedLayout selectedHome={selectedHome} homes={homes}>
+      <StatsTenant />
+    </AuthenticatedLayout>
+  }
+/>
+
+<Route
+  path="/stats"
+  element={
+    <AuthenticatedLayout selectedHome={selectedHome} homes={homes}>
+      {selectedHome?.homeType === 'admin' ? <StatsAdmin /> : <StatsTenant />}
+    </AuthenticatedLayout>
+  }
+/>
+
+        
 
         <Route
           path="/accountspage"
@@ -341,6 +366,8 @@ const App = () => {
           }
         />
       </Routes>
+
+      <ChatApp /> {/* Add the ChatApp component here */}
     </>
   );
 };

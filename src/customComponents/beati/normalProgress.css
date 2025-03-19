@@ -1,13 +1,27 @@
 .progress-bar-container {
-    width: 80%;
-    height: 20px;
-    background-color: #e0e0e0;
-    border-radius: 10px;
-    overflow: hidden;
-  }
-  
-  .progress-bar-fill {
-    height: 100%;
-    background-color: #76c7c0;
-    transition: width 0.3s ease-in-out;
-  }
+  width: 100%; /* Full width */
+  display: flex;
+  align-items: center; /* Vertically center the progress bar and text */
+  gap: 10px; /* Space between the progress bar and text */
+}
+
+.progress-bar-wrapper {
+  flex: 1; /* Take up remaining space */
+  height: 20px;
+  background-color: #e0e0e0; /* Background color of the progress bar container */
+  border-radius: 10px; /* Rounded corners */
+  overflow: hidden; /* Ensures the fill doesn't overflow */
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background-color: #76c7c0; /* Fill color of the progress bar */
+  transition: width 0.3s ease-in-out; /* Smooth transition for width changes */
+}
+
+.progress-bar-text {
+  font-size: 14px; /* Font size of the percentage text */
+  color: #333; /* Text color */
+  white-space: nowrap; /* Prevent text from wrapping */
+  background: transparent;
+}

@@ -1,0 +1,145 @@
+{
+  "room_id": "room-104",
+  "room_name": "Home Office",
+  "hub_id": "hub-589",
+  "energy_data": {
+    "daily": {
+      "total_energy": 3.6,
+      "unit": "kWh",
+      "date": "2025-03-17",
+      "devices": {
+        "Light-HO": {
+          "device_id": "dev-2001",
+          "device_name": "Office Ceiling Light",
+          "device_type": "Light",
+          "energy_value": 0.6,
+          "unit": "kWh",
+          "usage_hours": 10,
+          "hourly_rate": 0.06
+        },
+        "Fan-HO": {
+          "device_id": "dev-2002",
+          "device_name": "Office Desk Fan",
+          "device_type": "Fan",
+          "energy_value": 0.3,
+          "unit": "kWh",
+          "usage_hours": 10,
+          "hourly_rate": 0.03
+        },
+        "Thermostat-HO": {
+          "device_id": "dev-2003",
+          "device_name": "Office Thermostat",
+          "device_type": "Thermostat",
+          "energy_value": 1.2,
+          "unit": "kWh",
+          "usage_hours": 24,
+          "hourly_rate": 0.05
+        }
+      }
+    },
+    "weekly": {
+      "total_energy": 25.2,
+      "unit": "kWh",
+      "week": "11",
+      "year": "2025",
+      "devices": {
+        "Light-HO": {
+          "device_id": "dev-2001",
+          "device_name": "Office Ceiling Light",
+          "device_type": "Light",
+          "energy_value": 4.2,
+          "unit": "kWh",
+          "usage_hours": 70,
+          "hourly_rate": 0.06
+        },
+        "Fan-HO": {
+          "device_id": "dev-2002",
+          "device_name": "Office Desk Fan",
+          "device_type": "Fan",
+          "energy_value": 2.1,
+          "unit": "kWh",
+          "usage_hours": 70,
+          "hourly_rate": 0.03
+        },
+        "Thermostat-HO": {
+          "device_id": "dev-2003",
+          "device_name": "Office Thermostat",
+          "device_type": "Thermostat",
+          "energy_value": 8.4,
+          "unit": "kWh",
+          "usage_hours": 168,
+          "hourly_rate": 0.05
+        }
+      }
+    },
+    "monthly": {
+      "total_energy": 114.0,
+      "unit": "kWh",
+      "month": "03",
+      "year": "2025",
+      "devices": {
+        "Light-HO": {
+          "device_id": "dev-2001",
+          "device_name": "Office Ceiling Light",
+          "device_type": "Light",
+          "energy_value": 18.0,
+          "unit": "kWh",
+          "usage_hours": 300,
+          "hourly_rate": 0.06
+        },
+        "Fan-HO": {
+          "device_id": "dev-2002",
+          "device_name": "Office Desk Fan",
+          "device_type": "Fan",
+          "energy_value": 9.0,
+          "unit": "kWh",
+          "usage_hours": 300,
+          "hourly_rate": 0.03
+        },
+        "Thermostat-HO": {
+          "device_id": "dev-2003",
+          "device_name": "Office Thermostat",
+          "device_type": "Thermostat",
+          "energy_value": 36.0,
+          "unit": "kWh",
+          "usage_hours": 720,
+          "hourly_rate": 0.05
+        }
+      }
+    },
+    "yearly": {
+      "total_energy": 1612.8,
+      "unit": "kWh",
+      "year": "2025",
+      "devices": {
+        "Light-HO": {
+          "device_id": "dev-2001",
+          "device_name": "Office Ceiling Light",
+          "device_type": "Light",
+          "energy_value": 219.0,
+          "unit": "kWh",
+          "usage_hours": 3650,
+          "hourly_rate": 0.06
+        },
+        "Fan-HO": {
+          "device_id": "dev-2002",
+          "device_name": "Office Desk Fan",
+          "device_type": "Fan",
+          "energy_value": 109.5,
+          "unit": "kWh",
+          "usage_hours": 3650,
+          "hourly_rate": 0.03
+        },
+        "Thermostat-HO": {
+          "device_id": "dev-2003",
+          "device_name": "Office Thermostat",
+          "device_type": "Thermostat",
+          "energy_value": 438.0,
+          "unit": "kWh",
+          "usage_hours": 8760,
+          "hourly_rate": 0.05
+        }
+      }
+    }
+  }
+}

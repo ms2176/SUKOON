@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Box, Button, Heading, HStack, Input, Stack, Text } from "@chakra-ui/react";
 import { FormControl } from '@chakra-ui/form-control';
 import './AddHome.css';
@@ -26,6 +26,25 @@ const AddHome: React.FC<{
   const [homeName, setHomeName] = useState(""); // State for home name
   const [hubCode, setHubCode] = useState(""); // State for hub link code
   const [error, setError] = useState(""); // State for error messages
+  const modalRef = useRef<HTMLDivElement | null>(null); // Reference for modal container
+
+  // Function to handle clicks outside the modal
+  const handleClickOutside = (event: MouseEvent) => {
+    if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
+      closeAddHome(); // Close the modal if the click is outside
+    }
+  };
+
+  // Add event listener for clicks outside modal when component mounts
+  useEffect(() => {
+    document.addEventListener('mousedown', handleClickOutside);
+    
+    // Cleanup the event listener when component unmounts
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
 
   // Function to link the hub to the user's account
   const linkHubToUser = async () => {
@@ -118,6 +137,7 @@ const AddHome: React.FC<{
         top={"50%"}
         left={"50%"}
         zIndex={100}
+        ref={modalRef} // Attach the ref to the modal container
       >
         <Stack margin={"5% 5% 5% 5%"} width={"100%"}>
           <Button
@@ -134,6 +154,10 @@ const AddHome: React.FC<{
           <Heading bg={"transparent"} textAlign={"center"} color={"black"}>
             Add Home
           </Heading>
+
+<Text bg={"transparent"} textAlign={"center"} color={"gray.600"} fontSize={"sm"} mt={2}>
+  Enter a unique home name and the hub code. You can find the hub code on the back of your hub device.
+</Text>
 
           <Stack width={"100%"} bg={"transparent"} height={"auto"} mt={"8%"}>
             <Stack>
