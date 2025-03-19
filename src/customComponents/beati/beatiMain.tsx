@@ -143,7 +143,7 @@ const BeatiMain = () => {
       <Box className='beatiTop'>
         <Heading
           bg={'transparent'}
-          margin={'25px 0px 25px 15px'}
+         margin={'25px 0px 35px 15px'}
           fontSize={'250%'}
           className='beatiHead'
         >
@@ -151,7 +151,7 @@ const BeatiMain = () => {
         </Heading>
       </Box>
 
-      <Stack className='beatiContentCont' spaceY={3}>
+      <Stack className='beatiContentCont' spaceY={3} style={{ marginTop: '80px' }}>
         <Box className='dailyGoal' spaceY={3}>
           <Stack bg={'transparent'} className='dailyGoalStack'>
             <Heading bg={'transparent'} color={'#3627ba'} mt={'10px'}>
@@ -192,6 +192,7 @@ const BeatiMain = () => {
           image={GreenhouseC}
           showPercentage={true}
           onImageClick={goToGreenhouse}
+        
           
         />
 
