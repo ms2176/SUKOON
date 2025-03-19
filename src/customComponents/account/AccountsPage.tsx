@@ -415,17 +415,28 @@ const AccountsPage = () => {
                 </Stack>
 
                 <Switch.Root
-                  colorScheme="green" 
+                  colorScheme="green"
                   checked={darkMode}
                   onCheckedChange={handleDarkModeToggle}
                   size="md"
                   variant="raised"
                   ml="auto"
-                  background="transparent"
+                  // Remove this transparent background
+                  // background="transparent"
                 >
                   <Switch.HiddenInput />
-                  <Switch.Control background="transparent">
-                    <Switch.Thumb />
+                  <Switch.Control
+                    // Remove transparent background here too
+                    // background="transparent"
+                    // Add styles for the track
+                    bg={darkMode ? "#04cc01" : "#e4e4e7"}
+                    _hover={{ bg: darkMode ? "#04cc01" : "#d4d4d8" }}
+                  >
+                    <Switch.Thumb
+                      bg="#f5f5f5"
+                      boxShadow="0 1px 3px rgba(0,0,0,0.2)"
+                      border="1px solid #e0e0e0"
+                    />
                   </Switch.Control>
                 </Switch.Root>
               </HStack>
