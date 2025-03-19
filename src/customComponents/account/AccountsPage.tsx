@@ -387,7 +387,7 @@ const AccountsPage = () => {
 
             <Box width={"100%"} height={"auto"} bg={"white"}>
               <HStack bg={"transparent"} spaceX={"10%"}>
-                <FiUser
+                <FiMoon
                   style={{ background: "transparent" }}
                   size={"20%"}
                   color="#16a34a"
