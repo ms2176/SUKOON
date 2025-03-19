@@ -19,9 +19,6 @@ import PulseAnimationGreen from "@/images/animatedIcons/Animation - 173709209134
 import PulseAnimationBlue from "@/images/animatedIcons/Animation - 1738960096286.json";
 import { TbCirclePlusFilled } from "react-icons/tb";
 import PinnedMenu from "./pinnedMenu.tsx";
-import { MdOutlinePhoneAndroid } from "react-icons/md";
-import { BsGraphUpArrow } from "react-icons/bs";
-import { MdOutlineBatterySaver } from "react-icons/md";
 import { FaExpandAlt } from "react-icons/fa";
 import { AiOutlineShrink } from "react-icons/ai";
 import AddHome from "./AddHome.tsx";
@@ -53,6 +50,13 @@ import DoorbellImg from "@/images/devicesIcons/smart-door.png";
 import HeatconvectorImg from "@/images/devicesIcons/heater-convector.png";
 import Dishwasher from "@/images/devicesIcons/dishwasher.png";
 import { auth } from "@/config/firebase_conf.ts";
+import { 
+  FiMonitor, 
+  FiHome, 
+  FiCheck, 
+  FiAlertCircle, 
+  FiZap 
+} from "react-icons/fi";
 
 interface Home {
   homeName: string;
@@ -580,17 +584,17 @@ const Homepage: React.FC<{
             bg={"transparent"}
           >
             <MiniDisplays
-              Icon={MdOutlinePhoneAndroid}
+              Icon={FiMonitor}
               title="Active devices:"
               value={activeDevicesCount.toString()}
             />
             <MiniDisplays
-              Icon={BsGraphUpArrow}
+              Icon={FiHome}
               title="Home Status:"
               value="Good"
             />
             <MiniDisplays
-              Icon={MdOutlineBatterySaver}
+              Icon={FiZap}
               title="Energy Generation:"
               value="50KW/h"
             />
