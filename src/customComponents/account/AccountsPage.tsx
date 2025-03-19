@@ -387,7 +387,7 @@ const AccountsPage = () => {
 
             <Box width={"100%"} height={"auto"} bg={"white"}>
               <HStack bg={"transparent"} spaceX={"10%"}>
-                <FiUser
+                <FiMoon
                   style={{ background: "transparent" }}
                   size={"20%"}
                   color="#16a34a"
@@ -415,15 +415,16 @@ const AccountsPage = () => {
                 </Stack>
 
                 <Switch.Root
-                  colorPalette="green" // Changed from colorPalette to colorScheme
+                  colorScheme="green" 
                   checked={darkMode}
                   onCheckedChange={handleDarkModeToggle}
                   size="md"
                   variant="raised"
                   ml="auto"
+                  background="transparent"
                 >
                   <Switch.HiddenInput />
-                  <Switch.Control>
+                  <Switch.Control background="transparent">
                     <Switch.Thumb />
                   </Switch.Control>
                 </Switch.Root>
