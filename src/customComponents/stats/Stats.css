@@ -1,0 +1,198 @@
+/* Base styles */
+body {
+  overflow: auto;
+  overflow-y: auto;
+  z-index: 20;
+  font-size: 16px;
+}
+
+.homepageContainer {
+  display: flex;
+  flex-direction: column;
+  background-color: #f5f7fa;
+  min-height: 100vh;
+  width: 100%;
+  padding-bottom: 20px;
+  color: '#454545';
+  z-index: 1;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.homepageHeader {
+  padding: 10px 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  height: auto;
+  align-items: center;
+  justify-content: center;
+  align-content: center;
+  z-index: 1;
+}
+
+.introHomepage {
+  font-size: 20px;
+  margin-bottom: 10px;
+  color: white;
+  font-family: 'SpotifyFont', sans-serif;
+  background: transparent;
+}
+
+.shadowPinned {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.pinnedHeader, .editHeader {
+  font-weight: 600;
+  font-family: 'SpotifyFont', sans-serif;
+  color: #21334a;
+}
+
+/* Admin button styles */
+.admin-filter-btn {
+  transition: all 0.2s ease-in-out;
+}
+
+.admin-filter-btn:hover {
+  background-color: #e6e9ff !important;
+  color: #0b13b0 !important;
+  border-color: #0b13b0 !important;
+}
+
+/* Tenant button styles */
+.tenant-filter-btn {
+  transition: all 0.2s ease-in-out;
+  border-radius: full;
+  padding-left: 5px;
+  padding-right: 5px;
+  padding-top: 2px;
+  padding-bottom: 2px;
+}
+
+.tenant-filter-btn:hover {
+  background-color: #e6ffe6 !important;
+  color: #6cce58 !important;
+  border-color: #6cce58 !important;
+}
+
+/* Chart fixes */
+.recharts-wrapper {
+  font-size: 12px;
+}
+
+.recharts-x-axis .recharts-cartesian-axis-tick text {
+  font-size: 10px !important;
+  text-anchor: end;
+}
+
+.recharts-responsive-container {
+  margin-bottom: 10px;
+}
+
+/* Fix for bar spacing - more aggressive */
+.recharts-bar-rectangles {
+  transform: translateX(1px);
+  width: 100% !important;
+}
+
+/* Override for bar width */
+.recharts-rectangle.recharts-bar-rectangle {
+  width: 80px !important;
+  transform: none !important;
+}
+
+/* Fix bars touching y-axis */
+.recharts-cartesian-grid {
+  transform: translateX(10px);
+}
+
+/* Adjust coordinate system */
+.recharts-cartesian-grid-horizontal line,
+.recharts-cartesian-grid-vertical line {
+  stroke-dasharray: 3 3;
+  stroke-opacity: 0.3;
+}
+
+/* Fix for x-axis labels */
+.recharts-x-axis .recharts-text {
+  overflow: visible;
+  word-break: break-word;
+}
+
+.recharts-layer.recharts-cartesian-axis-tick {
+  padding: 0;
+}
+
+/* Additional components */
+.usagePerRoomBox {
+  background-color: #f5f5f5;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.pulseBoxContainer {
+  align-content: center; 
+  align-items: center;
+  justify-content: center; 
+  height: clamp(250px, 20vw, 400px);
+  display: flex;
+  position: relative;
+}
+
+.pulseAnimation {
+  position: absolute; 
+  width: 500px; 
+  height: 500px;
+  z-index: 0; 
+  background-color: transparent;
+}
+
+.pulseBox {
+  border-radius: 100px;
+  height: 150px;
+  width: 150px;
+  position: relative;
+  z-index: 1;
+  justify-content: center;
+  align-items: center;
+  align-content: center;
+  display: flex;
+}
+
+.guestIntro, .totalConsShow, .totConsHeading {
+  font-family: 'SpotifyFont', sans-serif;
+  background: transparent;
+}
+
+.chartContainer {
+  font-size: inherit;
+  margin: 15px 20px;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  background-color: white;
+  padding: 15px;
+}
+
+@media (min-width: 481px) {
+  .pulseAnimation {
+    position: absolute; 
+    width: 600px; 
+    height: 600px;
+    z-index: 0; 
+    background-color: transparent;
+  }
+
+  .pulseBox {
+    border-radius: 150px;
+    height: 180px;
+    width: 180px;
+  }
+
+  .pulseBoxContainer {
+    margin-top: 10px;
+  }
+}
