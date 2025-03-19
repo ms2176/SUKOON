@@ -1,0 +1,216 @@
+{
+  "hub_id": "hub-589",
+  "hub_name": "Main House Hub",
+  "energy_data": {
+    "daily": {
+      "total_energy": 64.32,
+      "unit": "kWh",
+      "date": "2025-03-17",
+      "rooms": {
+        "Kitchen": {
+          "energy_value": 26.4,
+          "unit": "kWh",
+          "device_count": 5,
+          "devices": [
+            { "device_type": "Light" },
+            { "device_type": "Light" },
+            { "device_type": "Dishwasher" },
+            { "device_type": "Air Conditioner" },
+            { "device_type": "Smart Door" }
+          ]
+        },
+        "Living Room": {
+          "energy_value": 19.92,
+          "unit": "kWh",
+          "device_count": 5,
+          "devices": [
+            { "device_type": "TV" },
+            { "device_type": "Light" },
+            { "device_type": "Light" },
+            { "device_type": "Fan" },
+            { "device_type": "Thermostat" }
+          ]
+        },
+        "Bedroom": {
+          "energy_value": 14.4,
+          "unit": "kWh",
+          "device_count": 4,
+          "devices": [
+            { "device_type": "Light" },
+            { "device_type": "TV" },
+            { "device_type": "Air Conditioner" },
+            { "device_type": "Fan" }
+          ]
+        },
+        "Home Office": {
+          "energy_value": 3.6,
+          "unit": "kWh",
+          "device_count": 3,
+          "devices": [
+            { "device_type": "Light" },
+            { "device_type": "Fan" },
+            { "device_type": "Thermostat" }
+          ]
+        }
+      }
+    },
+    "weekly": {
+      "total_energy": 450.24,
+      "unit": "kWh",
+      "week": "11",
+      "year": "2025",
+      "rooms": {
+        "Kitchen": {
+          "energy_value": 184.8,
+          "unit": "kWh",
+          "device_count": 5,
+          "devices": [
+            { "device_type": "Light" },
+            { "device_type": "Light" },
+            { "device_type": "Dishwasher" },
+            { "device_type": "Air Conditioner" },
+            { "device_type": "Smart Door" }
+          ]
+        },
+        "Living Room": {
+          "energy_value": 139.44,
+          "unit": "kWh",
+          "device_count": 5,
+          "devices": [
+            { "device_type": "TV" },
+            { "device_type": "Light" },
+            { "device_type": "Light" },
+            { "device_type": "Fan" },
+            { "device_type": "Thermostat" }
+          ]
+        },
+        "Bedroom": {
+          "energy_value": 100.8,
+          "unit": "kWh",
+          "device_count": 4,
+          "devices": [
+            { "device_type": "Light" },
+            { "device_type": "TV" },
+            { "device_type": "Air Conditioner" },
+            { "device_type": "Fan" }
+          ]
+        },
+        "Home Office": {
+          "energy_value": 25.2,
+          "unit": "kWh",
+          "device_count": 3,
+          "devices": [
+            { "device_type": "Light" },
+            { "device_type": "Fan" },
+            { "device_type": "Thermostat" }
+          ]
+        }
+      }
+    },
+    "monthly": {
+      "total_energy": 1935.6,
+      "unit": "kWh",
+      "month": "03",
+      "year": "2025",
+      "rooms": {
+        "Kitchen": {
+          "energy_value": 792,
+          "unit": "kWh",
+          "device_count": 5,
+          "devices": [
+            { "device_type": "Light" },
+            { "device_type": "Light" },
+            { "device_type": "Dishwasher" },
+            { "device_type": "Air Conditioner" },
+            { "device_type": "Smart Door" }
+          ]
+        },
+        "Living Room": {
+          "energy_value": 597.6,
+          "unit": "kWh",
+          "device_count": 5,
+          "devices": [
+            { "device_type": "TV" },
+            { "device_type": "Light" },
+            { "device_type": "Light" },
+            { "device_type": "Fan" },
+            { "device_type": "Thermostat" }
+          ]
+        },
+        "Bedroom": {
+          "energy_value": 432,
+          "unit": "kWh",
+          "device_count": 4,
+          "devices": [
+            { "device_type": "Light" },
+            { "device_type": "TV" },
+            { "device_type": "Air Conditioner" },
+            { "device_type": "Fan" }
+          ]
+        },
+        "Home Office": {
+          "energy_value": 114,
+          "unit": "kWh",
+          "device_count": 3,
+          "devices": [
+            { "device_type": "Light" },
+            { "device_type": "Fan" },
+            { "device_type": "Thermostat" }
+          ]
+        }
+      }
+    },
+    "yearly": {
+      "total_energy": 23472,
+      "unit": "kWh",
+      "year": "2025",
+      "rooms": {
+        "Kitchen": {
+          "energy_value": 9504,
+          "unit": "kWh",
+          "device_count": 5,
+          "devices": [
+            { "device_type": "Light" },
+            { "device_type": "Light" },
+            { "device_type": "Dishwasher" },
+            { "device_type": "Air Conditioner" },
+            { "device_type": "Smart Door" }
+          ]
+        },
+        "Living Room": {
+          "energy_value": 7171.2,
+          "unit": "kWh",
+          "device_count": 5,
+          "devices": [
+            { "device_type": "TV" },
+            { "device_type": "Light" },
+            { "device_type": "Light" },
+            { "device_type": "Fan" },
+            { "device_type": "Thermostat" }
+          ]
+        },
+        "Bedroom": {
+          "energy_value": 5184,
+          "unit": "kWh",
+          "device_count": 4,
+          "devices": [
+            { "device_type": "Light" },
+            { "device_type": "TV" },
+            { "device_type": "Air Conditioner" },
+            { "device_type": "Fan" }
+          ]
+        },
+        "Home Office": {
+          "energy_value": 1612.8,
+          "unit": "kWh",
+          "device_count": 3,
+          "devices": [
+            { "device_type": "Light" },
+            { "device_type": "Fan" },
+            { "device_type": "Thermostat" }
+          ]
+        }
+      }
+    }
+  }
+}
