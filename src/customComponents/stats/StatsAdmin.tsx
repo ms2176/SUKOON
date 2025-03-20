@@ -3,124 +3,149 @@ import { Text, Flex, Heading, Box, SimpleGrid, Button, ButtonGroup } from "@chak
 import { toaster } from "@/components/ui/toaster";
 import { useNavigate } from 'react-router-dom';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { getFirestore, collection, query, where, getDocs } from 'firebase/firestore';
 import './Stats.css';
 import DownloadButton from './DownloadButton';
 
-// Import the JSON data
-import energyStatsData from './hub-rooms-main-view.json';
+// Enhanced JSON data with fake data for all time periods
+const hubData = {
+  "hub_id": "GFM4Y",
+  "hub_name": "Central Admin Hub",
+  "hub_type": "admin",
+  "energy_data": {
+    "daily": {
+      "total_energy": 11.6,
+      "unit": "kWh",
+      "date": "2025-03-18",
+      "tenant_hubs": {
+        "Apartment Building C": {
+          "hub_id": "222iii",
+          "energy_value": 11.6,
+          "unit": "kWh"
+        }
+      }
+    },
+    "weekly": {
+      "total_energy": 74.2,
+      "unit": "kWh",
+      "week": "11",
+      "year": "2025",
+      "tenant_hubs": {
+        "Apartment Building A": {
+          "hub_id": "111aaa",
+          "energy_value": 28.7,
+          "unit": "kWh"
+        },
+        "Apartment Building B": {
+          "hub_id": "333ccc",
+          "energy_value": 14.5,
+          "unit": "kWh"
+        },
+        "Apartment Building C": {
+          "hub_id": "222iii",
+          "energy_value": 31.0,
+          "unit": "kWh"
+        }
+      }
+    },
+    "monthly": {
+      "total_energy": 284.3,
+      "unit": "kWh",
+      "month": "03",
+      "year": "2025",
+      "tenant_hubs": {
+        "Apartment Building A": {
+          "hub_id": "111aaa",
+          "energy_value": 98.2,
+          "unit": "kWh"
+        },
+        "Apartment Building B": {
+          "hub_id": "333ccc",
+          "energy_value": 56.4,
+          "unit": "kWh"
+        },
+        "Apartment Building C": {
+          "hub_id": "222iii",
+          "energy_value": 87.6,
+          "unit": "kWh"
+        },
+        "Commercial Building D": {
+          "hub_id": "444ddd",
+          "energy_value": 42.1,
+          "unit": "kWh"
+        }
+      }
+    },
+    "yearly": {
+      "total_energy": 3275.8,
+      "unit": "kWh",
+      "year": "2025",
+      "tenant_hubs": {
+        "Apartment Building A": {
+          "hub_id": "111aaa",
+          "energy_value": 876.3,
+          "unit": "kWh"
+        },
+        "Apartment Building B": {
+          "hub_id": "333ccc",
+          "energy_value": 654.2,
+          "unit": "kWh"
+        },
+        "Apartment Building C": {
+          "hub_id": "222iii",
+          "energy_value": 924.7,
+          "unit": "kWh"
+        },
+        "Commercial Building D": {
+          "hub_id": "444ddd",
+          "energy_value": 478.9,
+          "unit": "kWh"
+        },
+        "Office Complex E": {
+          "hub_id": "555eee",
+          "energy_value": 341.7,
+          "unit": "kWh"
+        }
+      }
+    }
+  }
+};
 
 const StatsAdmin = () => {
   const navigate = useNavigate();
   const [energyData, setEnergyData] = useState([]);
-  const [selectedHome, setSelectedHome] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [timeFilter, setTimeFilter] = useState('monthly'); // Default filter
-  const [hubData, setHubData] = useState(null);
-  // Load selected home from localStorage
-  useEffect(() => {
-    const storedSelectedHome = localStorage.getItem('selectedHome');
-    if (storedSelectedHome) {
-      const homeData = JSON.parse(storedSelectedHome);
-      setSelectedHome(homeData);
-    }
-  }, []);
+  const [timeFilter, setTimeFilter] = useState('daily'); // Default to daily since that's where we have data
 
-  // Fetch hub data and validate with Firebase
+  // Process energy data based on the time filter when component mounts or timeFilter changes
   useEffect(() => {
-    const fetchHubData = async () => {
-      if (selectedHome && selectedHome.hubCode) {
-        setLoading(true);
-        
-        // First check if the hubCode matches any hub_id in the JSON data
-        const matchingHub = energyStatsData.hub_id === selectedHome.hubCode;
-        
-        if (matchingHub) {
-          // If matched, set the hub data
-          setHubData(energyStatsData);
-          processEnergyData(energyStatsData, timeFilter);
-        } else {
-          // If not matched in JSON, check Firebase
-          const db = getFirestore();
-          const roomsRef = collection(db, 'rooms');
-          const roomsQuery = query(roomsRef, where('hubCode', '==', selectedHome.hubCode));
+    setLoading(true);
+    
+    const processEnergyData = () => {
+      const timeData = hubData.energy_data[timeFilter];
+      
+      if (timeData && timeData.tenant_hubs) {
+        // Transform tenant_hubs data into the format expected by the chart
+        const formattedData = Object.entries(timeData.tenant_hubs).map(([tenantName, tenantData]) => {
+          return {
+            name: tenantName,
+            energy: tenantData.energy_value,
+            hub_id: tenantData.hub_id
+          };
+        });
 
-          try {
-            const querySnapshot = await getDocs(roomsQuery);
-            const roomsData = [];
-            querySnapshot.forEach((doc) => {
-              const data = doc.data();
-              roomsData.push({
-                id: doc.id,
-                roomName: data.roomName,
-                devices: data.devices || []
-              });
-            });
-            
-            // Use Firebase data if available
-            if (roomsData.length > 0) {
-              // Process Firebase data (keeping your existing logic)
-              const roomEnergyData = roomsData.map(room => {
-                return {
-                  name: room.roomName,
-                  energy: 0, // You'll need to modify this based on your needs
-                  devices: room.devices.length
-                };
-              });
-              setEnergyData(roomEnergyData);
-            } else {
-              // No data found in either source
-              setEnergyData([]);
-            }
-          } catch (error) {
-            console.error('Error fetching rooms:', error);
-            setEnergyData([]);
-          }
-        }
+        // Sort by energy consumption (descending)
+        formattedData.sort((a, b) => b.energy - a.energy);
         
-        setLoading(false);
+        setEnergyData(formattedData);
+      } else {
+        setEnergyData([]);
       }
+      
+      setLoading(false);
     };
 
-    fetchHubData();
-  }, [selectedHome, timeFilter]);
-
-  // Process energy data based on the time filter
-  const processEnergyData = (hubData, timeFilter) => {
-    if (!hubData || !hubData.energy_data || !hubData.energy_data[timeFilter]) {
-      setEnergyData([]);
-      return;
-    }
-
-    const timeData = hubData.energy_data[timeFilter];
-    const roomsData = timeData.rooms;
-    
-    if (!roomsData) {
-      setEnergyData([]);
-      return;
-    }
-
-    // Transform rooms data into the format expected by the chart
-    const formattedData = Object.entries(roomsData).map(([roomName, roomData]) => {
-      return {
-        name: roomName,
-        energy: roomData.energy_value,
-        devices: roomData.device_count
-      };
-    });
-
-    // Sort by energy consumption (descending)
-    formattedData.sort((a, b) => b.energy - a.energy);
-    
-    setEnergyData(formattedData);
-  };
-
-  // When time filter changes, update the energy data
-  useEffect(() => {
-    if (hubData) {
-      processEnergyData(hubData, timeFilter);
-    }
-  }, [hubData, timeFilter]);
+    processEnergyData();
+  }, [timeFilter]);
 
   const goToHome = () => {
     navigate('/homepage');
@@ -137,13 +162,13 @@ const StatsAdmin = () => {
     }
 
     // Create CSV content
-    const headers = ['Room', 'Energy (kWh)', 'Devices'];
+    const headers = ['Tenant', 'Energy (kWh)', 'Hub ID'];
     const csvRows = [
       headers.join(','),
       ...energyData.map(item => [
         item.name,
         item.energy,
-        item.devices
+        item.hub_id
       ].join(','))
     ];
     
@@ -167,11 +192,9 @@ const StatsAdmin = () => {
 
   // Function to get the current time period label
   const getTimePeriodLabel = () => {
-    if (!hubData || !hubData.energy_data || !hubData.energy_data[timeFilter]) {
-      return '';
-    }
-
     const timeData = hubData.energy_data[timeFilter];
+    
+    if (!timeData) return '';
     
     switch (timeFilter) {
       case 'daily':
@@ -185,6 +208,12 @@ const StatsAdmin = () => {
       default:
         return '';
     }
+  };
+
+  // Get total energy value for the current time period
+  const getTotalEnergy = () => {
+    const timeData = hubData.energy_data[timeFilter];
+    return timeData ? timeData.total_energy : 0;
   };
 
   return (
@@ -206,6 +235,30 @@ const StatsAdmin = () => {
         </Box>
       ) : (
         <>
+          {/* Hub Information */}
+          <Box className="shadowPinned" mt="20px" mx="20px" borderRadius="10px" bg="white">
+            <Flex direction="column" width="100%" p="15px">
+              <Heading 
+                textAlign="left" 
+                fontSize="xl" 
+                className="pinnedHeader" 
+                color="#21334a"
+                mb="10px"
+              >
+                Hub Information
+              </Heading>
+              <Text color="#21334a" mb="5px">
+                <strong>Hub ID:</strong> {hubData.hub_id}
+              </Text>
+              <Text color="#21334a" mb="5px">
+                <strong>Hub Name:</strong> {hubData.hub_name}
+              </Text>
+              <Text color="#21334a" mb="15px">
+                <strong>Hub Type:</strong> {hubData.hub_type}
+              </Text>
+            </Flex>
+          </Box>
+
           {/* Energy Consumption Chart */}
           <Box className="shadowPinned" mt="20px" mx="20px" borderRadius="10px" bg="white">
             <Flex direction="column" width="100%" p="15px">
@@ -217,7 +270,7 @@ const StatsAdmin = () => {
                   color="#21334a"
                   mb="10px"
                 >
-                  Energy Consumed:
+                  Energy Consumed: {getTotalEnergy()} {hubData.energy_data[timeFilter]?.unit || 'kWh'}
                 </Heading>
                 <Text color="#0b13b0" fontWeight="medium" mb="15px">{getTimePeriodLabel()}</Text>
                 <ButtonGroup size="sm" isAttached variant="outline" alignSelf="flex-start">
@@ -285,7 +338,7 @@ const StatsAdmin = () => {
             </Flex>
           </Box>
 
-          {/* Devices Per Room */}
+          {/* Tenant Hubs List */}
           <Box className="shadowPinned" mt="20px" mx="20px" borderRadius="10px" bg="white" mb="30px">
             <Flex direction="column" width="100%" p="15px">
               <Heading 
@@ -295,7 +348,7 @@ const StatsAdmin = () => {
                 color="#21334a" 
                 mb="15px"
               >
-                Devices by Room
+                Tenant Hubs
               </Heading>
               {energyData.length > 0 ? (
                 <SimpleGrid columns={1} gap={3}>
@@ -311,7 +364,7 @@ const StatsAdmin = () => {
                     >
                       <Box>
                         <Text fontWeight="medium" color="#21334a">{item.name}</Text>
-                        <Text fontSize="sm" color="#666">{item.devices} devices</Text>
+                        <Text fontSize="sm" color="#666">Hub ID: {item.hub_id}</Text>
                       </Box>
                       <Text 
                         bg='#5764f7'
@@ -328,7 +381,7 @@ const StatsAdmin = () => {
                 </SimpleGrid>
               ) : (
                 <Flex justifyContent="center" alignItems="center" py={5}>
-                  <Text color="#666">No device data available for this time period</Text>
+                  <Text color="#666">No tenant data available for this time period</Text>
                 </Flex>
               )}
             </Flex>
