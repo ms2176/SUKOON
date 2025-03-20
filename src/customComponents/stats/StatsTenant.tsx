@@ -3,20 +3,24 @@ import { Text, Flex, Heading, Box, SimpleGrid, Button, ButtonGroup } from "@chak
 import { toaster } from "@/components/ui/toaster";
 import { useNavigate } from 'react-router-dom';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { getFirestore, collection, query, where, getDocs } from 'firebase/firestore';
 import './Stats.css';
 import DownloadButton from './DownloadButton';
 
-// Import the JSON data
-import energyStatsData from './hub-rooms-main-view.json';
+const API_BASE_URL = 'https://api.sukoonhome.me'; // Base API URL
 
 const StatsTenant = () => {
   const navigate = useNavigate();
   const [energyData, setEnergyData] = useState([]);
-  const [selectedHome, setSelectedHome] = useState(null);
+  interface Home {
+    hubCode: string;
+    [key: string]: any; // Add other properties as needed
+  }
+
+  const [selectedHome, setSelectedHome] = useState<Home | null>(null);
   const [loading, setLoading] = useState(true);
   const [timeFilter, setTimeFilter] = useState('monthly'); // Default filter
   const [hubData, setHubData] = useState(null);
+  const [error, setError] = useState(null);
 
   // Load selected home from localStorage
   useEffect(() => {
@@ -27,59 +31,98 @@ const StatsTenant = () => {
     }
   }, []);
 
-  // Fetch hub data and validate with Firebase
+  // Fetch hub data from the API
   useEffect(() => {
     const fetchHubData = async () => {
       if (selectedHome && selectedHome.hubCode) {
         setLoading(true);
+        setError(null);
         
-        // First check if the hubCode matches any hub_id in the JSON data
-        const matchingHub = energyStatsData.hub_id === selectedHome.hubCode;
-        
-        if (matchingHub) {
-          // If matched, set the hub data
-          setHubData(energyStatsData);
-          processEnergyData(energyStatsData, timeFilter);
-        } else {
-          // If not matched in JSON, check Firebase
-          const db = getFirestore();
-          const roomsRef = collection(db, 'rooms');
-          const roomsQuery = query(roomsRef, where('hubCode', '==', selectedHome.hubCode));
-
-          try {
-            const querySnapshot = await getDocs(roomsQuery);
-            const roomsData = [];
-            querySnapshot.forEach((doc) => {
-              const data = doc.data();
-              roomsData.push({
-                id: doc.id,
-                roomName: data.roomName,
-                devices: data.devices || []
-              });
-            });
+        try {
+          // First try the new endpoint format
+          const response = await fetch(`${API_BASE_URL}/hubs/${selectedHome.hubCode}/energy/${timeFilter}`);
+          
+          if (response.ok) {
+            // New endpoint format worked
+            const data = await response.json();
+            const formattedData = {
+              hub_id: data.hub_code,
+              hub_name: `Hub ${data.hub_code}`,
+              hub_type: "tenant",
+              energy_data: {
+                [timeFilter]: {
+                  total_energy: data.total_energy,
+                  unit: data.unit,
+                  date: data.date,
+                  month: timeFilter === 'monthly' ? data.date?.split('-')[1] : undefined,
+                  year: timeFilter === 'yearly' || timeFilter === 'monthly' ? data.date?.split('-')[0] : undefined,
+                  week: timeFilter === 'weekly' ? data.week : undefined,
+                  rooms: data.rooms
+                }
+              }
+            };
+            setHubData(formattedData);
+            processEnergyData(formattedData, timeFilter);
+          } else {
+            // Try the fallback endpoints
+            const fallbackEndpoint = `${API_BASE_URL}/hub/${selectedHome.hubCode}/energy`;
+            const fallbackResponse = await fetch(fallbackEndpoint);
             
-            // Use Firebase data if available
-            if (roomsData.length > 0) {
-              // Process Firebase data (keeping your existing logic)
-              const roomEnergyData = roomsData.map(room => {
-                return {
-                  name: room.roomName,
-                  energy: 0, // You'll need to modify this based on your needs
-                  devices: room.devices.length
+            if (!fallbackResponse.ok) {
+              throw new Error(`API error: ${fallbackResponse.status}`);
+            }
+            
+            const fallbackData = await fallbackResponse.json();
+            setHubData(fallbackData);
+            processEnergyData(fallbackData, timeFilter);
+          }
+        } catch (error) {
+          console.error('Error fetching hub data:', error);
+          setError('Failed to load energy data. Please try again later.');
+          
+          // Try to load room data to show device information even if energy data fails
+          try {
+            const roomsResponse = await fetch(`${API_BASE_URL}/hubs/${selectedHome.hubCode}/rooms`);
+            if (roomsResponse.ok) {
+              const roomsData = await roomsResponse.json();
+              const formattedRooms = {};
+              
+              roomsData.forEach(room => {
+                formattedRooms[room.roomName] = {
+                  energy_value: 0, // Default to 0 since we couldn't get energy data
+                  unit: "kWh",
+                  device_count: room.device_count || 0,
+                  room_id: room.roomId,
+                  devices: room.device_details || []
                 };
               });
-              setEnergyData(roomEnergyData);
+              
+              const mockData = {
+                hub_id: selectedHome.hubCode,
+                hub_name: `Hub ${selectedHome.hubCode}`,
+                hub_type: "tenant",
+                energy_data: {
+                  [timeFilter]: {
+                    total_energy: 0,
+                    unit: "kWh",
+                    date: new Date().toISOString().split('T')[0],
+                    rooms: formattedRooms
+                  }
+                }
+              };
+              
+              setHubData(mockData);
+              processEnergyData(mockData, timeFilter);
             } else {
-              // No data found in either source
               setEnergyData([]);
             }
-          } catch (error) {
-            console.error('Error fetching rooms:', error);
+          } catch (roomError) {
+            console.error('Error fetching room data:', roomError);
             setEnergyData([]);
           }
+        } finally {
+          setLoading(false);
         }
-        
-        setLoading(false);
       }
     };
 
@@ -125,6 +168,35 @@ const StatsTenant = () => {
 
   const goToHome = () => {
     navigate('/homepage');
+  };
+
+  // Function to get detailed room data
+  const fetchRoomDetails = async (roomId) => {
+    try {
+      // Try new endpoint format first
+      const response = await fetch(`${API_BASE_URL}/room/${roomId}/energy`);
+      
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      console.log('Room details:', data);
+      
+      // Show room details in a toast notification
+      toaster.create({
+        description: `Room: ${data.room_name} - Energy: ${data.energy_data[timeFilter]?.total_energy || 0} kWh`,
+        type: "info",
+      });
+      
+      return data;
+    } catch (error) {
+      console.error('Error fetching room details:', error);
+      toaster.create({
+        description: "Failed to load room details",
+        type: "error",
+      });
+    }
   };
 
   // Function to download report as CSV
@@ -176,15 +248,42 @@ const StatsTenant = () => {
     
     switch (timeFilter) {
       case 'daily':
-        return `Date: ${timeData.date}`;
+        return `Date: ${timeData.date || new Date().toISOString().split('T')[0]}`;
       case 'weekly':
-        return `Week ${timeData.week}, ${timeData.year}`;
+        return `Week ${timeData.week || '1'}, ${timeData.year || new Date().getFullYear()}`;
       case 'monthly':
-        return `Month ${timeData.month}, ${timeData.year}`;
+        return `Month ${timeData.month || new Date().getMonth() + 1}, ${timeData.year || new Date().getFullYear()}`;
       case 'yearly':
-        return `Year ${timeData.year}`;
+        return `Year ${timeData.year || new Date().getFullYear()}`;
       default:
         return '';
+    }
+  };
+
+  // Function to get the total energy for the current period
+  const getTotalEnergy = () => {
+    if (!hubData || !hubData.energy_data || !hubData.energy_data[timeFilter]) {
+      return '0';
+    }
+    
+    return hubData.energy_data[timeFilter].total_energy;
+  };
+
+  // Function to get live energy data
+  const fetchLiveEnergyData = async () => {
+    if (!selectedHome || !selectedHome.hubCode) return;
+    
+    try {
+      const response = await fetch(`${API_BASE_URL}/hubs/${selectedHome.hubCode}/live-energy`);
+      if (response.ok) {
+        const data = await response.json();
+        toaster.create({
+          description: `Current power consumption: ${data.total_consumption} ${data.unit} - Active devices: ${data.active_devices}/${data.total_devices}`,
+          type: "info",
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching live energy data:', error);
     }
   };
 
@@ -205,21 +304,34 @@ const StatsTenant = () => {
         <Box textAlign="center" py={10}>
           <Text>Loading energy data...</Text>
         </Box>
+      ) : error ? (
+        <Box textAlign="center" py={10} color="red.500">
+          <Text>{error}</Text>
+          <Button mt={4} colorScheme="green" onClick={() => window.location.reload()}>Retry</Button>
+        </Box>
       ) : (
         <>
           {/* Energy Consumption Chart */}
           <Box className="shadowPinned" mt="20px" mx="20px" borderRadius="10px" bg="white">
             <Flex direction="column" width="100%" p="15px">
               <Flex direction="column" mb="15px">
-                <Heading 
-                  textAlign="left" 
-                  fontSize="xl" 
-                  className="pinnedHeader" 
-                  color="#21334a"
-                  mb="10px"
-                >
-                  Energy Consumed:
-                </Heading>
+                <Flex justifyContent="space-between" alignItems="center" mb="10px">
+                  <Heading 
+                    textAlign="left" 
+                    fontSize="xl" 
+                    className="pinnedHeader" 
+                    color="#21334a"
+                  >
+                    Energy Consumed:
+                  </Heading>
+                  <Button 
+                    size="sm" 
+                    colorScheme="green" 
+                    onClick={fetchLiveEnergyData}
+                  >
+                    Live Usage
+                  </Button>
+                </Flex>
                 <Text color="#6cce58" fontWeight="medium" mb="15px">{getTimePeriodLabel()}</Text>
                 <ButtonGroup size="sm" isAttached variant="outline" alignSelf="flex-start">
                   <Button 
@@ -263,7 +375,7 @@ const StatsTenant = () => {
                     data={energyData} 
                     barSize={20} 
                     margin={{ top: 20, right: 20, left: 5, bottom: 5 }}
-                    barGap={5} // Small gap between bars within the same category
+                    barGap={5}
                   >
                     <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
                     <XAxis 
@@ -313,18 +425,27 @@ const StatsTenant = () => {
                       justifyContent="space-between" 
                       alignItems="center"
                       boxShadow="0 2px 4px rgba(0, 0, 0, 0.05)"
+                      onClick={() => {
+                        // Find room_id from the hubData structure
+                        const roomId = hubData?.energy_data[timeFilter]?.rooms[item.name]?.room_id;
+                        if (roomId) {
+                          fetchRoomDetails(roomId);
+                        }
+                      }}
+                      cursor="pointer"
+                      _hover={{ bg: "#f9f9f9" }}
                     >
                       <Box>
                         <Text fontWeight="medium" color="#21334a">{item.name}</Text>
                         <Text fontSize="sm" color="#666">{item.devices} devices</Text>
                       </Box>
                       <Text 
-                        bg='#43eb7f'
+                        bg={item.energy > 0 ? '#43eb7f' : '#e0e0e0'}
                         px={3} 
                         py={1} 
                         borderRadius="full" 
                         fontSize="sm"
-                        color="white"
+                        color={item.energy > 0 ? 'white' : '#666'}
                       >
                         {item.energy} kWh
                       </Text>

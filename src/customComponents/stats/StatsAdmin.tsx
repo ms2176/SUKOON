@@ -17,7 +17,6 @@ const StatsAdmin = () => {
   const [loading, setLoading] = useState(true);
   const [timeFilter, setTimeFilter] = useState('monthly'); // Default filter
   const [hubData, setHubData] = useState(null);
-
   // Load selected home from localStorage
   useEffect(() => {
     const storedSelectedHome = localStorage.getItem('selectedHome');
