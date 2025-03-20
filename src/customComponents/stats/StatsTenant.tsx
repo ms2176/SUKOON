@@ -8,19 +8,92 @@ import DownloadButton from './DownloadButton';
 
 const API_BASE_URL = 'https://api.sukoonhome.me'; // Base API URL
 
-const StatsTenant = () => {
-  const navigate = useNavigate();
-  const [energyData, setEnergyData] = useState([]);
-  interface Home {
-    hubCode: string;
-    [key: string]: any; // Add other properties as needed
+// Helper method to get week number
+  // This is needed for the mockData creation
+  declare global {
+    interface Date {
+      getWeek(): number;
+    }
   }
 
+// Define proper interfaces for all data structures
+interface Device {
+  device_type: string;
+  device_id?: string;
+  status?: boolean;
+  energy_value?: number;
+  unit?: string;
+  usage_hours?: number;
+}
+
+interface RoomData {
+  energy_value: number;
+  unit: string;
+  device_count: number;
+  room_id?: string;
+  devices: Device[];
+}
+
+interface TimeData {
+  total_energy: number;
+  unit: string;
+  date?: string;
+  month?: string;
+  year?: string;
+  week?: string;
+  rooms: Record<string, RoomData>;
+}
+
+interface EnergyData {
+  daily: TimeData;
+  weekly: TimeData;
+  monthly: TimeData;
+  yearly: TimeData;
+}
+
+interface HubData {
+  hub_id: string;
+  hub_name: string;
+  hub_type: string;
+  energy_data: EnergyData;
+}
+
+interface Home {
+  hubCode: string;
+  [key: string]: any; // Add other properties as needed
+}
+
+interface ChartData {
+  name: string;
+  energy: number;
+  devices: number;
+}
+
+interface LiveEnergyData {
+  hub_id: string;
+  hub_name: string;
+  total_consumption: number;
+  unit: string;
+  active_devices: number;
+  total_devices: number;
+}
+
+interface NewEndpointResponse {
+  hub_code: string;
+  date: string;
+  total_energy: number;
+  unit: string;
+  rooms: Record<string, RoomData>;
+}
+
+const StatsTenant = () => {
+  const navigate = useNavigate();
+  const [energyData, setEnergyData] = useState<ChartData[]>([]);
   const [selectedHome, setSelectedHome] = useState<Home | null>(null);
   const [loading, setLoading] = useState(true);
-  const [timeFilter, setTimeFilter] = useState('monthly'); // Default filter
-  const [hubData, setHubData] = useState(null);
-  const [error, setError] = useState(null);
+  const [timeFilter, setTimeFilter] = useState<'daily' | 'weekly' | 'monthly' | 'yearly'>('monthly'); // Default filter
+  const [hubData, setHubData] = useState<HubData | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   // Load selected home from localStorage
   useEffect(() => {
@@ -44,8 +117,10 @@ const StatsTenant = () => {
           
           if (response.ok) {
             // New endpoint format worked
-            const data = await response.json();
-            const formattedData = {
+            const data = await response.json() as NewEndpointResponse;
+            
+            // Map the new endpoint format to the expected format
+            const formattedData: HubData = {
               hub_id: data.hub_code,
               hub_name: `Hub ${data.hub_code}`,
               hub_type: "tenant",
@@ -56,15 +131,16 @@ const StatsTenant = () => {
                   date: data.date,
                   month: timeFilter === 'monthly' ? data.date?.split('-')[1] : undefined,
                   year: timeFilter === 'yearly' || timeFilter === 'monthly' ? data.date?.split('-')[0] : undefined,
-                  week: timeFilter === 'weekly' ? data.week : undefined,
+                  week: timeFilter === 'weekly' ? data.date?.split('-')[1] : undefined,
                   rooms: data.rooms
                 }
-              }
+              } as unknown as EnergyData
             };
+            
             setHubData(formattedData);
             processEnergyData(formattedData, timeFilter);
           } else {
-            // Try the fallback endpoints
+            // Try the fallback endpoints - original format
             const fallbackEndpoint = `${API_BASE_URL}/hub/${selectedHome.hubCode}/energy`;
             const fallbackResponse = await fetch(fallbackEndpoint);
             
@@ -72,7 +148,7 @@ const StatsTenant = () => {
               throw new Error(`API error: ${fallbackResponse.status}`);
             }
             
-            const fallbackData = await fallbackResponse.json();
+            const fallbackData = await fallbackResponse.json() as HubData;
             setHubData(fallbackData);
             processEnergyData(fallbackData, timeFilter);
           }
@@ -85,9 +161,9 @@ const StatsTenant = () => {
             const roomsResponse = await fetch(`${API_BASE_URL}/hubs/${selectedHome.hubCode}/rooms`);
             if (roomsResponse.ok) {
               const roomsData = await roomsResponse.json();
-              const formattedRooms = {};
+              const formattedRooms: Record<string, RoomData> = {};
               
-              roomsData.forEach(room => {
+              roomsData.forEach((room: { roomName: string | number; device_count: any; roomId: any; device_details: any; }) => {
                 formattedRooms[room.roomName] = {
                   energy_value: 0, // Default to 0 since we couldn't get energy data
                   unit: "kWh",
@@ -97,15 +173,37 @@ const StatsTenant = () => {
                 };
               });
               
-              const mockData = {
+              const mockData: HubData = {
                 hub_id: selectedHome.hubCode,
                 hub_name: `Hub ${selectedHome.hubCode}`,
                 hub_type: "tenant",
                 energy_data: {
-                  [timeFilter]: {
+                  daily: {
                     total_energy: 0,
                     unit: "kWh",
                     date: new Date().toISOString().split('T')[0],
+                    rooms: formattedRooms
+                  },
+                  weekly: {
+                    total_energy: 0,
+                    unit: "kWh",
+                    date: new Date().toISOString().split('T')[0],
+                    week: new Date().getWeek().toString(),
+                    rooms: formattedRooms
+                  },
+                  monthly: {
+                    total_energy: 0,
+                    unit: "kWh",
+                    date: new Date().toISOString().split('T')[0],
+                    month: (new Date().getMonth() + 1).toString(),
+                    year: new Date().getFullYear().toString(),
+                    rooms: formattedRooms
+                  },
+                  yearly: {
+                    total_energy: 0,
+                    unit: "kWh",
+                    date: new Date().toISOString().split('T')[0],
+                    year: new Date().getFullYear().toString(),
                     rooms: formattedRooms
                   }
                 }
@@ -129,27 +227,45 @@ const StatsTenant = () => {
     fetchHubData();
   }, [selectedHome, timeFilter]);
 
+  
+  
+  Date.prototype.getWeek = function(): number {
+    const date = new Date(this.getTime());
+    date.setHours(0, 0, 0, 0);
+    date.setDate(date.getDate() + 3 - (date.getDay() + 6) % 7);
+    const week1 = new Date(date.getFullYear(), 0, 4);
+    return 1 + Math.round(((date.getTime() - week1.getTime()) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7);
+  };
+
   // Process energy data based on the time filter
-  const processEnergyData = (hubData, timeFilter) => {
-    if (!hubData || !hubData.energy_data || !hubData.energy_data[timeFilter]) {
+  const processEnergyData = (hubData: HubData | null, timeFilter: string) => {
+    if (!hubData || !hubData.energy_data) {
       setEnergyData([]);
       return;
     }
 
-    const timeData = hubData.energy_data[timeFilter];
+    // Handle the case where the specific timeFilter data doesn't exist yet
+    if (!hubData.energy_data[timeFilter as keyof EnergyData]) {
+      console.error(`No ${timeFilter} data available in the hub data`);
+      setEnergyData([]);
+      return;
+    }
+
+    const timeData = hubData.energy_data[timeFilter as keyof EnergyData];
     const roomsData = timeData.rooms;
     
     if (!roomsData) {
+      console.error(`No rooms data for ${timeFilter}`);
       setEnergyData([]);
       return;
     }
 
     // Transform rooms data into the format expected by the chart
-    const formattedData = Object.entries(roomsData).map(([roomName, roomData]) => {
+    const formattedData: ChartData[] = Object.entries(roomsData).map(([roomName, roomData]) => {
       return {
         name: roomName,
-        energy: roomData.energy_value,
-        devices: roomData.device_count
+        energy: roomData.energy_value || 0,
+        devices: roomData.device_count || 0
       };
     });
 
@@ -171,7 +287,9 @@ const StatsTenant = () => {
   };
 
   // Function to get detailed room data
-  const fetchRoomDetails = async (roomId) => {
+  const fetchRoomDetails = async (roomId: string) => {
+    if (!roomId) return;
+    
     try {
       // Try new endpoint format first
       const response = await fetch(`${API_BASE_URL}/room/${roomId}/energy`);
@@ -276,7 +394,7 @@ const StatsTenant = () => {
     try {
       const response = await fetch(`${API_BASE_URL}/hubs/${selectedHome.hubCode}/live-energy`);
       if (response.ok) {
-        const data = await response.json();
+        const data = await response.json() as LiveEnergyData;
         toaster.create({
           description: `Current power consumption: ${data.total_consumption} ${data.unit} - Active devices: ${data.active_devices}/${data.total_devices}`,
           type: "info",

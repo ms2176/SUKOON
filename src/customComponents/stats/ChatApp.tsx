@@ -456,7 +456,7 @@ const EnergyAssistantChat = () => {
     devices: []
   });
   
-  const apikey = "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"; // Groq API key
+  const apikey = "apikey"; // Groq API key
   const hubCode = "GFM4Y"; // Default hub code
   const baseApiUrl = "https://api.sukoonhome.me"; // Base API URL
 
