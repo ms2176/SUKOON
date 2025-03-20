@@ -1,126 +1,306 @@
 /* login.css */
 
-    body {
-        overflow: auto;
-        overflow-y: auto;
-        z-index: 20;
-    }
+:root {
+  --primary-green: #2ECC71;
+  --primary-dark: #2C3E50;
+  --secondary-green: #27AE60;
+  --accent-blue: #3498DB;
+  --background-light: #F8FAFC;
+  --text-dark: #1A202C;
+  --text-light: #FFFFFF;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.12);
+  --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
+  --shadow-lg: 0 10px 15px rgba(0,0,0,0.1);
+  --gradient-green: linear-gradient(135deg, #2ECC71 0%, #27AE60 100%);
+}
 
-   
+body {
+  overflow: auto;
+  overflow-y: auto;
+  z-index: 20;
+  background-color: var(--background-light);
+  color: var(--text-dark);
+}
 
-    .homepageContainer {
-        display: flex;
-        background: white;
-        columns: '#454545';
-        z-index: 1;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+.homepageContainer {
+  display: flex;
+  flex-direction: column;
+  background: var(--background-light);
+  box-shadow: var(--shadow-md);
+  border-radius: 24px;
+  margin: 16px;
+  padding-bottom: 32px;
+  min-height: calc(100vh - 32px);
+  overflow: hidden;
+}
 
-        
-    }
+.homepageHeader {
+  background: var(--gradient-green);
+  height: auto;
+  align-items: center;
+  justify-content: center;
+  align-content: center;
+  z-index: 1;
+  padding: 24px;
+  border-radius: 24px 24px 0 0;
+}
 
-    .homepageHeader {
-        background: #6cce58;
-        height: auto;
-        align-items: center;
-        justify-content: center;
-        align-content: center;
-        z-index: 1;
-    }
+.pulseBoxContainer {
+  position: relative;
+  width: 100%;
+  height: 400px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 20px 0;
+  overflow: hidden;
+}
+
+.pulseAnimation {
+  position: absolute; 
+  width: 100%; 
+  height: 100%;
+  max-width: 600px;
+  max-height: 600px;
+  z-index: 1; 
+  background-color: transparent;
+}
+
+.pulseBox {
+  position: relative;
+  z-index: 2;
+  background: var(--gradient-green);
+  border-radius: 50%;
+  width: 200px;
+  height: 200px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  box-shadow: var(--shadow-lg);
+  backdrop-filter: blur(8px);
+}
+
+.introHomepage {
+  font-size: 2.5rem;
+  margin-bottom: 10px;
+  color: var(--text-light);
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+
+.guestIntro, .totalConsShow, .totConsHeading {
+  font-family: 'SpotifyFont', sans-serif;
+  background: transparent;
+  color: var(--text-light);
+  opacity: 0.9;
+}
+
+.totalConsShow {
+  font-size: 1.25rem;
+  font-weight: bold;
+  color: var(--text-light);
+  text-align: center;
+}
+
+.pinnedHeader, .editHeader {
+  font-family: 'SpotifyFont', sans-serif;
+  color: #21334a;
+}
+
+.shadowPinned {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.statsCard {
+  background: white;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.statsCard:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.pinnedSection {
+  background: white;
+  border-radius: 20px;
+  margin: 24px;
+  padding: 24px;
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+}
+
+.pinnedHeader {
+  color: var(--primary-dark);
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+.pinnedGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 20px;
+  padding: 16px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.pinnedItem {
+  background: white;
+  border-radius: 16px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  box-shadow: var(--shadow-sm);
+}
+
+.pinnedItem:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+}
+
+.navButton {
+  width: 40px;
+  height: 40px;
+  padding: 8px;
+  border-radius: 8px;
+  transition: all 0.2s ease-in-out;
+}
+
+.navButton:hover {
+  transform: translateY(-2px);
+  background-color: rgba(108, 206, 88, 0.1);
+}
+
+.navButton:active {
+  transform: translateY(0);
+}
+
+.navButton[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@media (min-width: 481px) {
+
+  .pulseAnimation {
+    position: absolute; 
+    width: 600px; 
+    height: 600px;
+    z-index: 0; 
+    background-color: transparent;
+  }
+
+  .pulseBox {
+    background: var(--gradient-green);
+    border-radius: 50%;
+    height: 220px;
+    width: 220px;
+    position: relative;
+    z-index: 1;
+    justify-content: center;
+    align-items: center;
+    align-content: center;
+    display: flex;
+    box-shadow: var(--shadow-lg);
+    backdrop-filter: blur(8px);
+  }
+
+  .pulseBoxContainer {
+    margin-top: 20px;
+  }
+
+  .pinnedinfoContainer {
+    gap: 200px;
+  }
+
+  .pulseBoxContainer {
+    height: 400px;
+  }
+
+  .pulseAnimation {
+    max-width: 600px;
+    max-height: 600px;
+  }
+
+  .pulseBox {
+    height: 180px;
+    width: 180px;
+  }
+
+  .totalConsShow {
+    font-size: 1.75rem;
+  }
+
+  .pinnedGrid {
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 20px;
+    padding: 16px;
+  }
+}
+
+@media (min-width: 768px) {
+  .homepageContainer {
+    margin: 32px;
+  }
+
+  .statsGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .pulseBox {
+    height: 220px;
+    width: 220px;
+  }
+
+  .totalConsShow {
+    font-size: 2rem;
+  }
+
+  .statsGrid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+  }
+
+  .pinnedGrid {
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .pinnedGrid {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 16px;
+    padding: 12px;
+  }
+
+  .pinnedSection {
+    margin: 16px;
+    padding: 16px;
+  }
+
+  .pulseBox {
+    width: 160px;
+    height: 160px;
+  }
+
+  .pulseBoxContainer {
+    height: 300px;
+  }
+}
 
 
-    .pulseBoxContainer {
-        align-content: center; 
-        align-items: center;
-        justify-content: center; 
-        height: clamp(300px, 20vw, 600px);         
-        display: flex;
-        position: relative;
-    }
-
-    .pulseAnimation {
-        position: absolute; 
-        width: 500px; 
-        height: 500px;
-        z-index: 0; 
-        background-color: transparent;
-    }
-
-    .pulseBox {
-        background-color: #05FF02;
-        border-radius: 100px;
-        height: 150px;
-        width: 150px;
-        position: relative;
-        z-index: 1;
-        justify-content: center;
-        align-items: center;
-        align-content: center;
-        display: flex;
 
 
-    }
-
-    .introHomepage {
-        font-size: 210%;
-        margin-bottom: 10px;
-    }
-
-    .guestIntro, .totalConsShow, .totConsHeading {
-        font-family: 'SpotifyFont', sans-serif;
-        background: transparent;
-
-    }
-
-    .pinnedHeader, .editHeader {
-        font-family: 'SpotifyFont', sans-serif;
-        color: #21334a;
-    }
-
-    .shadowPinned {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
 
 
-    }
-
-    @media (min-width: 481px) {
-
-        .pulseAnimation {
-            position: absolute; 
-            width: 600px; 
-            height: 600px;
-            z-index: 0; 
-            background-color: transparent;
-        }
-
-        .pulseBox {
-            background-color: #05FF02;
-            border-radius: 200px;
-            height: 200px;
-            width: 200px;
-            position: relative;
-            z-index: 1;
-            justify-content: center;
-            align-items: center;
-            align-content: center;
-            display: flex;
-    
-    
-        }
-
-        .pulseBoxContainer {
-            margin-top: 20px;
-        }
-
-        .pinnedinfoContainer {
-            gap: 200px;
-        }
-    }
-        
-    
-
-  
-    
-
-  

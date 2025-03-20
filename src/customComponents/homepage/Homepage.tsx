@@ -8,11 +8,12 @@ import {
   Image,
   Text,
   Grid,
+  IconButton,
+  ButtonGroup,
 } from "@chakra-ui/react";
 import React, { useState, useRef, useEffect } from "react";
 import "./Homepage.css";
 import Dropdown from "./Dropdown.tsx";
-import MiniDisplays from "./miniDisplays.tsx";
 import { useNavigate } from "react-router-dom"; // Import useNavigate
 import Lottie from "react-lottie-player";
 import PulseAnimationGreen from "@/images/animatedIcons/Animation - 1737092091343.json";
@@ -151,6 +152,34 @@ const normalizeDeviceType = (deviceType: string): DeviceType => {
       return "light"; // Default to 'light' if the type is unknown
   }
 };
+
+interface MiniDisplaysProps {
+  Icon: React.ElementType;
+  title: string;
+  value: string;
+}
+
+const MiniDisplays = ({ Icon, title, value }: MiniDisplaysProps) => (
+  <Box
+    className="statsCard"
+    display="flex"
+    alignItems="center"
+    gap={4}
+    p={6}
+    width="full"
+    maxW="320px"
+  >
+    <Icon size={24} color="var(--primary-green)" />
+    <Box>
+      <Text color="gray.600" fontSize="sm" fontWeight="medium">
+        {title}
+      </Text>
+      <Text fontSize="2xl" fontWeight="bold" color="var(--primary-dark)">
+        {value}
+      </Text>
+    </Box>
+  </Box>
+);
 
 const Homepage: React.FC<{
   selectedHomePass: Home | null;
@@ -481,7 +510,7 @@ const Homepage: React.FC<{
   };
 
   return (
-    <div style={{ overflow: "hidden" }}>
+    <Box bg="var(--background-light)" minH="100vh">
       {isAddHomeVisible && (
         <AddHome
           closeAddHome={() => setIsAddHomeVisible(false)}
@@ -498,331 +527,203 @@ const Homepage: React.FC<{
         />
       )}
 
-      <Stack
-        className="homepageContainer"
-        position={"relative"}
-        display={"flex"}
-        overflow={"hidden"}
-      >
-        <Box
-          className="homepageHeader"
-          bg={selectedHome?.homeType === "admin" ? "#0b13b0" : "#6cce58"}
-        >
-          <Heading
-            bg={"transparent"}
-            ml={"20px"}
-            mt={"20px"}
-            mb={"20px"}
-            fontWeight={"extrabold"}
-            className="introHomepage"
-          >
+      <Stack className="homepageContainer">
+        <Box className="homepageHeader">
+          <Heading className="introHomepage">
             Ya Halla, <span className="guestIntro">{username}</span>
           </Heading>
         </Box>
 
-        <HStack
-          align="center"
-          ml="20px"
-          mt={"10px"}
-          zIndex={1}
-          bg={"transparent"}
-          width={"90%"}
+        {/* Homes Selector */}
+        <HStack 
+          gap={4} 
+          p={6} 
+          bg="white" 
+          borderRadius="xl" 
+          boxShadow="var(--shadow-sm)"
+          m={6}
         >
-          <Heading color={"#454545"} bg={"transparent"}>
-            Homes:
-          </Heading>
+          <Heading size="md" color="var(--primary-dark)">Homes:</Heading>
           <Dropdown
             homes={homes}
-            onSelect={(home) => {
-              handleSelectHome(home);
-              onSelectHome(home);
-            }}
+            onSelect={handleSelectHome}
             initialShow={selectedHome?.homeName || "Choose Home..."}
           />
           <Button
-            bg={"transparent"}
-            width={"auto"}
-            height={"auto"}
+            className="navButton"
             onClick={toggleAddHome}
+            variant="ghost"
+            colorScheme="green"
           >
-            <TbCirclePlusFilled color="#21334a" size={"50%"} />
+            <Stack spaceY={-3} display={'flex'} justifyContent={'center'} alignItems={'center'} alignContent={'center'}>
+              <TbCirclePlusFilled size={'70%'} style={{ background: 'transparent' }} color="#21334a" />
+            </Stack>
           </Button>
-
-          <Box
-            bg={"white"}
-            width={"50%"}
-            height={"25px"}
-            justifyContent={"center"}
-            alignItems={"center"}
-            alignContent={"center"}
-            display={"flex"}
-            borderRadius={20}
+          <Button
+            className="navButton"
             onClick={toggleEditHomes}
+            variant="ghost"
           >
-            <MdOutlineEdit
-              color="#21334a"
-              size={"100%"}
-              style={{ background: "transparent" }}
-            />
-          </Box>
+            <Stack spaceY={-3} display={'flex'} justifyContent={'center'} alignItems={'center'} alignContent={'center'}>
+              <MdOutlineEdit size={'70%'} style={{ background: 'transparent' }} color="#21334a" />
+            </Stack>
+          </Button>
         </HStack>
 
-        <Flex
-          display={"flex"}
-          justifyContent={"center"}
-          alignItems={"center"}
-          alignContent={"center"}
-          mt={"25px"}
-          zIndex={1}
-          bg={"transparent"}
-        >
-          <HStack
-            spaceX={"-5%"}
-            justifyContent={"center"}
-            alignItems={"center"}
-            alignContent={"center"}
-            bg={"transparent"}
+        {/* Stats Cards */}
+        <Box px={[4, 6]}>
+          <Grid
+            templateColumns={{ base: "1fr", md: "repeat(3, 1fr)" }}
+            gap={[4, 6]}
+            width="100%"
           >
             <MiniDisplays
               Icon={FiMonitor}
-              title="Active devices:"
+              title="Active devices"
               value={activeDevicesCount.toString()}
             />
             <MiniDisplays
               Icon={FiHome}
-              title="Home Status:"
+              title="Home Status"
               value="Good"
             />
             <MiniDisplays
               Icon={FiZap}
-              title="Energy Generation:"
+              title="Energy Generation"
               value="50KW/h"
             />
-          </HStack>
-        </Flex>
+          </Grid>
+        </Box>
 
-        <Flex className="pulseBoxContainer">
-          <Lottie
-            loop
-            animationData={
-              selectedHome?.homeType === "admin"
-                ? PulseAnimationBlue
-                : PulseAnimationGreen
-            }
-            play
-            className="pulseAnimation"
-            style={{ background: "transparent" }}
-          />
-          <Box
-            className="pulseBox"
-            bg={selectedHome?.homeType === "admin" ? "#0b13b0" : "#05FF02"}
-          >
-            <Heading
-              bg={"transparent"}
-              fontWeight={"bold"}
-              className="totalConsShow"
+        {/* Energy Pulse Animation */}
+        <Box position="relative" width="100%">
+          <Flex className="pulseBoxContainer">
+            <Lottie
+              loop
+              animationData={selectedHome?.homeType === "admin" ? PulseAnimationBlue : PulseAnimationGreen}
+              play
+              className="pulseAnimation"
+            />
+            <Flex
+              className="pulseBox"
+              alignItems="center"
+              justifyContent="center"
+              flexDirection="column"
+              gap={2}
             >
-              50.1KW/h
-            </Heading>
-          </Box>
-        </Flex>
-
-        <Flex
-          zIndex={1}
-          display={"flex"}
-          alignItems={"center"}
-          justifyContent={"center"}
-        >
-          <Heading
-            color={selectedHome?.homeType === "admin" ? "#0b13b0" : "#05FF02"}
-            textDecor={"underline"}
-            className="totConsHeading"
-          >
-            Total Consumption
-          </Heading>
-        </Flex>
-
-        <Flex className="shadowPinned">
-          <HStack
-            ml="20px"
-            zIndex={1}
-            spaceX={"20%"}
-            display={"flex"}
-            mt={"20px"}
-            className="pinnedinfoContainer"
-          >
-            <Heading fontSize={"220%"} className="pinnedHeader">
-              Pinned
-            </Heading>
-
-            <HStack
-              display={"flex"}
-              bg={"transparent"}
-              transform={"translateX(-5%)"}
-            >
-              <Flex
-                bg={selectedHome?.homeType === "admin" ? "#0b13b0" : "#6cce58"} // Change background color based on homeType
-                borderRadius="full"
-                overflow="hidden"
-                alignItems="center"
-                height={"3vh"}
+              <Text className="totalConsShow">50.1KW/h</Text>
+              <Text 
+                fontSize={["xs", "sm"]} 
+                color="white" 
+                opacity={0.9}
+                textAlign="center"
               >
+                Total Consumption
+              </Text>
+            </Flex>
+          </Flex>
+        </Box>
+
+        {/* Pinned Items Section */}
+        <Box className="pinnedSection">
+          <Flex justify="space-between" align="center" mb={6}>
+            <Heading className="pinnedHeader">Pinned Items</Heading>
+            <HStack p={2} gap={2}>
+              <ButtonGroup size="sm" attached variant="outline">
                 <Button
-                  bg="transparent"
-                  color="white"
-                  px={6}
-                  py={2}
-                  fontSize="md"
-                  _hover={{
-                    bg:
-                      selectedHome?.homeType === "admin"
-                        ? "#0a0f8f"
-                        : "#5bb046",
-                  }} // Change hover color based on homeType
+                  className="navButton"
                   onClick={() => setPinnedMenuVisible(true)}
                 >
-                  +
+                  <Stack spaceY={-3} display={'flex'} justifyContent={'center'} alignItems={'center'} alignContent={'center'}>
+                    <TbCirclePlusFilled size={'70%'} style={{ background: 'transparent' }} color="#21334a" />
+                  </Stack>
                 </Button>
                 <Button
-                  bg="transparent"
-                  color="white"
-                  px={6}
-                  py={2}
-                  fontSize="md"
-                  _hover={{
-                    bg:
-                      selectedHome?.homeType === "admin"
-                        ? "#0a0f8f"
-                        : "#5bb046",
-                  }} // Change hover color based on homeType
+                  className="navButton"
                   onClick={() => setIsEditing(!isEditing)}
                 >
-                  -
+                  <Stack spaceY={-3} display={'flex'} justifyContent={'center'} alignItems={'center'} alignContent={'center'}>
+                    <MdOutlineEdit size={'70%'} style={{ background: 'transparent' }} color="#21334a" />
+                  </Stack>
                 </Button>
-              </Flex>
-
-              <FaExpandAlt
-                color="#21334a"
-                size={"15%"}
+              </ButtonGroup>
+              <Button
+                className="navButton"
+                variant="ghost"
                 onClick={() => setIsExpanded(!isExpanded)}
-                style={{ cursor: "pointer" }}
-              />
-            </HStack>
-          </HStack>
-        </Flex>
-
-        <Flex
-          justifyContent={"center"}
-          display={"flex"}
-          alignItems={"center"}
-          alignContent={"center"}
-          zIndex={1}
-        >
-          <Box
-            bg={"white"}
-            width={isExpanded ? "100vw" : "95%"}
-            height={isExpanded ? "100vh" : "300px"}
-            overflow={"scroll"}
-            position={isExpanded ? "fixed" : "static"}
-            top={isExpanded ? "0" : "auto"}
-            left={isExpanded ? "0" : "auto"}
-            zIndex={isExpanded ? 1000 : "auto"}
-            mb={"20%"}
-          >
-            {isExpanded && (
-              <Box
-                position="absolute"
-                top="20px"
-                right="20px"
-                zIndex={1001}
-                cursor="pointer"
-                onClick={() => setIsExpanded(false)}
-                bg={"transparent"}
               >
-                <AiOutlineShrink size={24} color="#21334a" />
-              </Box>
-            )}
+                <Stack spaceY={-3} display={'flex'} justifyContent={'center'} alignItems={'center'} alignContent={'center'}>
+                  {isExpanded ? 
+                    <AiOutlineShrink size={'70%'} style={{ background: 'transparent' }} color="#21334a" /> :
+                    <FaExpandAlt size={'70%'} style={{ background: 'transparent' }} color="#21334a" />
+                  }
+                </Stack>
+              </Button>
+            </HStack>
+          </Flex>
 
-{isExpanded && (
-  <Box
-    textAlign="center"
-    mb={4}
-    position="sticky"  // Makes the heading stick at the top while scrolling
-    top={0}  // Sticks to the very top of the scrollable area
-    zIndex={1}  // Keeps it above the images when scrolling
-    bg="white"  // Background color to avoid overlap visibility issues
-    py={2}  // Adds some padding for better aesthetics
-  >
-    <Heading fontSize="2xl" color="#21334a" bg={"transparent"}>
-      Pinned Items
-    </Heading>
-  </Box>
-)}
-
-            <Grid templateColumns="repeat(2, 1fr)" gap={4} p={4}>
-              {pinnedItems.map((item) => (
-                <Box
-                  key={item.id}
-                  borderRadius="20px"
-                  overflow="hidden"
-                  bg="white"
-                  p={3}
-                  cursor="pointer"
-                  transition="all 0.3s ease-in-out"
-                  boxShadow="0px 5px 10px rgba(0, 0, 0, 0.05)"
-                  border={`1px solid ${
-                    isEditing ? "red" : "rgba(0, 0, 0, 0.08)"
-                  }`}
-                  _hover={{
-                    transform: "translateY(-5px)",
-                    boxShadow: "0px 10px 20px rgba(0, 0, 0, 0.1)",
-                    backgroundColor: "#f5f5f5",
-                  }}
-                  onClick={() => {
-                    if (isEditing) {
-                      handleUnpinItem(item);
-                    } else {
-                      if (item.type === "room") {
-                        navigate(`/devices/${item.id}`);
-                      } else if (item.type === "device") {
-                        navigate(`/device/${item.id}`);
-                      } else if (item.type === "unit") {
-                        navigate(`/unit/${item.id}`);
-                      }
+          {/* Pinned Items Grid */}
+          <Grid className="pinnedGrid">
+            {pinnedItems.map((item) => (
+              <Box
+                key={item.id}
+                borderRadius="16px"
+                overflow="hidden"
+                bg="white"
+                p={4}
+                cursor="pointer"
+                transition="all 0.3s ease-in-out"
+                boxShadow="0 4px 6px rgba(0, 0, 0, 0.05)"
+                border="1px solid rgba(0, 0, 0, 0.08)"
+                _hover={{
+                  transform: "translateY(-4px)",
+                  boxShadow: "0 8px 15px rgba(0, 0, 0, 0.1)",
+                }}
+                onClick={() => {
+                  if (isEditing) {
+                    handleUnpinItem(item);
+                  } else {
+                    if (item.type === "room") {
+                      navigate(`/devices/${item.id}`);
+                    } else if (item.type === "device") {
+                      navigate(`/device/${item.id}`);
+                    } else if (item.type === "unit") {
+                      navigate(`/unit/${item.id}`);
                     }
-                  }}
-                  height="180px"
-                >
-                  <Image
-                    src={
-                      item.type === "room"
-                        ? (item as Room).image || NoImage
-                        : item.type === "device"
-                        ? deviceTypeToImage[
-                            normalizeDeviceType((item as Device).deviceType)
-                          ] || LightImg
-                        : (item as Unit).image || NoImage // Handle units
-                    }
-                    alt={
-                      item.type === "room"
-                        ? (item as Room).roomName
-                        : item.type === "device"
-                        ? (item as Device).deviceName
-                        : (item as Unit).unitName
-                    }
-                    borderRadius="12px"
-                    objectFit="cover"
-                    width="100%"
-                    height="90px"
-                  />
-                  <Text fontWeight="bold" fontSize="md" mt={2} color="#6cce58">
+                  }
+                }}
+              >
+                <Image
+                  src={
+                    item.type === "room"
+                      ? (item as Room).image || NoImage
+                      : item.type === "device"
+                      ? deviceTypeToImage[
+                          normalizeDeviceType((item as Device).deviceType)
+                        ] || LightImg
+                      : (item as Unit).image || NoImage // Handle units
+                  }
+                  alt={
+                    item.type === "room"
+                      ? (item as Room).roomName
+                      : item.type === "device"
+                      ? (item as Device).deviceName
+                      : (item as Unit).unitName
+                  }
+                  borderRadius="12px"
+                  objectFit="cover"
+                  width="100%"
+                  height="140px"
+                />
+                <Box mt={3}>
+                  <Text fontWeight="600" fontSize="md" color="#2C3E50">
                     {item.type === "room"
                       ? (item as Room).roomName
                       : item.type === "device"
                       ? (item as Device).deviceName
                       : (item as Unit).unitName}
                   </Text>
-                  <Text color="gray.500" fontSize="sm">
+                  <Text color="gray.600" fontSize="sm" mt={1}>
                     {item.type === "room"
                       ? `${(item as Room).devices.length} devices`
                       : item.type === "device"
@@ -830,10 +731,10 @@ const Homepage: React.FC<{
                       : "Unit"}
                   </Text>
                 </Box>
-              ))}
-            </Grid>
-          </Box>
-        </Flex>
+              </Box>
+            ))}
+          </Grid>
+        </Box>
       </Stack>
 
       {selectedHome?.homeType === "admin" ? (
@@ -853,7 +754,7 @@ const Homepage: React.FC<{
           refreshPinnedMenu={refreshPinnedMenu}
         />
       )}
-    </div>
+    </Box>
   );
 };
 
