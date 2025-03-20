@@ -1,17 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
 import styled from 'styled-components';
-import mainview from './hub-rooms-main-view.json';
-import exampleroom from './kitchen.json';
 
 // Button Component
 const Button = ({ onClick }) => {
   return (
     <StyledWrapper>
       <button className="chatBtn" onClick={onClick} aria-label="Open chat">
-        {/* Replace SVG with emoji */}
-        <span style={{ fontSize: '24px' }}>💬</span>
-        {/* Tooltip */}
-        <span className="tooltip">Chat</span>
+        <span style={{ fontSize: '155%' }}>💡</span>
       </button>
     </StyledWrapper>
   );
@@ -19,9 +14,10 @@ const Button = ({ onClick }) => {
 
 const StyledWrapper = styled.div`
   position: fixed;
-  bottom: 20px;
+  bottom: 75px;
   right: 20px;
   z-index: 1000;
+  background-color: transparent;
 
   .chatBtn {
     width: 55px;
@@ -30,54 +26,25 @@ const StyledWrapper = styled.div`
     align-items: center;
     justify-content: center;
     border-radius: 50%;
-    border: 2px solid black; /* Added a visible black border */
-    background-color: rgb(255, 255, 255);
-    background-image: linear-gradient(147deg, rgb(255, 255, 255), rgb(255, 255, 255), rgb(255, 255, 255));
+    border: 2px solid #4682B4; /* Energy blue */
     cursor: pointer;
     box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.164);
     position: relative;
     background-size: 300%;
     background-position: left;
     transition-duration: 1s;
+    background-color: rgb(255, 255, 255);
 
-    svg {
-      width: 24px;
-      height: 24px;
-      fill: white;
-    }
-    
     /* Add active state styling */
     &:active {
       transform: scale(0.95);
-      box-shadow: 3px 3px 6px rgba(0, 0, 0, 0.2);
-      border: 3px solid black; /* Thicker border when clicked */
+      border: 3px solid #4682B4; /* Thicker border when clicked */
     }
-  }
-
-  .tooltip {
-    position: absolute;
-    top: -40px;
-    opacity: 0;
-    background-color: rgb(255, 255, 255);
-    color: black; /* Changed tooltip text color to black */
-    padding: 5px 10px;
-    border-radius: 5px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition-duration: 0.5s;
-    pointer-events: none;
-    letter-spacing: 0.5px;
-  }
-
-  .chatBtn:hover .tooltip {
-    opacity: 1;
-    transition-duration: 0.5s;
   }
 
   .chatBtn:hover {
     background-position: right;
-    transition-duration: 1s;
+    transition-duration: 0.5s;
   }
 `;
 
@@ -105,17 +72,22 @@ const Form = ({ onClose, onSendMessage, messages, isLoading }) => {
     <StyledFormWrapper>
       <div className="card">
         <div className="chat-header">
-          Chat
+          Energy Assistant
           <button className="close-button" onClick={onClose} aria-label="Close chat">×</button>
         </div>
         <div className="chat-window" ref={chatWindowRef}>
           <ul className="message-list">
+            {messages.length === 0 && (
+              <li className="message bot">
+                Hi there! I'm your energy assistant. Ask me about your energy usage, top consumers, or how to save energy.
+              </li>
+            )}
             {messages.map((msg, index) => (
               <li key={index} className={`message ${msg.sender}`}>
                 {msg.text}
               </li>
             ))}
-            {isLoading && <li className="message bot">Thinking...</li>}
+            {isLoading && <li className="message bot">Analyzing your energy data...</li>}
           </ul>
         </div>
         <div className="chat-input">
@@ -123,7 +95,7 @@ const Form = ({ onClose, onSendMessage, messages, isLoading }) => {
             ref={inputRef}
             type="text"
             className="message-input"
-            placeholder="Type your message here"
+            placeholder="Ask about your energy usage..."
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSend()}
@@ -135,32 +107,33 @@ const Form = ({ onClose, onSendMessage, messages, isLoading }) => {
       </div>
     </StyledFormWrapper>
   );
-}
+};
 
 const StyledFormWrapper = styled.div`
   position: fixed;
-  bottom: 90px;
+  bottom: 120px;
   right: 20px;
   z-index: 1000;
 
   .card {
-    width: 260px;
+    width: 320px;
     background-color: #fff;
     border: 1px solid #ccc;
-    border-radius: 5px;
-    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   }
 
   .chat-header {
-    background-color: #333;
+    background-color: #4682B4; /* Energy blue */
     color: #fff;
-    padding: 10px;
-    font-size: 18px;
-    border-top-left-radius: 5px;
-    border-top-right-radius: 5px;
+    padding: 12px 15px;
+    font-size: 16px;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    font-weight: 500;
   }
 
   .close-button {
@@ -172,9 +145,9 @@ const StyledFormWrapper = styled.div`
   }
 
   .chat-window {
-    height: 220px;
-    overflow-y: scroll;
-    padding: 10px;
+    height: 300px;
+    overflow-y: auto;
+    padding: 15px;
   }
 
   .message-list {
@@ -184,54 +157,68 @@ const StyledFormWrapper = styled.div`
   }
 
   .message {
-    margin-bottom: 10px;
-    padding: 8px;
-    border-radius: 5px;
-    max-width: 80%;
+    margin-bottom: 12px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    max-width: 85%;
+    line-height: 1.4;
   }
 
   .message.user {
-    background-color: #007bff;
+    background-color: #4682B4; /* Energy blue */
     color: white;
     margin-left: auto;
   }
 
   .message.bot {
-    background-color: #f1f1f1;
+    background-color: #f0f7ff; /* Lighter blue for bot */
     color: #333;
     margin-right: auto;
+    border: 1px solid #e0eeff;
   }
 
   .chat-input {
     display: flex;
     align-items: center;
-    padding: 10px;
-    border-top: 1px solid #ccc;
+    padding: 12px 15px;
+    border-top: 1px solid #e6e6e6;
   }
 
   .message-input {
     flex: 1;
-    border: 1px solid #ccc;
+    border: 1px solid #d9d9d9;
+    border-radius: 4px;
     outline: none;
-    padding: 5px;
+    padding: 8px 12px;
     font-size: 14px;
-    color: #333; /* Changed input text color to dark */
+    color: #333;
+  }
+
+  .message-input:focus {
+    border-color: #4682B4;
+    box-shadow: 0 0 0 2px rgba(70, 130, 180, 0.2);
   }
 
   .send-button {
     border: none;
     outline: none;
-    background-color: #333;
+    background-color: #4682B4;
     color: #fff;
     font-size: 14px;
-    padding: 5px 10px;
+    padding: 8px 15px;
+    margin-left: 8px;
     cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.2s;
   }
 
   .send-button:hover {
-    background-color: rgb(255, 255, 255);
-    color: rgb(0, 0, 0);
-    box-shadow: 0 4px 18px 0 rgba(0, 0, 0, 0.25);
+    background-color: #5993c5;
+  }
+
+  .send-button:disabled {
+    background-color: #a5c2dc;
+    cursor: not-allowed;
   }
 `;
 
@@ -240,58 +227,93 @@ const ChatApp = () => {
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [messages, setMessages] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-  const apikey = "fake";
+  const [energyData, setEnergyData] = useState(null);
+  const apiKey = "fake"; // Replace with your Groq API key in production
+  
+  // Function to fetch energy data from the API
+  const fetchEnergyData = async (hubId) => {
+    try {
+      const response = await fetch(`https://testing.sukoonhome.me/hub/${hubId}/real-energy`);
+      if (!response.ok) throw new Error(`Failed to fetch data: ${response.status}`);
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Error fetching energy data:', error);
+      return null;
+    }
+  };
 
-  // Combine the JSON data into a single string
-  const jsonContext = JSON.stringify({ mainview, exampleroom });
+  // Function to get user's recent energy data
+  const getUserEnergyContext = async () => {
+    try {
+      // Get top hubs data (this would typically come from user authentication)
+      const hubsResponse = await fetch(`https://testing.sukoonhome.me/firestore/hubs`);
+      const hubsData = await hubsResponse.json();
+      
+      // Get data for the first hub in the list or use a specific hub ID
+      // In a real app, you might want to let users select their hub or detect it from login
+      const hubId = hubsData && hubsData.length > 0 ? hubsData[0].hub_id : null;
+      
+      if (!hubId) return null;
+      
+      // Fetch energy data for this hub
+      const energyData = await fetchEnergyData(hubId);
+      
+      // Add this data to state for future reference
+      setEnergyData(energyData);
+      
+      return energyData;
+    } catch (error) {
+      console.error('Error getting energy context:', error);
+      return null;
+    }
+  };
 
   const openChat = () => {
     setIsChatOpen(true);
-    // Reset messages to start a new chat when opening
-    setMessages([]);
   };
 
   const closeChat = () => {
     setIsChatOpen(false);
-    // Reset messages when closing the chat
     setMessages([]);
   };
 
   const sendMessage = async (message) => {
+    // Add user message to the chat
     setMessages((prev) => [...prev, { text: message, sender: 'user' }]);
     setIsLoading(true);
-  
-    console.log('Starting API request to Groq');
     
     try {
-      console.log('Sending request to Groq with payload:', {
-        model: 'llama-3.3-70b-versatile',
-        messages: [
-          {
-            role: 'system',
-            content: `You are an AI assistant for a smart home energy management system. be consice - atmost use 3 lines of text at once. Your primary role is to help users understand and optimize their home's energy usage based on real-time and historical data provided in the additional context. You will analyze the energy data, provide personalized recommendations to reduce costs, explain energy consumption patterns, troubleshoot issues, and suggest energy-saving routines. Use the data from the additional context to provide accurate, context-specific responses. Be concise, conversational, and focus on practical advice. Highlight potential savings, explain technical concepts in plain language, and respect user privacy. Do not use bold or italic text. Always prioritize actionable insights and long-term energy efficiency strategies. Additional context: ${jsonContext}`,
-          },
-          {
-            role: 'user',
-            content: message,
-          },
-        ],
-        temperature: 0.5,
-        max_tokens: 1024,
-      });
-  
+      // Fetch energy data if we don't already have it
+      if (!energyData) {
+        await getUserEnergyContext();
+      }
+      
+      // Prepare the context for the AI
+      const context = energyData 
+        ? JSON.stringify(energyData)
+        : "No energy data available at the moment.";
+      
+      console.log('Sending request to Groq with energy data context');
+      
       const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apikey}`,
+          'Authorization': `Bearer ${apiKey}`,
         },
         body: JSON.stringify({
           model: 'llama-3.3-70b-versatile',
           messages: [
             {
               role: 'system',
-              content: `You are an AI assistant for a smart home energy management system. be consice - atmost use 3 lines of text at once. Your primary role is to help users understand and optimize their home's energy usage based on real-time and historical data provided in the additional context. You will analyze the energy data, provide personalized recommendations to reduce costs, explain energy consumption patterns, troubleshoot issues, and suggest energy-saving routines. Use the data from the additional context to provide accurate, context-specific responses. Be concise, conversational, and focus on practical advice. Highlight potential savings, explain technical concepts in plain language, and respect user privacy. Do not use bold or italic text. Always prioritize actionable insights and long-term energy efficiency strategies. Additional context: ${jsonContext}`,
+              content: `You are an AI assistant for a smart home energy management system. Be concise - at most use 3 lines of text at once. Your primary role is to help users understand and optimize their home's energy usage based on real-time data. 
+              
+              You will analyze the energy data, provide personalized recommendations to reduce costs, explain energy consumption patterns, troubleshoot issues, and suggest energy-saving routines. Use the data from the additional context to provide accurate, context-specific responses.
+              
+              Be conversational and focus on practical advice. Highlight potential savings, explain technical concepts in plain language, and respect user privacy. Always prioritize actionable insights and long-term energy efficiency strategies.
+              
+              Here is the user's current energy data: ${context}`
             },
             {
               role: 'user',
@@ -302,35 +324,23 @@ const ChatApp = () => {
           max_tokens: 1024,
         }),
       });
-  
-      console.log('API response status:', response.status);
-      console.log('API response headers:', Object.fromEntries([...response.headers]));
-  
+      
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('Error response body:', errorText);
-        
-        try {
-          const errorData = JSON.parse(errorText);
-          console.error('Parsed error data:', errorData);
-          throw new Error(`API request failed with status ${response.status}: ${JSON.stringify(errorData)}`);
-        } catch (parseError) {
-          throw new Error(`API request failed with status ${response.status}: ${errorText}`);
-        }
+        throw new Error(`API request failed with status ${response.status}: ${errorText}`);
       }
-  
+      
       const data = await response.json();
-      console.log('API Response:', data);
-  
-      const botResponse = data.choices[0]?.message?.content || 'No response from the bot.';
-      console.log('Bot response content:', botResponse);
+      const botResponse = data.choices[0]?.message?.content || 'I couldn\'t retrieve energy information at the moment. Please try again later.';
+      
       setMessages((prev) => [...prev, { text: botResponse, sender: 'bot' }]);
     } catch (error) {
       console.error('Error sending message to Groq:', error);
-      console.error('Error stack:', error.stack);
-      setMessages((prev) => [...prev, { text: `Error: ${error.message}`, sender: 'bot' }]);
+      setMessages((prev) => [...prev, { 
+        text: "I'm having trouble connecting to our system. Please try again in a moment.", 
+        sender: 'bot' 
+      }]);
     } finally {
-      console.log('API request completed');
       setIsLoading(false);
     }
   };
