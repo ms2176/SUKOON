@@ -1,0 +1,253 @@
+{
+  "hub_id": "GFM4Y",
+  "hub_name": "Hub GFM4Y",
+  "hub_type": "tenant",
+  "energy_data": {
+    "daily": {
+      "total_energy": 0,
+      "unit": "kWh",
+      "date": "2025-03-20",
+      "rooms": {
+        "Kitchen": {
+          "energy_value": 0,
+          "unit": "kWh",
+          "device_count": 4,
+          "room_id": "4whuJZrKeFBmbtZx5XDb",
+          "devices": [
+            {
+              "device_type": "light"
+            },
+            {
+              "device_type": "ac"
+            },
+            {
+              "device_type": "dishwasher"
+            },
+            {
+              "device_type": "thermostat"
+            }
+          ]
+        },
+        "Living Room": {
+          "energy_value": 0,
+          "unit": "kWh",
+          "device_count": 3,
+          "room_id": "U7JEtOSBEtmk3UYfPnZY",
+          "devices": [
+            {
+              "device_type": "light"
+            },
+            {
+              "device_type": "tv"
+            },
+            {
+              "device_type": "ac"
+            }
+          ]
+        },
+        "Bedroom": {
+          "energy_value": 0,
+          "unit": "kWh",
+          "device_count": 3,
+          "room_id": "g2ttxtgcP3MFsSc8E3XH",
+          "devices": [
+            {
+              "device_type": "fan"
+            },
+            {
+              "device_type": "light"
+            },
+            {
+              "device_type": "ac"
+            }
+          ]
+        }
+      }
+    },
+    "weekly": {
+      "total_energy": 415.1,
+      "unit": "kWh",
+      "week": "11",
+      "year": "2025",
+      "rooms": {
+        "Kitchen": {
+          "energy_value": 187.6,
+          "unit": "kWh",
+          "device_count": 4,
+          "room_id": "4whuJZrKeFBmbtZx5XDb",
+          "devices": [
+            {
+              "device_type": "light"
+            },
+            {
+              "device_type": "ac"
+            },
+            {
+              "device_type": "dishwasher"
+            },
+            {
+              "device_type": "thermostat"
+            }
+          ]
+        },
+        "Living Room": {
+          "energy_value": 116.2,
+          "unit": "kWh",
+          "device_count": 3,
+          "room_id": "U7JEtOSBEtmk3UYfPnZY",
+          "devices": [
+            {
+              "device_type": "light"
+            },
+            {
+              "device_type": "tv"
+            },
+            {
+              "device_type": "ac"
+            }
+          ]
+        },
+        "Bedroom": {
+          "energy_value": 111.3,
+          "unit": "kWh",
+          "device_count": 3,
+          "room_id": "g2ttxtgcP3MFsSc8E3XH",
+          "devices": [
+            {
+              "device_type": "fan"
+            },
+            {
+              "device_type": "light"
+            },
+            {
+              "device_type": "ac"
+            }
+          ]
+        }
+      }
+    },
+    "monthly": {
+      "total_energy": 1779,
+      "unit": "kWh",
+      "month": "03",
+      "year": "2025",
+      "rooms": {
+        "Kitchen": {
+          "energy_value": 804,
+          "unit": "kWh",
+          "device_count": 4,
+          "room_id": "4whuJZrKeFBmbtZx5XDb",
+          "devices": [
+            {
+              "device_type": "light"
+            },
+            {
+              "device_type": "ac"
+            },
+            {
+              "device_type": "dishwasher"
+            },
+            {
+              "device_type": "thermostat"
+            }
+          ]
+        },
+        "Living Room": {
+          "energy_value": 498,
+          "unit": "kWh",
+          "device_count": 3,
+          "room_id": "U7JEtOSBEtmk3UYfPnZY",
+          "devices": [
+            {
+              "device_type": "light"
+            },
+            {
+              "device_type": "tv"
+            },
+            {
+              "device_type": "ac"
+            }
+          ]
+        },
+        "Bedroom": {
+          "energy_value": 477,
+          "unit": "kWh",
+          "device_count": 3,
+          "room_id": "g2ttxtgcP3MFsSc8E3XH",
+          "devices": [
+            {
+              "device_type": "fan"
+            },
+            {
+              "device_type": "light"
+            },
+            {
+              "device_type": "ac"
+            }
+          ]
+        }
+      }
+    },
+    "yearly": {
+      "total_energy": 21644.5,
+      "unit": "kWh",
+      "year": "2025",
+      "rooms": {
+        "Kitchen": {
+          "energy_value": 9782,
+          "unit": "kWh",
+          "device_count": 4,
+          "room_id": "4whuJZrKeFBmbtZx5XDb",
+          "devices": [
+            {
+              "device_type": "light"
+            },
+            {
+              "device_type": "ac"
+            },
+            {
+              "device_type": "dishwasher"
+            },
+            {
+              "device_type": "thermostat"
+            }
+          ]
+        },
+        "Living Room": {
+          "energy_value": 6059,
+          "unit": "kWh",
+          "device_count": 3,
+          "room_id": "U7JEtOSBEtmk3UYfPnZY",
+          "devices": [
+            {
+              "device_type": "light"
+            },
+            {
+              "device_type": "tv"
+            },
+            {
+              "device_type": "ac"
+            }
+          ]
+        },
+        "Bedroom": {
+          "energy_value": 5803.5,
+          "unit": "kWh",
+          "device_count": 3,
+          "room_id": "g2ttxtgcP3MFsSc8E3XH",
+          "devices": [
+            {
+              "device_type": "fan"
+            },
+            {
+              "device_type": "light"
+            },
+            {
+              "device_type": "ac"
+            }
+          ]
+        }
+      }
+    }
+  }
+}

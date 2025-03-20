@@ -1,0 +1,97 @@
+{
+  "hub_id": "NI1O0",
+  "hub_name": "Demo Building",
+  "hub_type": "admin",
+  "energy_data": {
+    "daily": {
+      "total_energy": 176.58,
+      "unit": "kWh",
+      "date": "2025-03-21",
+      "tenant_hubs": {
+        "Aprt 1": {
+          "hub_id": "JS3G3",
+          "energy_value": 68.42,
+          "unit": "kWh"
+        },
+        "Aprt 2": {
+          "hub_id": "5A7QO",
+          "energy_value": 52.75,
+          "unit": "kWh"
+        },
+        "Aprt 3": {
+          "hub_id": "CCHBJ",
+          "energy_value": 55.41,
+          "unit": "kWh"
+        }
+      }
+    },
+    "weekly": {
+      "total_energy": 1236.06,
+      "unit": "kWh",
+      "week": "12",
+      "year": "2025",
+      "tenant_hubs": {
+        "Aprt 1": {
+          "hub_id": "JS3G3",
+          "energy_value": 478.94,
+          "unit": "kWh"
+        },
+        "Aprt 2": {
+          "hub_id": "5A7QO",
+          "energy_value": 369.25,
+          "unit": "kWh"
+        },
+        "Aprt 3": {
+          "hub_id": "CCHBJ",
+          "energy_value": 387.87,
+          "unit": "kWh"
+        }
+      }
+    },
+    "monthly": {
+      "total_energy": 5297.4,
+      "unit": "kWh",
+      "month": "03",
+      "year": "2025",
+      "tenant_hubs": {
+        "Aprt 1": {
+          "hub_id": "JS3G3",
+          "energy_value": 2052.6,
+          "unit": "kWh"
+        },
+        "Aprt 2": {
+          "hub_id": "5A7QO",
+          "energy_value": 1582.5,
+          "unit": "kWh"
+        },
+        "Aprt 3": {
+          "hub_id": "CCHBJ",
+          "energy_value": 1662.3,
+          "unit": "kWh"
+        }
+      }
+    },
+    "yearly": {
+      "total_energy": 64451.7,
+      "unit": "kWh",
+      "year": "2025",
+      "tenant_hubs": {
+        "Aprt 1": {
+          "hub_id": "JS3G3",
+          "energy_value": 24973.3,
+          "unit": "kWh"
+        },
+        "Aprt 2": {
+          "hub_id": "5A7QO",
+          "energy_value": 19253.8,
+          "unit": "kWh"
+        },
+        "Aprt 3": {
+          "hub_id": "CCHBJ",
+          "energy_value": 20224.6,
+          "unit": "kWh"
+        }
+      }
+    }
+  }
+}
