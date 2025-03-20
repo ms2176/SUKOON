@@ -46,7 +46,6 @@ const StatsAdmin = () => {
 
   const navigate = useNavigate();
   const [energyData, setEnergyData] = useState([]);
-  const [selectedHome, setSelectedHome] = useState(null);
   const [loading, setLoading] = useState(true);
   const [timeFilter, setTimeFilter] = useState("monthly"); // Default filter
   const [hubData, setHubData] = useState(null);
@@ -251,6 +250,12 @@ const StatsAdmin = () => {
     }
   };
 
+  // Get total energy value for the current time period
+  const getTotalEnergy = () => {
+    const timeData = hubData.energy_data[timeFilter];
+    return timeData ? timeData.total_energy : 0;
+  };
+
   return (
     <div className="homepageContainer" style={{ overflowX: "hidden" }}>
       {/* Header */}
@@ -297,7 +302,8 @@ const StatsAdmin = () => {
                   color="#21334a"
                   mb="10px"
                 >
-                  Energy Consumed:
+                  Energy Consumed: {getTotalEnergy()}{" "}
+                  {hubData.energy_data[timeFilter]?.unit || "kWh"}
                 </Heading>
                 {isDemoUser && (
                   <Text color="#0b13b0" fontWeight="medium" mb="15px">

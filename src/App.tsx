@@ -22,6 +22,7 @@ import MoreTools from './customComponents/account/MoreTools';
 import ThirdPartyServices from './customComponents/account/ThirdPartyServices';
 import InitialView from './customComponents/homepage/InitialView';
 import ChatApp from '@/customComponents/stats/ChatApp';
+import Notif from '@/customComponents/stats/Notif';
 import './index.css';
 import { useState } from 'react';
 import Verification_hold from './customComponents/login/verification_hold';
@@ -368,6 +369,7 @@ const App = () => {
       </Routes>
 
       <ChatApp /> {/* Add the ChatApp component here */}
+      <Notif /> {/* Add the Notif component here */}
     </>
   );
 };

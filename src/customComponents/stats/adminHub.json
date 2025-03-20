@@ -1,57 +1,57 @@
 {
-  "hub_id": "111zzz",
-  "hub_name": "Central Admin Hub",
-  "hub_type": "admin",
-  "energy_data": {
-    "daily": {
-      "total_energy": 11.6,
-      "unit": "kWh",
-      "date": "2025-03-18",
-      "tenant_hubs": {
-        "Apartment Building C": {
-          "hub_id": "222iii",
-          "energy_value": 11.6,
-          "unit": "kWh"
+    "hub_id": "GFM4Y",
+    "hub_name": "Central Admin Hub",
+    "hub_type": "admin",
+    "energy_data": {
+      "daily": {
+        "total_energy": 11.6,
+        "unit": "kWh",
+        "date": "2025-03-18",
+        "tenant_hubs": {
+          "Apartment Building C": {
+            "hub_id": "222iii",
+            "energy_value": 11.6,
+            "unit": "kWh"
+          }
         }
-      }
-    },
-    "weekly": {
-      "total_energy": 0,
-      "unit": "kWh",
-      "week": "11",
-      "year": "2025",
-      "tenant_hubs": {
-        "Apartment Building C": {
-          "hub_id": "222iii",
-          "energy_value": 0,
-          "unit": "kWh"
+      },
+      "weekly": {
+        "total_energy": 0,
+        "unit": "kWh",
+        "week": "11",
+        "year": "2025",
+        "tenant_hubs": {
+          "Apartment Building C": {
+            "hub_id": "222iii",
+            "energy_value": 0,
+            "unit": "kWh"
+          }
         }
-      }
-    },
-    "monthly": {
-      "total_energy": 0,
-      "unit": "kWh",
-      "month": "03",
-      "year": "2025",
-      "tenant_hubs": {
-        "Apartment Building C": {
-          "hub_id": "222iii",
-          "energy_value": 0,
-          "unit": "kWh"
+      },
+      "monthly": {
+        "total_energy": 0,
+        "unit": "kWh",
+        "month": "03",
+        "year": "2025",
+        "tenant_hubs": {
+          "Apartment Building C": {
+            "hub_id": "222iii",
+            "energy_value": 0,
+            "unit": "kWh"
+          }
         }
-      }
-    },
-    "yearly": {
-      "total_energy": 0,
-      "unit": "kWh",
-      "year": "2025",
-      "tenant_hubs": {
-        "Apartment Building C": {
-          "hub_id": "222iii",
-          "energy_value": 0,
-          "unit": "kWh"
+      },
+      "yearly": {
+        "total_energy": 0,
+        "unit": "kWh",
+        "year": "2025",
+        "tenant_hubs": {
+          "Apartment Building C": {
+            "hub_id": "222iii",
+            "energy_value": 0,
+            "unit": "kWh"
+          }
         }
       }
     }
   }
-}

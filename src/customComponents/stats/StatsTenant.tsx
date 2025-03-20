@@ -45,8 +45,8 @@ const StatsTenant = () => {
   ];
 
   const navigate = useNavigate();
-  const [energyData, setEnergyData] = useState([]);
-  const [selectedHome, setSelectedHome] = useState(null);
+  const [energyData, setEnergyData] = useState<ChartData[]>([]);
+  const [selectedHome, setSelectedHome] = useState<Home | null>(null);
   const [loading, setLoading] = useState(true);
   const [timeFilter, setTimeFilter] = useState("monthly"); // Default filter
   const [hubData, setHubData] = useState(null);
@@ -106,16 +106,24 @@ const StatsTenant = () => {
   }, [selectedHome, timeFilter, isDemoUser]); // Add isDemoUser as a dependency
 
   // Process energy data based on the time filter
-  const processEnergyData = (hubData, timeFilter) => {
-    if (!hubData || !hubData.energy_data || !hubData.energy_data[timeFilter]) {
+  const processEnergyData = (hubData: HubData | null, timeFilter: string) => {
+    if (!hubData || !hubData.energy_data) {
       setEnergyData([]);
       return;
     }
 
-    const timeData = hubData.energy_data[timeFilter];
+    // Handle the case where the specific timeFilter data doesn't exist yet
+    if (!hubData.energy_data[timeFilter as keyof EnergyData]) {
+      console.error(`No ${timeFilter} data available in the hub data`);
+      setEnergyData([]);
+      return;
+    }
+
+    const timeData = hubData.energy_data[timeFilter as keyof EnergyData];
     const roomsData = timeData.rooms;
 
     if (!roomsData) {
+      console.error(`No rooms data for ${timeFilter}`);
       setEnergyData([]);
       return;
     }
@@ -236,6 +244,17 @@ const StatsTenant = () => {
       {loading ? (
         <Box textAlign="center" py={10}>
           <Text>Loading energy data...</Text>
+        </Box>
+      ) : error ? (
+        <Box textAlign="center" py={10} color="red.500">
+          <Text>{error}</Text>
+          <Button
+            mt={4}
+            colorScheme="green"
+            onClick={() => window.location.reload()}
+          >
+            Retry
+          </Button>
         </Box>
       ) : (
         <>
@@ -400,6 +419,17 @@ const StatsTenant = () => {
                       justifyContent="space-between"
                       alignItems="center"
                       boxShadow="0 2px 4px rgba(0, 0, 0, 0.05)"
+                      onClick={() => {
+                        // Find room_id from the hubData structure
+                        const roomId =
+                          hubData?.energy_data[timeFilter]?.rooms[item.name]
+                            ?.room_id;
+                        if (roomId) {
+                          fetchRoomDetails(roomId);
+                        }
+                      }}
+                      cursor="pointer"
+                      _hover={{ bg: "#f9f9f9" }}
                     >
                       <Box>
                         <Text fontWeight="medium" color="#21334a">
@@ -415,7 +445,7 @@ const StatsTenant = () => {
                         py={1}
                         borderRadius="full"
                         fontSize="sm"
-                        color="white"
+                        color={item.energy > 0 ? "white" : "#666"}
                       >
                         {item.energy} kWh
                       </Text>
