@@ -1,121 +1,197 @@
-import { useState } from 'react';
-import { Box, Grid, GridItem, Text, VStack, Image, Center } from '@chakra-ui/react';
-import { Link } from 'react-router-dom'; // Import Link from react-router-dom
-import ToggleButton from './toggleButton';
-import AddDeviceButton from './addDeviceButton';
-import { useParams } from 'react-router-dom';
-
-// Import device images (Icons)
+import React, { useState, useEffect } from 'react';
+import { Box, Grid, Text, VStack, Center, Spinner, Image, HStack, Heading, GridItem } from '@chakra-ui/react';
+import { Link, useParams } from 'react-router-dom';
+import { getFirestore, doc, getDoc, collection, getDocs, query, where } from 'firebase/firestore';
+import { useNavigate } from 'react-router-dom';
+import AddDevice from './AddDevice';
 import LightImg from '@/images/devicesIcons/lamp.png';
 import TvImg from '@/images/devicesIcons/tv.png';
-import FireImg from '@/images/devicesIcons/fireplace.png';
 import AcImg from '@/images/devicesIcons/ac.png';
-import ConsoleImg from '@/images/devicesIcons/console.png';
 import FanImg from '@/images/devicesIcons/fan.png';
+import WasherImg from '@/images/devicesIcons/washing-machine.png';
+import SpeakerImg from '@/images/devicesIcons/speaker.png';
+import ThermostatImg from '@/images/devicesIcons/thermostat.png';
+import DoorbellImg from '@/images/devicesIcons/smart-door.png';
+import HeatconvectorImg from '@/images/devicesIcons/heater-convector.png';
+import Dishwasher from '@/images/devicesIcons/dishwasher.png';
+
+type DeviceType =
+  | 'light'
+  | 'tv'
+  | 'ac'
+  | 'fan'
+  | 'washingMachine'
+  | 'speaker'
+  | 'thermostat'
+  | 'door'
+  | 'heatconvector'
+  | 'dishwasher';
+
+interface Device {
+  id: string;
+  name: string;
+  isOn: boolean;
+  deviceType: DeviceType;
+}
+
+const deviceTypeToImage: Record<DeviceType, string> = {
+  light: LightImg,
+  tv: TvImg,
+  ac: AcImg,
+  fan: FanImg,
+  washingMachine: WasherImg,
+  speaker: SpeakerImg,
+  thermostat: ThermostatImg,
+  door: DoorbellImg,
+  heatconvector: HeatconvectorImg,
+  dishwasher: Dishwasher,
+};
+
+const normalizeDeviceType = (deviceType: string): DeviceType => {
+  const normalizedType = deviceType.toLowerCase().replace(/\s+/g, '');
+  switch (normalizedType) {
+    case 'washingmachine':
+      return 'washingMachine';
+    case 'smartdoor':
+      return 'door';
+    default:
+      return normalizedType as DeviceType;
+  }
+};
 
 const Devices = () => {
-
   const { roomId } = useParams<{ roomId: string }>();
+  const [devices, setDevices] = useState<Device[]>([]);
+  const [roomName, setRoomName] = useState<string>('');
+  const [loading, setLoading] = useState(true);
+  const [isAddDeviceVisible, setIsAddDeviceVisible] = useState(false);
+  const navigate = useNavigate();
+
+  const fetchRoomAndDevices = async () => {
+    if (roomId) {
+      const db = getFirestore();
   
-  const initialDevices = [
-    { id: 1, name: 'Light', isOn: false, image: LightImg },
-    { id: 2, name: 'TV', isOn: false, image: TvImg },
-    { id: 3, name: 'Fireplace', isOn: false, image: FireImg },
-    { id: 4, name: 'AC', isOn: false, image: AcImg },
-    { id: 5, name: 'Console', isOn: false, image: ConsoleImg },
-    { id: 6, name: 'Fan', isOn: false, image: FanImg },
-  ];
+      try {
+        const roomDocRef = doc(db, 'rooms', roomId);
+        const roomDocSnap = await getDoc(roomDocRef);
+  
+        if (roomDocSnap.exists()) {
+          const roomData = roomDocSnap.data();
+          setRoomName(roomData.roomName || 'Room');
+  
+          const deviceIds = roomData.devices || [];
+          const devicesRef = collection(db, 'devices');
+  
+          let devicesData: Device[] = [];
+  
+          // Only query devices if deviceIds is not empty
+          if (deviceIds.length > 0) {
+            const devicesQuery = query(devicesRef, where('__name__', 'in', deviceIds));
+            const devicesSnapshot = await getDocs(devicesQuery);
+  
+            devicesSnapshot.forEach((doc) => {
+              const data = doc.data();
+              const deviceType = normalizeDeviceType(data.deviceType || 'light');
+              devicesData.push({
+                id: doc.id,
+                name: data.deviceName || 'Unnamed Device',
+                isOn: false,
+                deviceType: deviceType,
+              });
+            });
+          }
+  
+          setDevices(devicesData);
+        } else {
+          console.error('Room not found');
+        }
+      } catch (error) {
+        console.error('Error fetching room and devices:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
 
-  const [devices, setDevices] = useState(initialDevices);
+  useEffect(() => {
+    fetchRoomAndDevices();
+  }, [roomId]);
 
-  const toggleDevice = (id: number) => {
-    setDevices((prevDevices) =>
-      prevDevices.map((device) =>
-        device.id === id ? { ...device, isOn: !device.isOn } : device
-      )
+  const getDeviceImage = (deviceType: DeviceType) => {
+    return deviceTypeToImage[deviceType] || LightImg;
+  };
+
+  if (loading) {
+    return (
+      <Center height="100vh">
+        <Spinner size="xl" />
+      </Center>
     );
-  };
-
-  // Function to add new device
-  const handleAddDevice = (newDevice: { id: number; name: string; image: string; isOn: boolean }) => {
-    setDevices((prevDevices) => [...prevDevices, newDevice]); // Add new device at the end
-  };
+  }
 
   return (
-    <Box bg="white" minH="100vh" p={4}>
-      {/* Room Header */}
-      <Box
-        bg="#6CCE58"
-        p={6}
-        borderRadius="lg"
-        boxShadow="md"
-        textAlign="center"
-        mb={6}
-      >
-        <Text fontSize="2xl" fontWeight="bold" color="white" bg={'transparent'}>
-          Living Room
-        </Text>
-        <Text fontSize="sm" color="whiteAlpha.800" mt={1} bg={'transparent'}>
-          Manage your devices seamlessly
-        </Text>
+    <Box bg="white" minH="100vh" p={4} overflowY={'scroll'} pb={'20%'}>
+      {isAddDeviceVisible && (
+        <AddDevice
+          roomId={roomId}
+          onClose={() => setIsAddDeviceVisible(false)}
+          refreshDevices={fetchRoomAndDevices} // Pass the refresh function
+        />
+      )}
+
+      <Box bg="#6CCE58" p={6} borderRadius="lg" boxShadow="md" textAlign="center" mb={6}>
+        <HStack bg="transparent" justifyContent="space-between" w="100%">
+          <button className="back-button" style={{ color: 'white' }} onClick={() => navigate(`/rooms`)}>
+            ←
+          </button>
+          <Heading fontSize="2xl" fontWeight="bold" color="white" bg="transparent" className="roomName">
+            {roomName}
+          </Heading>
+          <Heading fontSize="2xl" fontWeight="bold" color="white" bg="transparent" onClick={() => setIsAddDeviceVisible(true)}>
+            +
+          </Heading>
+        </HStack>
       </Box>
 
-      {/* Devices Grid */}
       <Grid templateColumns={{ base: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' }} gap={4}>
         {devices.map((device) => (
           <GridItem key={device.id}>
-            <VStack
-              p={4}
-              bg="white"
-              borderRadius="lg"
-              boxShadow="base"
-              border={device.isOn ? '2px solid #66BB6A' : '1px solid #e0e0e0'}
-              transition="all 0.3s ease"
-              _hover={{
-                transform: 'scale(1.05)',
-                boxShadow: 'lg',
-              }}
-            >
-              {/* Device Icon (Link wrapped around the Image) */}
-              <Box position="relative">
-              <Link to={`/devices/${roomId}/${device.id}`}>
-  <Image
-    src={device.image}
-    alt={device.name}
-    boxSize="64px"
-    borderRadius="full"
-    bg={device.isOn ? 'green.50' : 'gray.50'}
-    p={2}
-    transition="all 0.3s ease"
-  />
-</Link>
-              </Box>
-
-              {/* Device Name */}
-              <Text fontSize="md" fontWeight="medium" color="gray.700">
-                {device.name}
-              </Text>
-
-              {/* Toggle Button */}
-              <ToggleButton isOn={device.isOn} onToggle={() => toggleDevice(device.id)} />
-            </VStack>
+            <Link to={`/devices/${roomId}/${device.id}`} state={{ fromAllDevices: false }}>
+              <VStack
+                p={4}
+                bg="white"
+                borderRadius="lg"
+                boxShadow="base"
+                border={device.isOn ? '2px solid #66BB6A' : '1px solid #e0e0e0'}
+                transition="all 0.3s ease"
+                _hover={{
+                  transform: 'scale(1.05)',
+                  boxShadow: 'lg',
+                }}
+                display={'flex'}
+                justify={'center'}
+                align={'center'}
+                height={'100%'}
+              >
+                <Image
+                  src={getDeviceImage(device.deviceType)}
+                  alt={device.name}
+                  boxSize="64px"
+                  borderRadius="full"
+                  bg={device.isOn ? 'green.50' : 'gray.50'}
+                  p={2}
+                  transition="all 0.3s ease"
+                />
+                <Text fontSize="md" fontWeight="medium" color="gray.700" textAlign={'center'}>
+                  {device.name}
+                </Text>
+              </VStack>
+            </Link>
           </GridItem>
         ))}
       </Grid>
-
-      {/* Add New Device Button with onAddDevice */}
-      <Center mt={6}>
-        <AddDeviceButton onAddDevice={handleAddDevice} />
-      </Center>
     </Box>
   );
 };
 
 export default Devices;
-
-
-
-
-
-
-

@@ -24,6 +24,17 @@ import {
   signInWithGoogle,
   signInWithApple,
 } from "@/utilities/firebase_auth_functions";
+import {
+  getFirestore,
+  collection,
+  query,
+  where,
+  getDocs,
+  doc,
+  getDoc,
+  setDoc,
+} from "firebase/firestore";
+import { getAuth, fetchSignInMethodsForEmail } from "firebase/auth";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -39,6 +50,20 @@ const Login = () => {
 
   const handlePasswordChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setPassword(event.target.value); // Update the password state when the user types
+  };
+
+  const checkUserHubs = async (userId: string) => {
+    const db = getFirestore();
+    const userHubsRef = collection(db, "userHubs");
+    const q = query(userHubsRef, where("userId", "==", userId));
+
+    try {
+      const querySnapshot = await getDocs(q);
+      return !querySnapshot.empty; // Return true if hubs exist, false otherwise
+    } catch (error) {
+      console.error("Error checking user hubs:", error);
+      return false;
+    }
   };
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -58,8 +83,12 @@ const Login = () => {
         // If email isn't verified, send to verification page
         navigate("/verification_hold");
       } else {
-        // If verified, proceed to home
-        navigate("/home");
+        const hasHubs = await checkUserHubs(result.user.uid);
+        if (hasHubs) {
+          navigate("/home"); // Navigate to home if hubs exist
+        } else {
+          navigate("/initial"); // Navigate to initial setup if no hubs exist
+        }
       }
     } else {
       setEmailError("Invalid email or password");
@@ -68,22 +97,89 @@ const Login = () => {
 
   // Add these functions for Google and Apple sign in to the approprite btn component
   const handleGoogleSignIn = async () => {
-    const result = await signInWithGoogle();
-    if (result.success) {
-      navigate("/home");
-    } else {
-      setEmailError(result.error);
-    }
-  };
+    try {
+      const auth = getAuth();
+      const result = await signInWithGoogle();
 
-  const handleAppleSignIn = async () => {
-    const result = await signInWithApple();
-    if (result.success) {
-      navigate("/home");
-    } else {
-      setEmailError(result.error);
+      if (result.success && result.user) {
+        const userEmail = result.user.email || "";
+
+        // Check if this email is used with email/password auth
+        const methods = await fetchSignInMethodsForEmail(auth, userEmail);
+
+        if (methods.includes("password") && !methods.includes("google.com")) {
+          // Email already registered with password only
+          setEmailError(
+            "An account with this email already exists. Please sign in with your email and password."
+          );
+          return;
+        }
+
+        // Check if the user document already exists
+        const db = getFirestore();
+        const userDocRef = doc(db, "users", result.user.uid);
+        const userDoc = await getDoc(userDocRef);
+
+        // If user document doesn't exist, create it (first-time Google login)
+        if (!userDoc.exists()) {
+          const username = userEmail.split("@")[0];
+
+          try {
+            await setDoc(userDocRef, {
+              email: userEmail,
+              username: username,
+              userId: result.user.uid,
+              dailyGoal: "",
+              dailyGoalProgress: "",
+              phoneNumber: "",
+              plants: {
+                roses: false,
+                sunflower: false,
+                daisy: false,
+                cactus: false,
+                bonsai: false,
+                VFtrap: false,
+              },
+              profilePhoto: result.user.photoURL || "",
+              totalCarbonSavingGoal: 0,
+              totalEnergySavingGoal: 0,
+              totalCostGoal: 0,
+              totalCarbonSavingGoalProgress: 0,
+              totalEnergySavingGoalProgress: 0,
+              totalCostGoalProgress: 0,
+              darkMode: false,
+            });
+          } catch (error) {
+            console.error("Error creating user document:", error);
+          }
+        }
+
+        // Store user email in session
+        sessionStorage.setItem("userEmail", userEmail);
+
+        // Check if user has hubs and navigate accordingly
+        const hasHubs = await checkUserHubs(result.user.uid);
+        if (hasHubs) {
+          navigate("/home");
+        } else {
+          navigate("/initial");
+        }
+      } else {
+        setEmailError(result.error || "Google sign-in failed");
+      }
+    } catch (error) {
+      console.error("Error during Google sign-in:", error);
+      setEmailError("An error occurred during authentication");
     }
   };
+  // const handleAppleSignIn = async () => {
+  //   const result = await signInWithApple();
+  //   if (result.success) {
+  //     navigate("/home");
+  //   } else {
+  //     setEmailError(result.error);
+  //   }
+  // };
 
   const navigate = useNavigate(); // Initialize navigate function
 
@@ -92,8 +188,8 @@ const Login = () => {
     navigate("/"); // Navigate to the root Auth page
   };
 
-  const goToQR = () => {
-    navigate("/QRWait"); // Navigate to the root Auth page
+  const goToReg = () => {
+    navigate("/register"); // Navigate to the root Auth page
   };
 
   const goToResetPassword = () => {
@@ -250,7 +346,7 @@ const Login = () => {
             Don't have an account?{" "}
             <span
               style={{ color: "#6cce58", textDecoration: "underline" }}
-              onClick={goToQR}
+              onClick={goToReg}
             >
               {" "}
               Sign Up!
@@ -266,24 +362,8 @@ const Login = () => {
         </Stack>
 
         <div className="buttons-container">
-          <div className="apple-login-button">
-            <svg
-              stroke="currentColor"
-              fill="currentColor"
-              strokeWidth="0"
-              className="apple-icon"
-              viewBox="0 0 1024 1024"
-              height="1em"
-              width="1em"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path d="M747.4 535.7c-.4-68.2 30.5-119.6 92.9-157.5-34.9-50-87.7-77.5-157.3-82.8-65.9-5.2-138 38.4-164.4 38.4-27.9 0-91.7-36.6-141.9-36.6C273.1 298.8 163 379.8 163 544.6c0 48.7 8.9 99 26.7 150.8 23.8 68.2 109.6 235.3 199.1 232.6 46.8-1.1 79.9-33.2 140.8-33.2 59.1 0 89.7 33.2 141.9 33.2 90.3-1.3 167.9-153.2 190.5-221.6-121.1-57.1-114.6-167.2-114.6-170.7zm-105.1-305c50.7-60.2 46.1-115 44.6-134.7-44.8 2.6-96.6 30.5-126.1 64.8-32.5 36.8-51.6 82.3-47.5 133.6 48.4 3.7 92.6-21.2 129-63.7z"></path>
-            </svg>
-            <span style={{ backgroundColor: "transparent" }}>
-              Sign in with Apple
-            </span>
-          </div>
-          <div className="google-login-button">
+          
+          <div className="google-login-button" onClick={handleGoogleSignIn}>
             <svg
               stroke="currentColor"
               fill="currentColor"

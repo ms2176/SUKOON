@@ -1,0 +1,15 @@
+
+.optionsContainer {
+    background: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    align-content: center;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+    border-radius: 20px;
+    height: auto; /* Change from 100vh to auto or a fixed value */
+    padding-top: 20px; /* Ensure some spacing inside */
+    padding-bottom: 30%;
+    margin-top: -25px;
+    
+}

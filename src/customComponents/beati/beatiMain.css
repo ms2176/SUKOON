@@ -14,7 +14,11 @@
     min-height: 100vh; /* Ensure it covers at least the full viewport height */
     overflow: auto;
     z-index: 0; /* Create a new stacking context */
+    
 }
+
+    
+
 
 .beatiCont::before {
     content: '';
@@ -92,4 +96,8 @@
 .shelves {
     width: 100%;
     height: auto;
+}
+
+.beatiHead {
+    font-family: SpotifyFont, sans-serif;
 }

@@ -1,0 +1,24 @@
+[
+    {
+      "unitName": "b1",
+      "unitImage": "src/images/unitsImage/b1.png",
+      "unitNumber": 1
+      
+    },
+    {
+      "unitName": "b2",
+      "unitImage": "src/images/unitsImage/b2.png",
+      "unitNumber": 2
+      
+    },
+    {
+      "unitName": "b3",
+      "unitImage": "src/images/unitsImage/b3.png",
+      "unitNumber": 3
+    },
+    {
+      "unitName": "b4",
+      "unitImage": "src/images/unitsImage/b4.png",
+      "unitNumber": 4
+    }
+  ]

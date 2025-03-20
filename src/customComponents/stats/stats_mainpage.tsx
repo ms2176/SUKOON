@@ -1,133 +1,339 @@
 import { useState, useEffect } from 'react';
-import { Text, Flex, HStack, Heading, SimpleGrid, Box, Button,  } from "@chakra-ui/react";
-import { toaster } from "@/components/ui/toaster"
-import {
-  StatHelpText,
-  StatLabel,
-  StatRoot,
-  StatUpTrend,
-  StatValueText,
-} from "@/components/ui/stat";
-import { useNavigate } from 'react-router-dom'; // Import useNavigate hook
-import './stats_mainpage.css'; // Import the CSS file
+import { Text, Flex, Heading, Box, SimpleGrid, Button, ButtonGroup } from "@chakra-ui/react";
+import { toaster } from "@/components/ui/toaster";
+import { useNavigate } from 'react-router-dom';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { getFirestore, collection, query, where, getDocs } from 'firebase/firestore';
+import './stats_mainpage.css';
+import DownloadButton from './DownloadButton';
 
-
-interface DemoProps {
-  label: string;
-  value: number;
-  trend: string;
-  helpText: string;
-}
-
-const Demo = ({ label, value, trend, helpText }: DemoProps) => {
-  return (
-    <StatRoot>
-      <StatLabel>{label}</StatLabel>
-      <HStack>
-        <StatValueText
-          value={value}
-          formatOptions={{ style: "currency", currency: "USD" }}
-        />
-        <StatUpTrend>{trend}</StatUpTrend>
-      </HStack>
-      <StatHelpText>{helpText}</StatHelpText>
-    </StatRoot>
-  );
-};
+// Import the JSON data
+import energyStatsData from './hub-rooms-main-view.json';
 
 const Statistics = () => {
-  const navigate = useNavigate(); // Initialize navigate function
-  const [value, setValue] = useState(8456.4); // Initial value
+  const navigate = useNavigate();
+  const [energyData, setEnergyData] = useState([]);
+  const [isAdmin, setIsAdmin] = useState(false); // State to track if user is admin
+  const [selectedHome, setSelectedHome] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [timeFilter, setTimeFilter] = useState('monthly'); // Default filter
+  const [hubData, setHubData] = useState(null);
 
+  // Load selected home from localStorage
   useEffect(() => {
-    const interval = setInterval(() => {
-      // Update the value here. For example, incrementing by a random number.
-      setValue(prevValue => prevValue + Math.random() * 10000);}, 120000); // 120000 milliseconds = 2 minutes
-    return () => clearInterval(interval); // Cleanup interval on component unmount
+    const storedSelectedHome = localStorage.getItem('selectedHome');
+    if (storedSelectedHome) {
+      const homeData = JSON.parse(storedSelectedHome);
+      setSelectedHome(homeData);
+      setIsAdmin(homeData.homeType === 'admin');
+    }
   }, []);
 
-  const goToAuth = () => {
-    navigate('/'); // Navigate to Auth page
+  // Fetch hub data and validate with Firebase
+  useEffect(() => {
+    const fetchHubData = async () => {
+      if (selectedHome && selectedHome.hubCode) {
+        setLoading(true);
+        
+        // First check if the hubCode matches any hub_id in the JSON data
+        const matchingHub = energyStatsData.hub_id === selectedHome.hubCode;
+        
+        if (matchingHub) {
+          // If matched, set the hub data
+          setHubData(energyStatsData);
+          processEnergyData(energyStatsData, timeFilter);
+        } else {
+          // If not matched in JSON, check Firebase
+          const db = getFirestore();
+          const roomsRef = collection(db, 'rooms');
+          const roomsQuery = query(roomsRef, where('hubCode', '==', selectedHome.hubCode));
+
+          try {
+            const querySnapshot = await getDocs(roomsQuery);
+            const roomsData = [];
+            querySnapshot.forEach((doc) => {
+              const data = doc.data();
+              roomsData.push({
+                id: doc.id,
+                roomName: data.roomName,
+                devices: data.devices || []
+              });
+            });
+            
+            // Use Firebase data if available
+            if (roomsData.length > 0) {
+              // Process Firebase data (keeping your existing logic)
+              const roomEnergyData = roomsData.map(room => {
+                return {
+                  name: room.roomName,
+                  energy: 0, // You'll need to modify this based on your needs
+                  devices: room.devices.length
+                };
+              });
+              setEnergyData(roomEnergyData);
+            } else {
+              // No data found in either source
+              setEnergyData([]);
+            }
+          } catch (error) {
+            console.error('Error fetching rooms:', error);
+            setEnergyData([]);
+          }
+        }
+        
+        setLoading(false);
+      }
+    };
+
+    fetchHubData();
+  }, [selectedHome, timeFilter]);
+
+  // Process energy data based on the time filter
+  const processEnergyData = (hubData, timeFilter) => {
+    if (!hubData || !hubData.energy_data || !hubData.energy_data[timeFilter]) {
+      setEnergyData([]);
+      return;
+    }
+
+    const timeData = hubData.energy_data[timeFilter];
+    const roomsData = timeData.rooms;
+    
+    if (!roomsData) {
+      setEnergyData([]);
+      return;
+    }
+
+    // Transform rooms data into the format expected by the chart
+    const formattedData = Object.entries(roomsData).map(([roomName, roomData]) => {
+      return {
+        name: roomName,
+        energy: roomData.energy_value,
+        devices: roomData.device_count
+      };
+    });
+
+    // Sort by energy consumption (descending)
+    formattedData.sort((a, b) => b.energy - a.energy);
+    
+    setEnergyData(formattedData);
+  };
+
+  // When time filter changes, update the energy data
+  useEffect(() => {
+    if (hubData) {
+      processEnergyData(hubData, timeFilter);
+    }
+  }, [hubData, timeFilter]);
+
+  const goToHome = () => {
+    navigate('/homepage');
+  };
+
+  // Function to download report as CSV
+  const downloadReport = () => {
+    if (energyData.length === 0) {
+      toaster.create({
+        description: "No data available to download",
+        type: "error",
+      });
+      return;
+    }
+
+    // Create CSV content
+    const headers = ['Room', 'Energy (kWh)', 'Devices'];
+    const csvRows = [
+      headers.join(','),
+      ...energyData.map(item => [
+        item.name,
+        item.energy,
+        item.devices
+      ].join(','))
+    ];
+    
+    const csvContent = csvRows.join('\n');
+    
+    // Create and trigger download
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `energy_report_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    toaster.create({
+      description: "Report downloaded successfully",
+      type: "success",
+    });
+  };
+
+  // Function to get the current time period label
+  const getTimePeriodLabel = () => {
+    if (!hubData || !hubData.energy_data || !hubData.energy_data[timeFilter]) {
+      return '';
+    }
+
+    const timeData = hubData.energy_data[timeFilter];
+    
+    switch (timeFilter) {
+      case 'daily':
+        return `Date: ${timeData.date}`;
+      case 'weekly':
+        return `Week ${timeData.week}, ${timeData.year}`;
+      case 'monthly':
+        return `Month ${timeData.month}, ${timeData.year}`;
+      case 'yearly':
+        return `Year ${timeData.year}`;
+      default:
+        return '';
+    }
   };
 
   return (
-    <div style={{ overflowX: 'hidden' }}> {/* Prevent horizontal scrolling */}      
-      <Button
-            borderRadius={200}
-            width="30px"
-            height="40px"
-            display={'flex'}
-            bg={'#43eb7f'}
-            position="relative"
-            left="-15%"
-            boxShadow='0 4px 8px rgba(0, 0, 0, 0.2)'
-            onClick={goToAuth} // Add onClick to navigate back
-          >
-            <Text color={'black'}>&lt;</Text>
-
-          </Button>
-          
-          <Flex justifyContent="space-between" alignItems="center" padding={5}>
-        <Heading textAlign="left" color={'black'}>
-          Your Usage
-        </Heading>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() =>
-            toaster.create({
-              description: "File saved successfully",
-              type: "info",
-            })
-          }
-        >
-          Download Report
-        </Button>
-      </Flex>
-
-      <SimpleGrid columns={2} gap={4} padding={5}>
-        <Box className="statisticsBox">
-          <Demo label="Unique Users" value={value} trend="12%" helpText="since last month" />
-        </Box>
-        <Box className="statisticsBox">
-          <Demo label="Page Views" value={value} trend="-5%" helpText="since last month" />
-        </Box>
-        <Box className="statisticsBox">
-          <Demo label="New Signups" value={value} trend="12.45%" helpText="since last month" />
-        </Box>
-        <Box className="statisticsBox">
-          <Demo label="Revenue" value={value} trend="8.99%" helpText="since last month" />
-        </Box>
-      </SimpleGrid>
-
-      <Flex> 
-          <Heading textAlign="center" width="100%" color={'black'}>
-            Device By Room
+    <div className="homepageContainer" style={{ overflowX: 'hidden' }}>
+      {/* Header */}
+      <Box className="homepageHeader" bg={isAdmin ? '#0b13b0' : '#6cce58'}>
+        <Flex justifyContent="space-between" alignItems="center" px="20px" py="20px">
+          <Heading bg="transparent" fontWeight="extrabold" className="introHomepage" color="black">
+            Your Statistics
           </Heading>
+          <DownloadButton onClick={downloadReport} />
         </Flex>
+      </Box>
 
-      <SimpleGrid columns={1} gap={1} padding={5}>
-        <Box className="usagePerRoomBox">
-        <Text textStyle="md">Living Room</Text>
-        <Text textStyle="xs">5 devices</Text>
+      {/* Loading State */}
+      {loading ? (
+        <Box textAlign="center" py={10}>
+          <Text>Loading energy data...</Text>
         </Box>
-        <Box className="usagePerRoomBox">
-        <Text textStyle="md">Kitchen</Text>
-        <Text textStyle="xs">10 devices</Text>
-        </Box>
-        <Box className="usagePerRoomBox">
-        <Text textStyle="md">Master Bedroom</Text>
-        <Text textStyle="xs">5 devices</Text>
-        </Box>
-        <Box className="usagePerRoomBox">
-        <Text textStyle="md">Kids Bathroom</Text>
-        <Text textStyle="xs">5 devices</Text>
-        </Box>
-        <Box className="usagePerRoomBox">
-        <Text textStyle="md">Kids Bedroom</Text>
-        <Text textStyle="xs">9 devices</Text>
-        </Box>
-      </SimpleGrid>
+      ) : (
+        <>
+          {/* Energy Consumption Chart */}
+          <Box className="shadowPinned" mt="20px" mx="20px" borderRadius="10px" bg="white">
+            <Flex direction="column" width="100%" p="15px">
+              <Flex justifyContent="space-between" alignItems="center" mb="15px">
+                <Heading 
+                  textAlign="left" 
+                  fontSize="xl" 
+                  className="pinnedHeader" 
+                  color="#21334a"
+                >
+                  Energy Consumed: <Text as="span" color={isAdmin ? '#0b13b0' : '#6cce58'} display="inline" fontsize="6">
+                  {getTimePeriodLabel()}</Text>
+                </Heading>
+                <ButtonGroup size="sm" isAttached variant="outline">
+  <Button 
+    colorScheme={timeFilter === 'daily' ? (isAdmin ? 'blue' : 'green') : 'gray'} 
+    onClick={() => setTimeFilter('daily')}
+    color="#21334a"
+    _hover={{ bg: isAdmin ? '#e6e9ff' : '#e6ffe6', color: isAdmin ? '#0b13b0' : '#6cce58' }}
+  >
+    Daily
+  </Button>
+  <Button 
+    colorScheme={timeFilter === 'weekly' ? (isAdmin ? 'blue' : 'green') : 'gray'} 
+    onClick={() => setTimeFilter('weekly')}
+    color="#21334a"
+    _hover={{ bg: isAdmin ? '#e6e9ff' : '#e6ffe6', color: isAdmin ? '#0b13b0' : '#6cce58' }}
+  >
+    Weekly
+  </Button>
+  <Button 
+    colorScheme={timeFilter === 'monthly' ? (isAdmin ? 'blue' : 'green') : 'gray'} 
+    onClick={() => setTimeFilter('monthly')}
+    color="#21334a"
+    _hover={{ bg: isAdmin ? '#e6e9ff' : '#e6ffe6', color: isAdmin ? '#0b13b0' : '#6cce58' }}
+  >
+    Monthly
+  </Button>
+  <Button 
+    colorScheme={timeFilter === 'yearly' ? (isAdmin ? 'blue' : 'green') : 'gray'} 
+    onClick={() => setTimeFilter('yearly')}
+    color="#21334a"
+    _hover={{ bg: isAdmin ? '#e6e9ff' : '#e6ffe6', color: isAdmin ? '#0b13b0' : '#6cce58' }}
+  >
+    Yearly
+  </Button>
+</ButtonGroup>
+              </Flex>
+              <Box height="300px" width="100%">
+                {energyData.length > 0 ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={energyData}>
+                      <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
+                      <XAxis 
+  dataKey="name" 
+  tick={{ fill: '#21334a', fontSize: 6 }} 
+  height={60}
+  tickLine={false}
+  angle={-45}
+  textAnchor="end"
+/>                      <YAxis tick={{ fill: '#21334a', fontSize: 12 }} />
+                      <Tooltip />
+                      <Legend />
+                      <Bar dataKey="energy" fill={isAdmin ? '#0b13b0' : '#6cce58'} name="Energy (kWh)" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <Flex height="100%" justifyContent="center" alignItems="center">
+                    <Text color="#666">No energy data available for this time period</Text>
+                  </Flex>
+                )}
+              </Box>
+            </Flex>
+          </Box>
+
+          {/* Devices Per Room */}
+          <Box className="shadowPinned" mt="20px" mx="20px" borderRadius="10px" bg="white" mb="30px">
+            <Flex direction="column" width="100%" p="15px">
+              <Heading 
+                textAlign="left" 
+                fontSize="xl" 
+                className="pinnedHeader" 
+                color="#21334a" 
+                mb="15px"
+              >
+                Devices by Room
+              </Heading>
+              {energyData.length > 0 ? (
+                <SimpleGrid columns={1} gap={3}>
+                  {energyData.map((item, index) => (
+                    <Flex 
+                    key={index} 
+                    bg="white" // Changed from #f5f5f5 to white to match card background
+                    p={3} 
+                    borderRadius="md" 
+                    justifyContent="space-between" 
+                    alignItems="center"
+                    boxShadow="0 2px 4px rgba(0, 0, 0, 0.05)"
+                  >
+                    <Box>
+                      <Text fontWeight="medium" color="#21334a">{item.name}</Text>
+                      <Text fontSize="sm" color="#666">{item.devices} devices</Text>
+                    </Box>
+                    <Text 
+                      bg={isAdmin ? '#5764f7' : '#43eb7f'} 
+                      px={3} 
+                      py={1} 
+                      borderRadius="full" 
+                      fontSize="sm"
+                      color="white"
+                    >
+                      {item.energy} kWh
+                    </Text>
+                  </Flex>
+                  ))}
+                </SimpleGrid>
+              ) : (
+                <Flex justifyContent="center" alignItems="center" py={5}>
+                  <Text color="#666">No device data available for this time period</Text>
+                </Flex>
+              )}
+            </Flex>
+          </Box>
+        </>
+      )}
     </div>
   );
 };

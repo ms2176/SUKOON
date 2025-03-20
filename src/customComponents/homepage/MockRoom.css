@@ -1,0 +1,17 @@
+.mockRoomComp {
+    background-color: white; 
+    width: calc(45%);
+    height: 150px;
+    /* margin: 10px 10px 10px 10px; */
+    margin-top: 10px;
+    margin-bottom: 10px;
+    border-radius: 20px;
+    border-width: 2;
+    position: relative;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.imageboxpin {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+
+}

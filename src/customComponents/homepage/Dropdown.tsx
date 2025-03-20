@@ -1,5 +1,5 @@
 import { Heading, HStack } from '@chakra-ui/react';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import {
   MenuContent,
@@ -9,15 +9,36 @@ import {
 } from "@/components/ui/menu";
 import { MdArrowDropDown } from "react-icons/md";
 
-interface DropdownProps {
-  initialShow: string;
+interface Home {
+  homeName: string;
+  homeType: string;
+  hubCode: string;
 }
 
-const Dropdown: React.FC<DropdownProps> = ({ initialShow }) => {
-  const [selectedItem, setSelectedItem] = useState<string>(initialShow);
+interface DropdownProps {
+  initialShow: string;
+  homes: Home[];
+  onSelect: (home: Home) => void; // Callback for when a hub is selected
+}
+
+const Dropdown: React.FC<{
+  homes: Home[];
+  onSelect: (home: Home) => void;
+  initialShow: string;
+}> = ({ homes, onSelect, initialShow }) => {
+  const [selectedHome, setSelectedHome] = useState(initialShow);
+
+  useEffect(() => {
+    setSelectedHome(initialShow);
+  }, [homes, initialShow]); // Update when homes change
+
+  const handleSelect = (home: Home) => {
+    setSelectedHome(home.homeName);
+    onSelect(home);
+  };
 
   return (
-    <div style={{ background: 'transparent' }}>
+    <div key={homes.length} style={{ background: 'transparent', width: '100%' }}>
       <MenuRoot>
         <MenuTrigger asChild>
           <Button
@@ -25,35 +46,34 @@ const Dropdown: React.FC<DropdownProps> = ({ initialShow }) => {
             size="xs"
             color={'gray.300'}
             borderRadius={20}
-            minWidth="120px"  // Set minimum width to prevent shrinking
-            maxWidth="200px"  // Limit maximum width
-            px={3}  // Add horizontal padding to prevent a squeezed look
+            width="80%"
+            px={3}
+            style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}
           >
-            <HStack >
-              <Heading fontSize="sm" whiteSpace="nowrap">
-                {selectedItem}
+            <HStack width="100%" spaceX={2}>
+              <Heading fontSize={{ base: '80%', sm: '90%', md: '100%' }} whiteSpace="nowrap" overflow="hidden" textOverflow="ellipsis">
+                {initialShow}
               </Heading>
               <MdArrowDropDown />
             </HStack>
           </Button>
         </MenuTrigger>
 
-        <MenuContent color={'#454545'}>
-          <MenuItem value="new-txt" color={'inherit'} onClick={() => setSelectedItem("New Text File")}>
-            New Text File
-          </MenuItem>
-          <MenuItem value="new-file" color={'inherit'} onClick={() => setSelectedItem("New File...")}>
-            New File...
-          </MenuItem>
-          <MenuItem value="new-win" color={'inherit'} onClick={() => setSelectedItem("New Window")}>
-            New Window
-          </MenuItem>
-          <MenuItem value="open-file" color={'inherit'} onClick={() => setSelectedItem("Open File...")}>
-            Open File...
-          </MenuItem>
-          <MenuItem value="export" color={'inherit'} onClick={() => setSelectedItem("Export")}>
-            Export
-          </MenuItem>
+        <MenuContent color={'#454545'} width="100%" maxWidth="200px" p={3} borderRadius={'20px'} spaceY={2}>
+          {homes.map((home) => (
+            <MenuItem
+              key={home.homeName}
+              value={home.homeName}
+              color={'inherit'}
+              onClick={() => {
+                setSelectedHome(home.homeName);
+                onSelect(home); // Call the onSelect callback with the selected home
+              }}
+              style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+            >
+              {home.homeName}
+            </MenuItem>
+          ))}
         </MenuContent>
       </MenuRoot>
     </div>

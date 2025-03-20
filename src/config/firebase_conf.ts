@@ -1,6 +1,7 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
+import { getFirestore, connectFirestoreEmulator } from "firebase/firestore";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -15,3 +16,19 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
+export const db = getFirestore(app);
+
+// Add a global error handler for Firestore connection issues
+window.addEventListener("unhandledrejection", (event) => {
+  if (
+    event.reason &&
+    typeof event.reason.message === "string" &&
+    event.reason.message.includes("ERR_BLOCKED_BY_CLIENT")
+  ) {
+    console.warn(
+      "Firebase connection appears to be blocked by an extension. " +
+        "Please check any ad blockers or privacy extensions that might " +
+        "be interfering with the connection."
+    );
+  }
+});
