@@ -58,6 +58,7 @@ import {
   FiZap 
 } from "react-icons/fi";
 
+
 interface Home {
   homeName: string;
   homeType: string;
@@ -179,6 +180,8 @@ const Homepage: React.FC<{
   const [loading, setLoading] = useState(true);
   const [activeDevicesCount, setActiveDevicesCount] = useState<number>(0); // State for active devices count
   const navigate = useNavigate();
+  const [energyGeneration, setEnergyGeneration] = useState<string>("0KW/h");
+  const [totalConsumption, setTotalConsumption] = useState<string>("0KW/h");
 
   useEffect(() => {
     const auth = getAuth();
@@ -208,8 +211,8 @@ const Homepage: React.FC<{
 
     return () => unsubscribe();
   }, []);
-
-  const fetchActiveDevicesCount = async (hubCode: string) => {
+  
+  const fetchActiveDevicesAndEnergy = async (hubCode: string) => {
     const db = getFirestore();
     const devicesRef = collection(db, "devices");
     const q = query(
@@ -217,19 +220,34 @@ const Homepage: React.FC<{
       where("hubCode", "==", hubCode),
       where("on", "==", true)
     );
-
+  
     try {
+      // Fetch active devices count
       const querySnapshot = await getDocs(q);
-      setActiveDevicesCount(querySnapshot.size); // Set the count of active devices
+      setActiveDevicesCount(querySnapshot.size);
+      
+      // Fetch energy data from API
+      const liveEnergyResponse = await fetch(`https://api.sukoonhome.me/hubs/${hubCode}/live-energy`);
+      if (liveEnergyResponse.ok) {
+        const liveEnergyData = await liveEnergyResponse.json();
+        setTotalConsumption(`${liveEnergyData.total_consumption}KW`);
+      }
+      
+      // Fetch real energy data for generation
+      const realEnergyResponse = await fetch(`https://api.sukoonhome.me/hub/${hubCode}/real-energy`);
+      if (realEnergyResponse.ok) {
+        const realEnergyData = await realEnergyResponse.json();
+        setEnergyGeneration(`${realEnergyData.energy_data.daily.total_energy}KW/h`);
+      }
     } catch (error) {
-      console.error("Error fetching active devices:", error);
+      console.error("Error fetching active devices and energy:", error);
     }
   };
 
   // Update active devices count when selectedHome changes
   useEffect(() => {
     if (selectedHome) {
-      fetchActiveDevicesCount(selectedHome.hubCode);
+      fetchActiveDevicesAndEnergy(selectedHome.hubCode);
     }
   }, [selectedHome]);
 
@@ -596,7 +614,7 @@ const Homepage: React.FC<{
             <MiniDisplays
               Icon={FiZap}
               title="Energy Generation:"
-              value="50KW/h"
+              value={energyGeneration}
             />
           </HStack>
         </Flex>
@@ -622,7 +640,7 @@ const Homepage: React.FC<{
               fontWeight={"bold"}
               className="totalConsShow"
             >
-              50.1KW/h
+  {totalConsumption}
             </Heading>
           </Box>
         </Flex>
