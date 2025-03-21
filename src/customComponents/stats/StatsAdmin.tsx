@@ -34,6 +34,49 @@ import DownloadButton from "./DownloadButton";
 // Import the JSON data - use the custom admin hub JSON
 import adminHubData from "./demo-admin-hub.json";
 
+// Add TypeScript interfaces
+interface Home {
+  homeName: string;
+  homeType: string;
+  hubCode: string;
+}
+
+interface ChartData {
+  name: string;
+  energy: number;
+  hubCode: string;
+}
+
+interface TenantHubData {
+  hub_id: string;
+  energy_value: number;
+  unit: string;
+}
+
+interface TimeData {
+  total_energy: number;
+  unit: string;
+  date?: string;
+  week?: string;
+  month?: string;
+  year?: string;
+  tenant_hubs: Record<string, TenantHubData>;
+}
+
+interface EnergyData {
+  daily: TimeData;
+  weekly: TimeData;
+  monthly: TimeData;
+  yearly: TimeData;
+}
+
+interface HubData {
+  hub_id: string;
+  hub_name: string;
+  hub_type: string;
+  energy_data: EnergyData;
+}
+
 const StatsAdmin = () => {
   // Add this array with your demo user IDs
   const demoUserIds = [
@@ -45,11 +88,13 @@ const StatsAdmin = () => {
   ];
 
   const navigate = useNavigate();
-  const [energyData, setEnergyData] = useState([]);
+  const [energyData, setEnergyData] = useState<ChartData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState<string>(""); // Add error state
   const [timeFilter, setTimeFilter] = useState("monthly"); // Default filter
-  const [hubData, setHubData] = useState(null);
+  const [hubData, setHubData] = useState<HubData | null>(null);
   const [isDemoUser, setIsDemoUser] = useState(false);
+  const [selectedHome, setSelectedHome] = useState<Home | null>(null);
 
   // Check if current user is a demo user
   useEffect(() => {
@@ -91,54 +136,54 @@ const StatsAdmin = () => {
       if (selectedHome && selectedHome.hubCode) {
         setLoading(true);
 
-        // For admin users, we're going to use the custom admin hub JSON data
-        // instead of checking for matches with the hub code
-        if (selectedHome.homeType === "admin") {
-          setHubData(adminHubData);
-          processEnergyData(adminHubData, timeFilter);
-        } else {
-          // If not an admin hub, check Firebase
-          const db = getFirestore();
-          const tenantsRef = collection(db, "userHubs");
-          const tenantsQuery = query(
-            tenantsRef,
-            where("adminHubCode", "==", selectedHome.hubCode)
-          );
+        try {
+          // For admin users, we're going to use the custom admin hub JSON data
+          // instead of checking for matches with the hub code
+          if (selectedHome.homeType === "admin") {
+            setHubData(adminHubData as HubData);
+            processEnergyData(adminHubData as HubData, timeFilter);
+          } else {
+            // If not an admin hub, check Firebase
+            const db = getFirestore();
+            const tenantsRef = collection(db, "userHubs");
+            const tenantsQuery = query(
+              tenantsRef,
+              where("adminHubCode", "==", selectedHome.hubCode)
+            );
 
-          try {
-            const querySnapshot = await getDocs(tenantsQuery);
-            const tenantsData = [];
-            querySnapshot.forEach((doc) => {
-              const data = doc.data();
-              tenantsData.push({
-                id: doc.id,
-                homeName: data.homeName,
-                hubCode: data.hubCode,
-              });
-            });
-
-            // Use Firebase data if available
-            if (tenantsData.length > 0) {
-              // Process Firebase data for tenants
-              const tenantEnergyData = tenantsData.map((tenant) => {
-                return {
-                  name: tenant.homeName,
+            try {
+              const querySnapshot = await getDocs(tenantsQuery);
+              const tenantsData: ChartData[] = [];
+              querySnapshot.forEach((doc) => {
+                const data = doc.data();
+                tenantsData.push({
+                  name: data.homeName,
                   energy: 0, // You'll need to modify this based on your needs
-                  hubCode: tenant.hubCode,
-                };
+                  hubCode: data.hubCode,
+                });
               });
-              setEnergyData(tenantEnergyData);
-            } else {
-              // No data found in either source
+
+              // Use Firebase data if available
+              if (tenantsData.length > 0) {
+                setEnergyData(tenantsData);
+              } else {
+                // No data found in either source
+                setEnergyData([]);
+              }
+            } catch (error) {
+              console.error("Error fetching tenant hubs:", error);
+              setErrorMessage("Failed to load hub data. Please try again.");
               setEnergyData([]);
             }
-          } catch (error) {
-            console.error("Error fetching tenant hubs:", error);
-            setEnergyData([]);
           }
+        } catch (error) {
+          console.error("Error in fetchHubData:", error);
+          setErrorMessage(
+            "An error occurred while loading data. Please try again."
+          );
+        } finally {
+          setLoading(false);
         }
-
-        setLoading(false);
       }
     };
 
@@ -146,13 +191,17 @@ const StatsAdmin = () => {
   }, [selectedHome, timeFilter, isDemoUser]); // Add isDemoUser as a dependency
 
   // Process energy data based on the time filter - modified for admin view with tenant_hubs
-  const processEnergyData = (hubData, timeFilter) => {
-    if (!hubData || !hubData.energy_data || !hubData.energy_data[timeFilter]) {
+  const processEnergyData = (hubData: HubData | null, timeFilter: string) => {
+    if (
+      !hubData ||
+      !hubData.energy_data ||
+      !hubData.energy_data[timeFilter as keyof EnergyData]
+    ) {
       setEnergyData([]);
       return;
     }
 
-    const timeData = hubData.energy_data[timeFilter];
+    const timeData = hubData.energy_data[timeFilter as keyof EnergyData];
     const tenantHubsData = timeData.tenant_hubs;
 
     if (!tenantHubsData) {
@@ -230,11 +279,15 @@ const StatsAdmin = () => {
 
   // Function to get the current time period label
   const getTimePeriodLabel = () => {
-    if (!hubData || !hubData.energy_data || !hubData.energy_data[timeFilter]) {
+    if (
+      !hubData ||
+      !hubData.energy_data ||
+      !hubData.energy_data[timeFilter as keyof EnergyData]
+    ) {
       return "";
     }
 
-    const timeData = hubData.energy_data[timeFilter];
+    const timeData = hubData.energy_data[timeFilter as keyof EnergyData];
 
     switch (timeFilter) {
       case "daily":
@@ -252,7 +305,14 @@ const StatsAdmin = () => {
 
   // Get total energy value for the current time period
   const getTotalEnergy = () => {
-    const timeData = hubData.energy_data[timeFilter];
+    if (
+      !hubData ||
+      !hubData.energy_data ||
+      !hubData.energy_data[timeFilter as keyof EnergyData]
+    ) {
+      return 0;
+    }
+    const timeData = hubData.energy_data[timeFilter as keyof EnergyData];
     return timeData ? timeData.total_energy : 0;
   };
 
@@ -283,6 +343,17 @@ const StatsAdmin = () => {
         <Box textAlign="center" py={10}>
           <Text>Loading energy data...</Text>
         </Box>
+      ) : errorMessage ? (
+        <Box textAlign="center" py={10} color="red.500">
+          <Text>{errorMessage}</Text>
+          <Button
+            mt={4}
+            colorScheme="blue"
+            onClick={() => window.location.reload()}
+          >
+            Retry
+          </Button>
+        </Box>
       ) : (
         <>
           {/* Energy Consumption Chart */}
@@ -303,7 +374,8 @@ const StatsAdmin = () => {
                   mb="10px"
                 >
                   Energy Consumed: {getTotalEnergy()}{" "}
-                  {hubData.energy_data[timeFilter]?.unit || "kWh"}
+                  {hubData?.energy_data[timeFilter as keyof EnergyData]?.unit ||
+                    "kWh"}
                 </Heading>
                 {isDemoUser && (
                   <Text color="#0b13b0" fontWeight="medium" mb="15px">

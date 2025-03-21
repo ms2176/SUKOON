@@ -34,6 +34,51 @@ import DownloadButton from "./DownloadButton";
 // Import the JSON data
 import energyStatsData from "./demoData.json";
 
+// Add TypeScript interfaces
+interface ChartData {
+  name: string;
+  energy: number;
+  devices: number;
+}
+
+interface Home {
+  homeName: string;
+  homeType: string;
+  hubCode: string;
+}
+
+interface RoomData {
+  energy_value: number;
+  unit: string;
+  device_count: number;
+  room_id: string;
+  devices: Array<{ device_type: string }>;
+}
+
+interface TimeData {
+  total_energy: number;
+  unit: string;
+  date?: string;
+  week?: string;
+  month?: string;
+  year?: string;
+  rooms: Record<string, RoomData>;
+}
+
+interface EnergyData {
+  daily: TimeData;
+  weekly: TimeData;
+  monthly: TimeData;
+  yearly: TimeData;
+}
+
+interface HubData {
+  hub_id: string;
+  hub_name: string;
+  hub_type: string;
+  energy_data: EnergyData;
+}
+
 const StatsTenant = () => {
   // Add this array with your demo user IDs
   const demoUserIds = [
@@ -48,9 +93,16 @@ const StatsTenant = () => {
   const [energyData, setEnergyData] = useState<ChartData[]>([]);
   const [selectedHome, setSelectedHome] = useState<Home | null>(null);
   const [loading, setLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState<string>(""); // Add error state variable
   const [timeFilter, setTimeFilter] = useState("monthly"); // Default filter
-  const [hubData, setHubData] = useState(null);
+  const [hubData, setHubData] = useState<HubData | null>(null);
   const [isDemoUser, setIsDemoUser] = useState(false);
+
+  // Function to fetch room details (add implementation as needed)
+  const fetchRoomDetails = (roomId: string) => {
+    console.log("Fetching details for room:", roomId);
+    // Implement your room details fetching logic here
+  };
 
   // Check if current user is a demo user
   useEffect(() => {
@@ -80,7 +132,6 @@ const StatsTenant = () => {
   }, []);
 
   // Fetch hub data and validate with Firebase
-  // Fetch hub data and validate with Firebase
   useEffect(() => {
     const fetchHubData = async () => {
       // Skip data fetching for non-demo users
@@ -93,12 +144,19 @@ const StatsTenant = () => {
       if (selectedHome) {
         setLoading(true);
 
-        // For demo users, we'll always use the energyStatsData JSON
-        // No need to check if the hubCode matches
-        setHubData(energyStatsData);
-        processEnergyData(energyStatsData, timeFilter);
-
-        setLoading(false);
+        try {
+          // For demo users, we'll always use the energyStatsData JSON
+          // No need to check if the hubCode matches
+          setHubData(energyStatsData as HubData);
+          processEnergyData(energyStatsData as HubData, timeFilter);
+        } catch (error) {
+          console.error("Error fetching or processing hub data:", error);
+          setErrorMessage(
+            "Failed to load energy data. Please try again later."
+          );
+        } finally {
+          setLoading(false);
+        }
       }
     };
 
@@ -198,11 +256,15 @@ const StatsTenant = () => {
 
   // Function to get the current time period label
   const getTimePeriodLabel = () => {
-    if (!hubData || !hubData.energy_data || !hubData.energy_data[timeFilter]) {
+    if (
+      !hubData ||
+      !hubData.energy_data ||
+      !hubData.energy_data[timeFilter as keyof EnergyData]
+    ) {
       return "";
     }
 
-    const timeData = hubData.energy_data[timeFilter];
+    const timeData = hubData.energy_data[timeFilter as keyof EnergyData];
 
     switch (timeFilter) {
       case "daily":
@@ -245,9 +307,9 @@ const StatsTenant = () => {
         <Box textAlign="center" py={10}>
           <Text>Loading energy data...</Text>
         </Box>
-      ) : error ? (
+      ) : errorMessage ? (
         <Box textAlign="center" py={10} color="red.500">
-          <Text>{error}</Text>
+          <Text>{errorMessage}</Text>
           <Button
             mt={4}
             colorScheme="green"
@@ -421,11 +483,16 @@ const StatsTenant = () => {
                       boxShadow="0 2px 4px rgba(0, 0, 0, 0.05)"
                       onClick={() => {
                         // Find room_id from the hubData structure
-                        const roomId =
-                          hubData?.energy_data[timeFilter]?.rooms[item.name]
-                            ?.room_id;
-                        if (roomId) {
-                          fetchRoomDetails(roomId);
+                        if (
+                          hubData?.energy_data[timeFilter as keyof EnergyData]
+                            ?.rooms
+                        ) {
+                          const roomId =
+                            hubData.energy_data[timeFilter as keyof EnergyData]
+                              .rooms[item.name]?.room_id;
+                          if (roomId) {
+                            fetchRoomDetails(roomId);
+                          }
                         }
                       }}
                       cursor="pointer"
