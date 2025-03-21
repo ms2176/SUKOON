@@ -71,8 +71,8 @@ const InitialView: React.FC<{
         {isAddHomeVisible && <AddHome onHomeAdded={handleHomeAdded} closeAddHome={toggleAddHome}/> }
       <Stack className='homepageContainer' position={'relative'} display={'flex'} height={'auto'}>
         <Box className='homepageHeader'>
-          <Heading bg={'transparent'} ml={'20px'} mt={'20px'} mb={'20px'} fontWeight={'extrabold'} className='introHomepage'>
-            Ya Halla, <span className='guestIntro'>{username || 'guest'}</span>
+          <Heading bg={'transparent'} fontSize={'110%'} ml={'5px'} mt={'20px'} mb={'20px'} fontWeight={'extrabold'} className='introHomepage'>
+            Ya Halla, <span style={{color: 'white'}} className='guestIntro'>{username || 'guest'}</span>
           </Heading>
         </Box>
 

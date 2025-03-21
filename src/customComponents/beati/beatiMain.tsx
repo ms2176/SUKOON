@@ -146,12 +146,13 @@ const BeatiMain = () => {
          margin={'25px 0px 35px 15px'}
           fontSize={'250%'}
           className='beatiHead'
+          mb={'20px'}
         >
           Be'ati
         </Heading>
       </Box>
 
-      <Stack className='beatiContentCont' spaceY={3} style={{ marginTop: '80px' }}>
+      <Stack className='beatiContentCont' spaceY={3} style={{ marginTop: '5%' }}>
         <Box className='dailyGoal' spaceY={3}>
           <Stack bg={'transparent'} className='dailyGoalStack'>
             <Heading bg={'transparent'} color={'#3627ba'} mt={'10px'}>
@@ -163,7 +164,7 @@ const BeatiMain = () => {
             </div>
 
             <Heading bg={'transparent'} color={'#3627ba'}>
-              {dailyGoal} kWh
+              {dailyGoal} kW
             </Heading>
             <Box className='editBox' onClick={toggleDailyConfig}>
               <FaPen
