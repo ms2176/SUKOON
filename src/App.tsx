@@ -368,8 +368,8 @@ const App = () => {
         />
       </Routes>
 
-      <ChatApp /> {/* Add the ChatApp component here */}
-      <Notif /> {/* Add the Notif component here */}
+      {isAuthenticatedRoute && <ChatApp />}
+      {isAuthenticatedRoute && <Notif />}
     </>
   );
 };
