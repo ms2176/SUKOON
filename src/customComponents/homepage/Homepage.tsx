@@ -533,7 +533,8 @@ const Homepage: React.FC<{
             mt={"20px"}
             mb={"20px"}
             className="introHomepage"
-            fontSize={'150%'}
+            fontSize={'110%'}
+            
           >
             Ya Halla, <span style={{color:'white'}} className="guestIntro">{username}</span>
           </Heading>
