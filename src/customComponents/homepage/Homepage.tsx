@@ -524,17 +524,18 @@ const Homepage: React.FC<{
       >
         <Box
           className="homepageHeader"
+          margin={0}
           bg={selectedHome?.homeType === "admin" ? "#0b13b0" : "#6cce58"}
         >
           <Heading
             bg={"transparent"}
-            ml={"20px"}
+            ml={"5px"}
             mt={"20px"}
             mb={"20px"}
-            fontWeight={"extrabold"}
             className="introHomepage"
+            fontSize={'150%'}
           >
-            Ya Halla, <span className="guestIntro">{username}</span>
+            Ya Halla, <span style={{color:'white'}} className="guestIntro">{username}</span>
           </Heading>
         </Box>
 
@@ -637,10 +638,12 @@ const Homepage: React.FC<{
           >
             <Heading
               bg={"transparent"}
+              color={'white'}
               fontWeight={"bold"}
               className="totalConsShow"
+              fontSize={'120%'}
             >
-  {totalConsumption}
+              {totalConsumption}/h
             </Heading>
           </Box>
         </Flex>

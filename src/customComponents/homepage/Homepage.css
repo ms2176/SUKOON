@@ -10,7 +10,6 @@ body {
 .homepageContainer {
     min-height: 100vh;
     overflow-y: auto;
-    padding: 20px;
     background-color: #fff !important;
     box-shadow: none;
 }
@@ -23,6 +22,7 @@ body {
     justify-content: center;
     align-content: center;
     z-index: 1;
+    font-size: 150%;
 }
 
 /* Pulse Box Container and Animation */
@@ -67,7 +67,7 @@ body {
     font-family: 'SpotifyFont', sans-serif;
     background: transparent;
     color: #000; /* Black font color */
-    font-size: 1.2rem; /* Adjusted font size to match room list design */
+    font-size: 100%; /* Adjusted font size to match room list design */
 }
 
 .pinnedHeader, .editHeader {
