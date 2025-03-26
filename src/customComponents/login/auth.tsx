@@ -1,24 +1,36 @@
 import { Button, Heading, Stack, Text } from '@chakra-ui/react';
 import './auth.css';
-import LoginAnimation from '@/images/animatedIcons/Forest-Waterfall.mp4';
-import { useNavigate } from 'react-router-dom'; // Import useNavigate
+import { useNavigate } from 'react-router-dom';
+import TAS from './TAS';
+import { useState } from 'react';
+import PP from './PP';
+import Lottie from 'react-lottie-player';
+import smartHomeAnimation from '@/images/animatedIcons/smartHome.json';
+import Logo from '@/images/logo.png'
 
 const Auth = () => {
-  const navigate = useNavigate(); // Initialize useNavigate
+  const navigate = useNavigate();
+  const [showTAS, setShowTAS] = useState(false);
+  const [showPP, setShowPP] = useState(false);
 
-  const goToEmailConf = () => {
-    navigate('/EmailConf')
-  }
+  
 
   return (
-    <div>
+    <div className="auth-container">
       <Stack className="loginStartStack">
-        <video className="loginAnimation" autoPlay loop>
-          <source src={LoginAnimation} type="video/mp4" />
-          Your browser does not support mp4s.
-        </video>
+        <div className="animation-container">
+          <Lottie
+            loop
+            animationData={smartHomeAnimation}
+            play
+            className="smart-home-animation"
+          />
+        </div>
 
-        <Heading className='Sukoon-logo'>
+        {showTAS && <TAS onClose={() => setShowTAS(false)} />}
+        {showPP && <PP onClose={() => setShowPP(false)} />}
+
+        <Heading className="Sukoon-logo">
           SUKOON
         </Heading>
 
@@ -26,30 +38,33 @@ const Auth = () => {
           Smarter choices for a better tomorrow!
         </Heading>
 
-        {/* Get Started Button */}
         <Button
           className="loginStart-Button"
           backgroundColor={'#6cce58'}
           color={'#f6f6f6'}
-          onClick={() => navigate('/register')} // Navigate to Register
+          onClick={() => navigate('/register')}
         >
           Get started
         </Button>
 
-        {/* Login Button */}
         <Button
           className="loginStart-Button"
           backgroundColor={'#f6f6f6'}
           color={'#6cce58'}
-          onClick={() => navigate('/login')} // Navigate to Login
+          onClick={() => navigate('/login')}
         >
           Log in
         </Button>
 
         <Text className="loginStart-text">
           By continuing, you agree to the{' '}
-          <span style={{ color: '#6cce58' }} onClick={goToEmailConf}>Terms of Service</span> and{' '}
-          <span style={{ color: '#6cce58' }}>Privacy Policy</span>
+          <span style={{ color: '#6cce58', cursor: 'pointer' }} onClick={() => setShowTAS(true)}>
+            Terms of Service
+          </span>{' '}
+          and{' '}
+          <span style={{ color: '#6cce58', cursor: 'pointer' }} onClick={() => setShowPP(true)}>
+            Privacy Policy
+          </span>
         </Text>
       </Stack>
     </div>
@@ -57,5 +72,3 @@ const Auth = () => {
 };
 
 export default Auth;
-
-

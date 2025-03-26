@@ -84,6 +84,7 @@ html, body {
 .edithomes,
 .roomshd,
 .deviceNameConfig,
-.roomName {
+.roomName,
+.bold {
   font-family: 'SpotifyFont', sans-serif;
 }

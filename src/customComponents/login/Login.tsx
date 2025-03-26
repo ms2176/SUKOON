@@ -14,11 +14,11 @@ import { CiLock } from "react-icons/ci";
 import { MdOutlineEmail } from "react-icons/md";
 import { useNavigate } from "react-router-dom"; // Import useNavigate
 import React, { useState } from "react";
+import { IoChevronBackOutline } from "react-icons/io5";
 
 import { FormControl } from "@chakra-ui/form-control";
 import { FiEye, FiEyeOff } from "react-icons/fi";
 
-import { IoChevronBack } from "react-icons/io5";
 import {
   loginWithEmail,
   signInWithGoogle,
@@ -70,6 +70,20 @@ const Login = () => {
     e.preventDefault();
     setEmailError("");
     setPasswordError("");
+    e.preventDefault();
+  setEmailError("");
+  setPasswordError("");
+
+  let hasError = false;
+  if (!email) {
+    setEmailError("Email is required");
+    hasError = true;
+  }
+  if (!password) {
+    setPasswordError("Password is required");
+    hasError = true;
+  }
+  if (hasError) return;
 
     if (!email || !password) {
       setEmailError("Email and password are required");
@@ -198,6 +212,29 @@ const Login = () => {
 
   return (
     <div style={{ overflowX: "hidden" }}>
+
+      <Button
+        borderRadius="full"
+        width="50px"
+        height="50px"
+        display="flex"
+        alignItems="center"
+        justifyContent="center"
+        bg="#43eb7f"
+        position="fixed" // Changed from absolute to fixed
+        left="7%"
+        top="9%"
+        boxShadow="0 4px 8px rgba(0, 0, 0, 0.2)"
+        onClick={goToAuth}
+        zIndex={999} // Ensure it stays on top
+      >
+        <IoChevronBackOutline 
+          color="white" 
+          size={24} 
+          style={{ background: "transparent" }}
+        />
+      </Button>
+
       <Flex
         className="registerTop"
         overflow="hidden"
@@ -229,24 +266,7 @@ const Login = () => {
           display={"flex"}
           position="relative"
           bg={"transparent"}
-        >
-          {/* Back Button */}
-          <Button
-            borderRadius={200}
-            width="30px"
-            height="40px"
-            display={"flex"}
-            bg={"#43eb7f"}
-            position="absolute"
-            left="-15%"
-            boxShadow="0 4px 8px rgba(0, 0, 0, 0.2)"
-            onClick={goToAuth} // Navigate to Auth when clicked
-            top={"-120%"}
-          >
-            <Text color={"white"} bg={"transparent"}>
-              &lt;
-            </Text>
-          </Button>
+        >          
 
           {/* Log In Heading */}
           <Heading
