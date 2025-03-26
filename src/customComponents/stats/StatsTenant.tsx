@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Text,
   Flex,
@@ -7,7 +7,11 @@ import {
   SimpleGrid,
   Button,
   ButtonGroup,
+  Spinner,
+  IconButton,
+  Tooltip as ChakraTooltip,
 } from "@chakra-ui/react";
+import { FiRefreshCcw, FiDownload } from "react-icons/fi";
 import { toaster } from "@/components/ui/toaster";
 import { useNavigate } from "react-router-dom";
 import {
@@ -20,25 +24,15 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import {
-  getFirestore,
-  collection,
-  query,
-  where,
-  getDocs,
-} from "firebase/firestore";
-import { getAuth } from "firebase/auth"; // Add this import
 import "./Stats.css";
-import DownloadButton from "./DownloadButton";
-
-// Import the JSON data
-import energyStatsData from "./demoData.json";
+// import DownloadButton from "./DownloadButton";
 
 // Add TypeScript interfaces
 interface ChartData {
   name: string;
   energy: number;
   devices: number;
+  roomId: string;
 }
 
 interface Home {
@@ -80,47 +74,53 @@ interface HubData {
 }
 
 const StatsTenant = () => {
-  // Add this array with your demo user IDs
-  const demoUserIds = [
-    "rPms1L8WRYgeSDGV59I30J6ZaGp1",
-    "A4RUSi3FNTT8mR9kOhx0HJCCvXN2",
-    "eA30YbSS12M7oL19w2i9zSjZbmo1",
-    "3rq9m8Oew9XJ44WbTvNsJhtHLv73",
-    // Add all your demo account IDs here
-  ];
-
   const navigate = useNavigate();
   const [energyData, setEnergyData] = useState<ChartData[]>([]);
   const [selectedHome, setSelectedHome] = useState<Home | null>(null);
   const [loading, setLoading] = useState(true);
-  const [errorMessage, setErrorMessage] = useState<string>(""); // Add error state variable
+  const [errorMessage, setErrorMessage] = useState<string>("");
   const [timeFilter, setTimeFilter] = useState("monthly"); // Default filter
   const [hubData, setHubData] = useState<HubData | null>(null);
-  const [isDemoUser, setIsDemoUser] = useState(false);
+  const [isLoading, setIsLoading] = useState(false); // For individual API calls
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [lastUpdatedText, setLastUpdatedText] = useState<string>("");
+  const timerRef = useRef<number | null>(null);
 
-  // Function to fetch room details (add implementation as needed)
-  const fetchRoomDetails = (roomId: string) => {
-    console.log("Fetching details for room:", roomId);
-    // Implement your room details fetching logic here
-  };
-
-  // Check if current user is a demo user
+  // Update relative time every minute
   useEffect(() => {
-    const checkIfDemoUser = async () => {
-      const auth = getAuth();
-      const currentUser = auth.currentUser;
+    const updateRelativeTime = () => {
+      if (!lastUpdated) return;
 
-      if (currentUser && demoUserIds.includes(currentUser.uid)) {
-        setIsDemoUser(true);
+      const now = new Date();
+      const diffMs = now.getTime() - lastUpdated.getTime();
+      const diffSecs = Math.floor(diffMs / 1000);
+      const diffMins = Math.floor(diffSecs / 60);
+      const diffHours = Math.floor(diffMins / 60);
+
+      if (diffSecs < 10) {
+        setLastUpdatedText("just now");
+      } else if (diffSecs < 60) {
+        setLastUpdatedText(`${diffSecs}s ago`);
+      } else if (diffMins < 60) {
+        setLastUpdatedText(`${diffMins}m ago`);
       } else {
-        setIsDemoUser(false);
-        // Force loading to false since we won't be loading any data
-        setLoading(false);
+        setLastUpdatedText(`${diffHours}h ${diffMins % 60}m ago`);
       }
     };
 
-    checkIfDemoUser();
-  }, []);
+    // Initial update
+    updateRelativeTime();
+
+    // Set interval to update every 10 seconds
+    const intervalId = window.setInterval(updateRelativeTime, 10000);
+    timerRef.current = intervalId;
+
+    return () => {
+      if (timerRef.current) {
+        window.clearInterval(timerRef.current);
+      }
+    };
+  }, [lastUpdated]);
 
   // Load selected home from localStorage
   useEffect(() => {
@@ -128,40 +128,76 @@ const StatsTenant = () => {
     if (storedSelectedHome) {
       const homeData = JSON.parse(storedSelectedHome);
       setSelectedHome(homeData);
+    } else {
+      setErrorMessage("No home selected. Please select a home first.");
+      setLoading(false);
     }
   }, []);
 
-  // Fetch hub data and validate with Firebase
+  // Fetch hub data from API - only when selectedHome changes, not on timeFilter change
   useEffect(() => {
     const fetchHubData = async () => {
-      // Skip data fetching for non-demo users
-      if (!isDemoUser) {
-        setEnergyData([]);
-        setLoading(false);
-        return;
-      }
-
-      if (selectedHome) {
+      if (selectedHome && selectedHome.hubCode) {
         setLoading(true);
+        setIsLoading(true);
 
         try {
-          // For demo users, we'll always use the energyStatsData JSON
-          // No need to check if the hubCode matches
-          setHubData(energyStatsData as HubData);
-          processEnergyData(energyStatsData as HubData, timeFilter);
+          const apiUrl = `https://api.sukoonhome.me/hub/${selectedHome.hubCode}/energy`;
+
+          const response = await fetch(apiUrl);
+
+          if (!response.ok) {
+            throw new Error(`Failed to fetch hub data: ${response.statusText}`);
+          }
+
+          const data = await response.json();
+          setHubData(data as HubData);
+          processEnergyData(data as HubData, timeFilter);
+          setLastUpdated(new Date());
         } catch (error) {
-          console.error("Error fetching or processing hub data:", error);
+          console.error("Error fetching hub data:", error);
           setErrorMessage(
             "Failed to load energy data. Please try again later."
           );
         } finally {
           setLoading(false);
+          setIsLoading(false);
         }
       }
     };
 
     fetchHubData();
-  }, [selectedHome, timeFilter, isDemoUser]); // Add isDemoUser as a dependency
+  }, [selectedHome]); // Remove timeFilter dependency
+
+  // Refresh data function
+  const refreshData = async () => {
+    if (selectedHome && selectedHome.hubCode) {
+      setIsLoading(true);
+
+      try {
+        const apiUrl = `https://api.sukoonhome.me/hub/${selectedHome.hubCode}/energy`;
+
+        const response = await fetch(apiUrl);
+
+        if (!response.ok) {
+          throw new Error(`Failed to fetch hub data: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        setHubData(data as HubData);
+        processEnergyData(data as HubData, timeFilter);
+        setLastUpdated(new Date());
+      } catch (error) {
+        console.error("Error refreshing hub data:", error);
+        toaster.create({
+          description: "Failed to refresh data. Please try again.",
+          type: "error",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    }
+  };
 
   // Process energy data based on the time filter
   const processEnergyData = (hubData: HubData | null, timeFilter: string) => {
@@ -193,6 +229,7 @@ const StatsTenant = () => {
           name: roomName,
           energy: roomData.energy_value,
           devices: roomData.device_count,
+          roomId: roomData.room_id,
         };
       }
     );
@@ -210,8 +247,12 @@ const StatsTenant = () => {
     }
   }, [hubData, timeFilter]);
 
-  const goToHome = () => {
-    navigate("/homepage");
+  // Handle room click - will be used later for navigation to room stats
+  const handleRoomClick = (roomId: string, roomName: string) => {
+    console.log("Room clicked:", roomId, roomName);
+    // For now, just log the click
+    // Later this will navigate to the room stats page
+    // navigate(`/room-stats/${roomId}`, { state: { roomName } });
   };
 
   // Function to download report as CSV
@@ -225,11 +266,11 @@ const StatsTenant = () => {
     }
 
     // Create CSV content
-    const headers = ["Room", "Energy (kWh)", "Devices"];
+    const headers = ["Room", "Energy (kWh)", "Devices", "Room ID"];
     const csvRows = [
       headers.join(","),
       ...energyData.map((item) =>
-        [item.name, item.energy, item.devices].join(",")
+        [item.name, item.energy, item.devices, item.roomId].join(",")
       ),
     ];
 
@@ -280,6 +321,34 @@ const StatsTenant = () => {
     }
   };
 
+  // Function to get total energy for the selected time period
+  const getTotalEnergy = () => {
+    if (
+      !hubData ||
+      !hubData.energy_data ||
+      !hubData.energy_data[timeFilter as keyof EnergyData]
+    ) {
+      return 0;
+    }
+
+    const timeData = hubData.energy_data[timeFilter as keyof EnergyData];
+    return timeData ? timeData.total_energy : 0;
+  };
+
+  // Function to get energy unit
+  const getEnergyUnit = () => {
+    if (
+      !hubData ||
+      !hubData.energy_data ||
+      !hubData.energy_data[timeFilter as keyof EnergyData]
+    ) {
+      return "kWh";
+    }
+
+    const timeData = hubData.energy_data[timeFilter as keyof EnergyData];
+    return timeData ? timeData.unit : "kWh";
+  };
+
   return (
     <div className="homepageContainer" style={{ overflowX: "hidden" }}>
       {/* Header */}
@@ -298,15 +367,30 @@ const StatsTenant = () => {
           >
             Your Statistics
           </Heading>
-          {isDemoUser && <DownloadButton onClick={downloadReport} />}
+          <IconButton
+            aria-label="Download report"
+            onClick={downloadReport}
+            size="md"
+            variant="ghost"
+            colorScheme="green"
+          >
+            <FiDownload color="#43eb7f" />
+          </IconButton>
         </Flex>
       </Box>
 
       {/* Loading State */}
       {loading ? (
-        <Box textAlign="center" py={10}>
+        <Flex
+          direction="column"
+          alignItems="center"
+          justifyContent="center"
+          py={10}
+          height="200px"
+        >
+          <Spinner color="#6cce58" size="xl" margin="0 0 16px 0" />
           <Text>Loading energy data...</Text>
-        </Box>
+        </Flex>
       ) : errorMessage ? (
         <Box textAlign="center" py={10} color="red.500">
           <Text>{errorMessage}</Text>
@@ -327,82 +411,101 @@ const StatsTenant = () => {
             mx="20px"
             borderRadius="10px"
             bg="white"
+            position="relative"
           >
+            {isLoading && (
+              <Flex
+                position="absolute"
+                top="0"
+                left="0"
+                right="0"
+                bottom="0"
+                alignItems="center"
+                justifyContent="center"
+                bg="rgba(255, 255, 255, 0.7)"
+                zIndex="1"
+                borderRadius="10px"
+              >
+                <Spinner color="#6cce58" size="xl" />
+              </Flex>
+            )}
             <Flex direction="column" width="100%" p="15px">
               <Flex direction="column" mb="15px">
-                <Heading
-                  textAlign="left"
-                  fontSize="xl"
-                  className="pinnedHeader"
-                  color="#21334a"
+                <Flex
+                  justifyContent="space-between"
+                  alignItems="center"
                   mb="10px"
                 >
-                  Energy Consumed:
-                </Heading>
-                {isDemoUser && (
-                  <Text color="#6cce58" fontWeight="medium" mb="15px">
-                    {getTimePeriodLabel()}
-                  </Text>
-                )}
-                {isDemoUser && (
-                  <ButtonGroup
-                    size="sm"
-                    isAttached
-                    variant="outline"
-                    alignSelf="flex-start"
+                  <Heading
+                    textAlign="left"
+                    fontSize="xl"
+                    className="pinnedHeader"
+                    color="#21334a"
                   >
-                    <Button
-                      colorScheme={timeFilter === "daily" ? "green" : "gray"}
-                      onClick={() => setTimeFilter("daily")}
-                      color="#21334a"
-                      className="tenant-filter-btn"
+                    Energy Consumed: {getTotalEnergy()} {getEnergyUnit()}
+                  </Heading>
+                  <Flex alignItems="center">
+                    {lastUpdated && (
+                      <Text fontSize="sm" color="gray.500" mr={2}>
+                        Last updated: {lastUpdatedText}
+                      </Text>
+                    )}
+                    <IconButton
+                      aria-label="Refresh data"
+                      onClick={refreshData}
+                      isLoading={isLoading}
+                      size="sm"
+                      variant="ghost"
+                      colorScheme="green"
                     >
-                      Daily
-                    </Button>
-                    <Button
-                      colorScheme={timeFilter === "weekly" ? "green" : "gray"}
-                      onClick={() => setTimeFilter("weekly")}
-                      color="#21334a"
-                      className="tenant-filter-btn"
-                    >
-                      Weekly
-                    </Button>
-                    <Button
-                      colorScheme={timeFilter === "monthly" ? "green" : "gray"}
-                      onClick={() => setTimeFilter("monthly")}
-                      color="#21334a"
-                      className="tenant-filter-btn"
-                    >
-                      Monthly
-                    </Button>
-                    <Button
-                      colorScheme={timeFilter === "yearly" ? "green" : "gray"}
-                      onClick={() => setTimeFilter("yearly")}
-                      color="#21334a"
-                      className="tenant-filter-btn"
-                    >
-                      Yearly
-                    </Button>
-                  </ButtonGroup>
-                )}
+                      <FiRefreshCcw color="#43eb7f" size={"190%"} />
+                    </IconButton>
+                  </Flex>
+                </Flex>
+                <Text color="#6cce58" fontWeight="medium" mb="15px">
+                  {getTimePeriodLabel()}
+                </Text>
+                <ButtonGroup
+                  size="sm"
+                  variant="outline"
+                  style={{ alignSelf: "flex-start" }}
+                >
+                  <Button
+                    colorScheme={timeFilter === "daily" ? "green" : "gray"}
+                    onClick={() => setTimeFilter("daily")}
+                    color="#21334a"
+                    className="tenant-filter-btn"
+                  >
+                    Daily
+                  </Button>
+                  <Button
+                    colorScheme={timeFilter === "weekly" ? "green" : "gray"}
+                    onClick={() => setTimeFilter("weekly")}
+                    color="#21334a"
+                    className="tenant-filter-btn"
+                  >
+                    Weekly
+                  </Button>
+                  <Button
+                    colorScheme={timeFilter === "monthly" ? "green" : "gray"}
+                    onClick={() => setTimeFilter("monthly")}
+                    color="#21334a"
+                    className="tenant-filter-btn"
+                  >
+                    Monthly
+                  </Button>
+                  <Button
+                    colorScheme={timeFilter === "yearly" ? "green" : "gray"}
+                    onClick={() => setTimeFilter("yearly")}
+                    color="#21334a"
+                    className="tenant-filter-btn"
+                  >
+                    Yearly
+                  </Button>
+                </ButtonGroup>
               </Flex>
               <Box height="300px" width="100%">
-                {!isDemoUser ? (
-                  <Flex
-                    height="100%"
-                    justifyContent="center"
-                    alignItems="center"
-                    flexDirection="column"
-                  >
-                    <Text color="#666" fontSize="lg" mb={4}>
-                      No energy data available for this account
-                    </Text>
-                    <Text color="#888" fontSize="sm">
-                      Energy data will appear here after your smart devices
-                      collect usage information.
-                    </Text>
-                  </Flex>
-                ) : energyData.length > 0 ? (
+                {energyData.length > 0 ? (
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart
                       data={energyData}
@@ -421,13 +524,16 @@ const StatsTenant = () => {
                         interval={0}
                       />
                       <YAxis tick={{ fill: "#21334a", fontSize: 12 }} />
-                      <Tooltip />
-                      <Legend />
-                      <Bar
-                        dataKey="energy"
-                        fill="#6cce58"
-                        name="Energy (kWh)"
+                      <Tooltip
+                        formatter={(value, name) => {
+                          if (name === "energy") {
+                            return [`${value} ${getEnergyUnit()}`, "Energy"];
+                          }
+                          return [value, name];
+                        }}
                       />
+                      <Legend />
+                      <Bar dataKey="energy" fill="#43eb7f" name="Energy" />
                     </BarChart>
                   </ResponsiveContainer>
                 ) : (
@@ -464,13 +570,7 @@ const StatsTenant = () => {
               >
                 Devices by Room
               </Heading>
-              {!isDemoUser ? (
-                <Flex justifyContent="center" alignItems="center" py={5}>
-                  <Text color="#666">
-                    No device data available for this account
-                  </Text>
-                </Flex>
-              ) : energyData.length > 0 ? (
+              {energyData.length > 0 ? (
                 <SimpleGrid columns={1} gap={3}>
                   {energyData.map((item, index) => (
                     <Flex
@@ -481,22 +581,10 @@ const StatsTenant = () => {
                       justifyContent="space-between"
                       alignItems="center"
                       boxShadow="0 2px 4px rgba(0, 0, 0, 0.05)"
-                      onClick={() => {
-                        // Find room_id from the hubData structure
-                        if (
-                          hubData?.energy_data[timeFilter as keyof EnergyData]
-                            ?.rooms
-                        ) {
-                          const roomId =
-                            hubData.energy_data[timeFilter as keyof EnergyData]
-                              .rooms[item.name]?.room_id;
-                          if (roomId) {
-                            fetchRoomDetails(roomId);
-                          }
-                        }
-                      }}
+                      onClick={() => handleRoomClick(item.roomId, item.name)}
                       cursor="pointer"
                       _hover={{ bg: "#f9f9f9" }}
+                      data-room-id={item.roomId}
                     >
                       <Box>
                         <Text fontWeight="medium" color="#21334a">
@@ -514,7 +602,7 @@ const StatsTenant = () => {
                         fontSize="sm"
                         color={item.energy > 0 ? "white" : "#666"}
                       >
-                        {item.energy} kWh
+                        {item.energy} {getEnergyUnit()}
                       </Text>
                     </Flex>
                   ))}
