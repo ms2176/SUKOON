@@ -11,9 +11,9 @@ import {
   IconButton,
   Tooltip as ChakraTooltip,
 } from "@chakra-ui/react";
-import { FiRefreshCcw, FiDownload } from "react-icons/fi";
+import { FiRefreshCcw, FiDownload, FiArrowLeft } from "react-icons/fi";
 import { toaster } from "@/components/ui/toaster";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import {
   BarChart,
   Bar,
@@ -25,28 +25,24 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import "./Stats.css";
-// import DownloadButton from "./DownloadButton";
 
 // Add TypeScript interfaces
 interface ChartData {
   name: string;
   energy: number;
-  devices: number;
-  roomId: string;
+  usageHours: number;
+  deviceId: string;
+  deviceType: string;
 }
 
-interface Home {
-  homeName: string;
-  homeType: string;
-  hubCode: string;
-}
-
-interface RoomData {
+interface DeviceData {
+  device_id: string;
+  device_name: string;
+  device_type: string;
   energy_value: number;
   unit: string;
-  device_count: number;
-  room_id: string;
-  devices: Array<{ device_type: string }>;
+  usage_hours: number;
+  hourly_rate: number;
 }
 
 interface TimeData {
@@ -56,7 +52,7 @@ interface TimeData {
   week?: string;
   month?: string;
   year?: string;
-  rooms: Record<string, RoomData>;
+  devices: Record<string, DeviceData>;
 }
 
 interface EnergyData {
@@ -66,21 +62,24 @@ interface EnergyData {
   yearly: TimeData;
 }
 
-interface HubData {
+interface RoomData {
+  room_id: string;
+  room_name: string;
   hub_id: string;
-  hub_name: string;
-  hub_type: string;
   energy_data: EnergyData;
 }
 
-const StatsTenant = () => {
+const StatsRoom = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { roomId } = useParams<{ roomId: string }>();
+  const roomName = location.state?.roomName || "Room";
+
   const [energyData, setEnergyData] = useState<ChartData[]>([]);
-  const [selectedHome, setSelectedHome] = useState<Home | null>(null);
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string>("");
   const [timeFilter, setTimeFilter] = useState("monthly"); // Default filter
-  const [hubData, setHubData] = useState<HubData | null>(null);
+  const [roomData, setRoomData] = useState<RoomData | null>(null);
   const [isLoading, setIsLoading] = useState(false); // For individual API calls
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [lastUpdatedText, setLastUpdatedText] = useState<string>("");
@@ -122,114 +121,107 @@ const StatsTenant = () => {
     };
   }, [lastUpdated]);
 
-  // Load selected home from localStorage
+  // Fetch room data from API
   useEffect(() => {
-    const storedSelectedHome = localStorage.getItem("selectedHome");
-    if (storedSelectedHome) {
-      const homeData = JSON.parse(storedSelectedHome);
-      setSelectedHome(homeData);
-    } else {
-      setErrorMessage("No home selected. Please select a home first.");
-      setLoading(false);
-    }
-  }, []);
-
-  // Fetch hub data from API - only when selectedHome changes, not on timeFilter change
-  useEffect(() => {
-    const fetchHubData = async () => {
-      if (selectedHome && selectedHome.hubCode) {
-        setLoading(true);
-        setIsLoading(true);
-
-        try {
-          const apiUrl = `https://api.sukoonhome.me/hub/${selectedHome.hubCode}/energy`;
-
-          const response = await fetch(apiUrl);
-
-          if (!response.ok) {
-            throw new Error(`Failed to fetch hub data: ${response.statusText}`);
-          }
-
-          const data = await response.json();
-          setHubData(data as HubData);
-          processEnergyData(data as HubData, timeFilter);
-          setLastUpdated(new Date());
-        } catch (error) {
-          console.error("Error fetching hub data:", error);
-          setErrorMessage(
-            "Failed to load energy data. Please try again later."
-          );
-        } finally {
-          setLoading(false);
-          setIsLoading(false);
-        }
+    const fetchRoomData = async () => {
+      if (!roomId) {
+        setErrorMessage(
+          "No room ID provided. Please go back and select a room."
+        );
+        setLoading(false);
+        return;
       }
-    };
 
-    fetchHubData();
-  }, [selectedHome]); // Remove timeFilter dependency
-
-  // Refresh data function
-  const refreshData = async () => {
-    if (selectedHome && selectedHome.hubCode) {
+      setLoading(true);
       setIsLoading(true);
 
       try {
-        const apiUrl = `https://api.sukoonhome.me/hub/${selectedHome.hubCode}/energy`;
+        const apiUrl = `https://api.sukoonhome.me/room/${roomId}/energy`;
 
         const response = await fetch(apiUrl);
 
         if (!response.ok) {
-          throw new Error(`Failed to fetch hub data: ${response.statusText}`);
+          throw new Error(`Failed to fetch room data: ${response.statusText}`);
         }
 
         const data = await response.json();
-        setHubData(data as HubData);
-        processEnergyData(data as HubData, timeFilter);
+        setRoomData(data as RoomData);
+        processEnergyData(data as RoomData, timeFilter);
         setLastUpdated(new Date());
       } catch (error) {
-        console.error("Error refreshing hub data:", error);
-        toaster.create({
-          description: "Failed to refresh data. Please try again.",
-          type: "error",
-        });
+        console.error("Error fetching room data:", error);
+        setErrorMessage("Failed to load energy data. Please try again later.");
       } finally {
+        setLoading(false);
         setIsLoading(false);
       }
+    };
+
+    fetchRoomData();
+  }, [roomId]);
+
+  // Refresh data function
+  const refreshData = async () => {
+    if (!roomId) return;
+
+    setIsLoading(true);
+
+    try {
+      const apiUrl = `https://api.sukoonhome.me/room/${roomId}/energy`;
+
+      const response = await fetch(apiUrl);
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch room data: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      setRoomData(data as RoomData);
+      processEnergyData(data as RoomData, timeFilter);
+      setLastUpdated(new Date());
+    } catch (error) {
+      console.error("Error refreshing room data:", error);
+      toaster.create({
+        description: "Failed to refresh data. Please try again.",
+        type: "error",
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
   // Process energy data based on the time filter
-  const processEnergyData = (hubData: HubData | null, timeFilter: string) => {
-    if (!hubData || !hubData.energy_data) {
+  const processEnergyData = (roomData: RoomData | null, timeFilter: string) => {
+    if (!roomData || !roomData.energy_data) {
       setEnergyData([]);
       return;
     }
 
     // Handle the case where the specific timeFilter data doesn't exist yet
-    if (!hubData.energy_data[timeFilter as keyof EnergyData]) {
-      console.error(`No ${timeFilter} data available in the hub data`);
+    if (!roomData.energy_data[timeFilter as keyof EnergyData]) {
+      console.error(`No ${timeFilter} data available in the room data`);
       setEnergyData([]);
       return;
     }
 
-    const timeData = hubData.energy_data[timeFilter as keyof EnergyData];
-    const roomsData = timeData.rooms;
+    const timeData = roomData.energy_data[timeFilter as keyof EnergyData];
+    const devicesData = timeData.devices;
 
-    if (!roomsData) {
-      console.error(`No rooms data for ${timeFilter}`);
+    if (!devicesData) {
+      console.error(`No devices data for ${timeFilter}`);
       setEnergyData([]);
       return;
     }
 
-    // Transform rooms data into the format expected by the chart
-    const formattedData = Object.entries(roomsData).map(
-      ([roomName, roomData]) => {
+    // Transform devices data into the format expected by the chart
+    const formattedData = Object.entries(devicesData).map(
+      ([deviceId, deviceData]) => {
         return {
-          name: roomName,
-          energy: roomData.energy_value,
-          devices: roomData.device_count,
-          roomId: roomData.room_id,
+          name: deviceData.device_name,
+          energy: deviceData.energy_value,
+          usageHours: deviceData.usage_hours,
+          deviceId: deviceData.device_id,
+          deviceType: deviceData.device_type,
         };
       }
     );
@@ -242,15 +234,14 @@ const StatsTenant = () => {
 
   // When time filter changes, update the energy data
   useEffect(() => {
-    if (hubData) {
-      processEnergyData(hubData, timeFilter);
+    if (roomData) {
+      processEnergyData(roomData, timeFilter);
     }
-  }, [hubData, timeFilter]);
+  }, [roomData, timeFilter]);
 
-  // Handle room click - will be used later for navigation to room stats
-  const handleRoomClick = (roomId: string, roomName: string) => {
-    // Navigate to the room stats page
-    navigate(`/room-stats/${roomId}`, { state: { roomName } });
+  // Go back to tenant stats
+  const goBackToTenantStats = () => {
+    navigate(-1);
   };
 
   // Function to download report as CSV
@@ -264,11 +255,23 @@ const StatsTenant = () => {
     }
 
     // Create CSV content
-    const headers = ["Room", "Energy (kWh)", "Devices", "Room ID"];
+    const headers = [
+      "Device",
+      "Energy (kWh)",
+      "Usage Hours",
+      "Device Type",
+      "Device ID",
+    ];
     const csvRows = [
       headers.join(","),
       ...energyData.map((item) =>
-        [item.name, item.energy, item.devices, item.roomId].join(",")
+        [
+          item.name,
+          item.energy,
+          item.usageHours,
+          item.deviceType,
+          item.deviceId,
+        ].join(",")
       ),
     ];
 
@@ -281,7 +284,9 @@ const StatsTenant = () => {
     link.href = url;
     link.setAttribute(
       "download",
-      `energy_report_${new Date().toISOString().split("T")[0]}.csv`
+      `room_energy_report_${roomName}_${
+        new Date().toISOString().split("T")[0]
+      }.csv`
     );
     document.body.appendChild(link);
     link.click();
@@ -296,14 +301,14 @@ const StatsTenant = () => {
   // Function to get the current time period label
   const getTimePeriodLabel = () => {
     if (
-      !hubData ||
-      !hubData.energy_data ||
-      !hubData.energy_data[timeFilter as keyof EnergyData]
+      !roomData ||
+      !roomData.energy_data ||
+      !roomData.energy_data[timeFilter as keyof EnergyData]
     ) {
       return "";
     }
 
-    const timeData = hubData.energy_data[timeFilter as keyof EnergyData];
+    const timeData = roomData.energy_data[timeFilter as keyof EnergyData];
 
     switch (timeFilter) {
       case "daily":
@@ -322,49 +327,80 @@ const StatsTenant = () => {
   // Function to get total energy for the selected time period
   const getTotalEnergy = () => {
     if (
-      !hubData ||
-      !hubData.energy_data ||
-      !hubData.energy_data[timeFilter as keyof EnergyData]
+      !roomData ||
+      !roomData.energy_data ||
+      !roomData.energy_data[timeFilter as keyof EnergyData]
     ) {
       return 0;
     }
 
-    const timeData = hubData.energy_data[timeFilter as keyof EnergyData];
+    const timeData = roomData.energy_data[timeFilter as keyof EnergyData];
     return timeData ? timeData.total_energy : 0;
   };
 
   // Function to get energy unit
   const getEnergyUnit = () => {
     if (
-      !hubData ||
-      !hubData.energy_data ||
-      !hubData.energy_data[timeFilter as keyof EnergyData]
+      !roomData ||
+      !roomData.energy_data ||
+      !roomData.energy_data[timeFilter as keyof EnergyData]
     ) {
       return "kWh";
     }
 
-    const timeData = hubData.energy_data[timeFilter as keyof EnergyData];
+    const timeData = roomData.energy_data[timeFilter as keyof EnergyData];
     return timeData ? timeData.unit : "kWh";
+  };
+
+  // Get device icon based on type
+  const getDeviceIcon = (deviceType: string) => {
+    switch (deviceType.toLowerCase()) {
+      case "light":
+        return "💡";
+      case "tv":
+        return "📺";
+      case "ac":
+        return "❄️";
+      case "dishwasher":
+        return "🍽️";
+      case "fan":
+        return "🌀";
+      case "thermostat":
+        return "🌡️";
+      default:
+        return "🔌";
+    }
   };
 
   return (
     <div className="homepageContainer" style={{ overflowX: "hidden" }}>
       {/* Header */}
-      <Box className="homepageHeader" bg="#6cce58">
+      <Box className="homepageHeader">
         <Flex
           justifyContent="space-between"
           alignItems="center"
           px="20px"
           py="20px"
         >
-          <Heading
-            bg="transparent"
-            fontWeight="extrabold"
-            className="introHomepage"
-            color="black"
-          >
-            Your Statistics
-          </Heading>
+          <Flex alignItems="center">
+            <IconButton
+              aria-label="Go back"
+              onClick={goBackToTenantStats}
+              variant="ghost"
+              colorScheme="green"
+              mr={2}
+            >
+              <FiArrowLeft color="#43eb7f" />
+            </IconButton>
+            <Heading
+              bg="transparent"
+              fontWeight="extrabold"
+              className="introHomepage"
+              color="black"
+            >
+              {roomName} Stats
+            </Heading>
+          </Flex>
           <IconButton
             aria-label="Download report"
             onClick={downloadReport}
@@ -387,7 +423,7 @@ const StatsTenant = () => {
           height="200px"
         >
           <Spinner color="#6cce58" size="xl" margin="0 0 16px 0" />
-          <Text>Loading energy data...</Text>
+          <Text>Loading room energy data...</Text>
         </Flex>
       ) : errorMessage ? (
         <Box textAlign="center" py={10} color="red.500">
@@ -549,7 +585,7 @@ const StatsTenant = () => {
             </Flex>
           </Box>
 
-          {/* Devices Per Room */}
+          {/* Devices List */}
           <Box
             className="shadowPinned"
             mt="20px"
@@ -566,7 +602,7 @@ const StatsTenant = () => {
                 color="#21334a"
                 mb="15px"
               >
-                Devices by Room
+                Device Energy Usage
               </Heading>
               {energyData.length > 0 ? (
                 <SimpleGrid columns={1} gap={3}>
@@ -579,19 +615,22 @@ const StatsTenant = () => {
                       justifyContent="space-between"
                       alignItems="center"
                       boxShadow="0 2px 4px rgba(0, 0, 0, 0.05)"
-                      onClick={() => handleRoomClick(item.roomId, item.name)}
-                      cursor="pointer"
+                      cursor="default"
                       _hover={{ bg: "#f9f9f9" }}
-                      data-room-id={item.roomId}
                     >
-                      <Box>
-                        <Text fontWeight="medium" color="#21334a">
-                          {item.name}
+                      <Flex alignItems="center">
+                        <Text fontSize="xl" mr={2}>
+                          {getDeviceIcon(item.deviceType)}
                         </Text>
-                        <Text fontSize="sm" color="#666">
-                          {item.devices} devices
-                        </Text>
-                      </Box>
+                        <Box>
+                          <Text fontWeight="medium" color="#21334a">
+                            {item.name}
+                          </Text>
+                          <Text fontSize="sm" color="#666">
+                            {Math.round(item.usageHours)} hours of use
+                          </Text>
+                        </Box>
+                      </Flex>
                       <Text
                         bg="#43eb7f"
                         px={3}
@@ -620,4 +659,4 @@ const StatsTenant = () => {
   );
 };
 
-export default StatsTenant;
+export default StatsRoom;

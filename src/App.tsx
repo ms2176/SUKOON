@@ -1,39 +1,47 @@
-import { Route, Routes, useLocation } from 'react-router-dom';
-import Register from '@/customComponents/login/register.tsx';
-import Auth from '@/customComponents/login/auth.tsx';
-import Login from '@/customComponents/login/Login.tsx';
-import QRWait from '@/customComponents/login/QRWait.tsx';
-import ResetPassword from '@/customComponents/login/ResetPassword.tsx';
-import OTP from '@/customComponents/login/OTP.tsx';
-import NewPass from '@/customComponents/login/NewPass.tsx';
-import Statistics from '@/customComponents/stats/stats_mainpage';
-import Homepage from './customComponents/homepage/Homepage';
-import NavbarTenant from './customComponents/navBar/NavbarTenant';
-import NavbarAdmin from './customComponents/navBar/NavbarAdmin';
-import RoomList from './customComponents/rooms/roomsList';
-import Devices from './customComponents/rooms/devices';
-import AccountsPage from './customComponents/account/AccountsPage';
-import AccInfo from './customComponents/account/AccInfo';
-import DeviceControlPage from './customComponents/rooms/DeviceControlPage';
-import BeatiMain from './customComponents/beati/beatiMain';
-import MyGreenhouse from './customComponents/beati/myGreenhouse';
-import Rate from './customComponents/account/Rate';
-import MoreTools from './customComponents/account/MoreTools';
-import ThirdPartyServices from './customComponents/account/ThirdPartyServices';
-import InitialView from './customComponents/homepage/InitialView';
-import ChatApp from '@/customComponents/stats/ChatApp';
-import Notif from '@/customComponents/stats/Notif';
-import './index.css';
-import { useState } from 'react';
-import Verification_hold from './customComponents/login/verification_hold';
-import Alldevices from './customComponents/rooms/Alldevices';
-import DeviceControlPageNoRoom from './customComponents/rooms/DeviceControlPageNoRoom';
-import UnitsList from './customComponents/rooms/unitsList';
-import StatsAdmin from './customComponents/stats/StatsAdmin';
-import StatsTenant from './customComponents/stats/StatsTenant';
-import { useEffect } from 'react';
-import { getAuth, onAuthStateChanged } from 'firebase/auth';
-import { getFirestore, collection, query, where, getDocs, QueryDocumentSnapshot } from 'firebase/firestore';
+import { Route, Routes, useLocation } from "react-router-dom";
+import Register from "@/customComponents/login/register.tsx";
+import Auth from "@/customComponents/login/auth.tsx";
+import Login from "@/customComponents/login/Login.tsx";
+import QRWait from "@/customComponents/login/QRWait.tsx";
+import ResetPassword from "@/customComponents/login/ResetPassword.tsx";
+import OTP from "@/customComponents/login/OTP.tsx";
+import NewPass from "@/customComponents/login/NewPass.tsx";
+import Statistics from "@/customComponents/stats/stats_mainpage";
+import Homepage from "./customComponents/homepage/Homepage";
+import NavbarTenant from "./customComponents/navBar/NavbarTenant";
+import NavbarAdmin from "./customComponents/navBar/NavbarAdmin";
+import RoomList from "./customComponents/rooms/roomsList";
+import Devices from "./customComponents/rooms/devices";
+import AccountsPage from "./customComponents/account/AccountsPage";
+import AccInfo from "./customComponents/account/AccInfo";
+import DeviceControlPage from "./customComponents/rooms/DeviceControlPage";
+import BeatiMain from "./customComponents/beati/beatiMain";
+import MyGreenhouse from "./customComponents/beati/myGreenhouse";
+import Rate from "./customComponents/account/Rate";
+import MoreTools from "./customComponents/account/MoreTools";
+import ThirdPartyServices from "./customComponents/account/ThirdPartyServices";
+import InitialView from "./customComponents/homepage/InitialView";
+import ChatApp from "@/customComponents/stats/ChatApp";
+import Notif from "@/customComponents/stats/Notif";
+import "./index.css";
+import { useState } from "react";
+import Verification_hold from "./customComponents/login/verification_hold";
+import Alldevices from "./customComponents/rooms/Alldevices";
+import DeviceControlPageNoRoom from "./customComponents/rooms/DeviceControlPageNoRoom";
+import UnitsList from "./customComponents/rooms/unitsList";
+import StatsAdmin from "./customComponents/stats/StatsAdmin";
+import StatsTenant from "./customComponents/stats/StatsTenant";
+import StatsRoom from "./customComponents/stats/StatsRoom";
+import { useEffect } from "react";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
+import {
+  getFirestore,
+  collection,
+  query,
+  where,
+  getDocs,
+  QueryDocumentSnapshot,
+} from "firebase/firestore";
 
 interface Home {
   homeName: string;
@@ -48,10 +56,18 @@ interface AuthenticatedLayoutProps {
 }
 
 // Layout component that includes the Navbar
-const AuthenticatedLayout = ({ children, selectedHome, homes }: AuthenticatedLayoutProps) => {
+const AuthenticatedLayout = ({
+  children,
+  selectedHome,
+  homes,
+}: AuthenticatedLayoutProps) => {
   return (
     <>
-      {selectedHome?.homeType === 'admin' ? <NavbarAdmin /> : <NavbarTenant homes={homes} />}
+      {selectedHome?.homeType === "admin" ? (
+        <NavbarAdmin />
+      ) : (
+        <NavbarTenant homes={homes} />
+      )}
       {children}
     </>
   );
@@ -63,7 +79,7 @@ const App = () => {
   const [homes, setHomes] = useState<Home[]>([]); // Add homes state
 
   // Define the routes that require authentication
-  const authenticatedRoutes = ['/Home', '/stats'];
+  const authenticatedRoutes = ["/Home", "/stats"];
 
   // Check if the current route is an authenticated route
   const isAuthenticatedRoute = authenticatedRoutes.includes(location.pathname);
@@ -81,9 +97,8 @@ const App = () => {
   const handleHomeRename = (renamedHomes: Home[]) => {
     setHomes(renamedHomes); // Update local state
   };
-  
 
-  console.log('Current path:', location.pathname); // Debugging
+  console.log("Current path:", location.pathname); // Debugging
 
   useEffect(() => {
     const auth = getAuth();
@@ -92,64 +107,62 @@ const App = () => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         const userId = user.uid;
-        const userHubsRef = collection(db, 'userHubs');
-        const q = query(userHubsRef, where('userId', '==', userId));
+        const userHubsRef = collection(db, "userHubs");
+        const q = query(userHubsRef, where("userId", "==", userId));
 
         try {
           const querySnapshot = await getDocs(q);
-          const hubs = querySnapshot.docs.map(doc => ({
+          const hubs = querySnapshot.docs.map((doc) => ({
             homeName: doc.data().homeName,
             homeType: doc.data().homeType,
             hubCode: doc.data().hubCode,
           }));
           setHomes(hubs); // Update global homes state
         } catch (error) {
-          console.error('Error fetching hubs:', error);
+          console.error("Error fetching hubs:", error);
         }
       } else {
         setHomes([]); // Clear homes if user logs out
       }
     });
 
-    
-
     return () => unsubscribe();
   }, []);
 
   const fetchHomes = async () => {
-      const auth = getAuth();
-      const db = getFirestore();
-  
-      const user = auth.currentUser;
-      if (user) {
-        const userId = user.uid;
-  
-        const hubsRef = collection(db, 'userHubs');
-        const q = query(hubsRef, where('userId', '==', userId));
-  
-        try {
-          const querySnapshot = await getDocs(q);
-          const homesData: Home[] = [];
-  
-          querySnapshot.forEach((doc: QueryDocumentSnapshot) => {
-            const data = doc.data();
-            homesData.push({
-              homeName: data.homeName,
-              homeType: data.homeType,
-              hubCode: data.hubCode,
-            });
+    const auth = getAuth();
+    const db = getFirestore();
+
+    const user = auth.currentUser;
+    if (user) {
+      const userId = user.uid;
+
+      const hubsRef = collection(db, "userHubs");
+      const q = query(hubsRef, where("userId", "==", userId));
+
+      try {
+        const querySnapshot = await getDocs(q);
+        const homesData: Home[] = [];
+
+        querySnapshot.forEach((doc: QueryDocumentSnapshot) => {
+          const data = doc.data();
+          homesData.push({
+            homeName: data.homeName,
+            homeType: data.homeType,
+            hubCode: data.hubCode,
           });
-  
-          setHomes(homesData);
-        } catch (error) {
-          console.error('Error fetching user hubs:', error);
-        }
+        });
+
+        setHomes(homesData);
+      } catch (error) {
+        console.error("Error fetching user hubs:", error);
       }
-    };
-  
-    useEffect(() => {
-      fetchHomes();
-    }, []);
+    }
+  };
+
+  useEffect(() => {
+    fetchHomes();
+  }, []);
 
   const handleHomeDeleted = async () => {
     const auth = getAuth();
@@ -157,31 +170,30 @@ const App = () => {
     if (!user) return;
 
     const db = getFirestore();
-    const userHubsRef = collection(db, 'userHubs');
-    const q = query(userHubsRef, where('userId', '==', user.uid));
+    const userHubsRef = collection(db, "userHubs");
+    const q = query(userHubsRef, where("userId", "==", user.uid));
 
     try {
       const querySnapshot = await getDocs(q);
-      const hubs = querySnapshot.docs.map(doc => ({
+      const hubs = querySnapshot.docs.map((doc) => ({
         homeName: doc.data().homeName,
         homeType: doc.data().homeType,
         hubCode: doc.data().hubCode,
       }));
       setHomes(hubs);
     } catch (error) {
-      console.error('Error refreshing homes:', error);
+      console.error("Error refreshing homes:", error);
     }
   };
 
-  
-
-  
-
   return (
     <>
-      {isAuthenticatedRoute && (
-        selectedHome?.homeType === 'admin' ? <NavbarAdmin /> : <NavbarTenant homes={homes} />
-      )}
+      {isAuthenticatedRoute &&
+        (selectedHome?.homeType === "admin" ? (
+          <NavbarAdmin />
+        ) : (
+          <NavbarTenant homes={homes} />
+        ))}
       <Routes>
         <Route path="/" element={<Auth />} />
         <Route path="/login" element={<Login />} />
@@ -196,7 +208,14 @@ const App = () => {
           path="/Home"
           element={
             <AuthenticatedLayout selectedHome={selectedHome} homes={homes}>
-              <Homepage onHomeRename={handleHomeRename} onHomeDelete={handleHomeDeleted} onSelectHome={handleSelectHome} selectedHome={selectedHome} onHomeAdded={handleHomeAdded} homes={homes}/>
+              <Homepage
+                onHomeRename={handleHomeRename}
+                onHomeDelete={handleHomeDeleted}
+                onSelectHome={handleSelectHome}
+                selectedHome={selectedHome}
+                onHomeAdded={handleHomeAdded}
+                homes={homes}
+              />
             </AuthenticatedLayout>
           }
         />
@@ -205,7 +224,11 @@ const App = () => {
           path="/initial"
           element={
             <AuthenticatedLayout selectedHome={selectedHome} homes={homes}>
-              <InitialView onSelectHome={handleSelectHome} selectedHome={selectedHome} onHomeAdded={handleHomeAdded}/>
+              <InitialView
+                onSelectHome={handleSelectHome}
+                selectedHome={selectedHome}
+                onHomeAdded={handleHomeAdded}
+              />
             </AuthenticatedLayout>
           }
         />
@@ -227,8 +250,6 @@ const App = () => {
             </AuthenticatedLayout>
           }
         />
-
-      
 
         <Route
           path="/device/:deviceId"
@@ -275,34 +296,36 @@ const App = () => {
           }
         />
 
-<Route
-  path="/statsadmin"
-  element={
-    <AuthenticatedLayout selectedHome={selectedHome} homes={homes}>
-      <StatsAdmin />
-    </AuthenticatedLayout>
-  }
-/>
+        <Route
+          path="/statsadmin"
+          element={
+            <AuthenticatedLayout selectedHome={selectedHome} homes={homes}>
+              <StatsAdmin />
+            </AuthenticatedLayout>
+          }
+        />
 
-<Route
-  path="/statstenant"
-  element={
-    <AuthenticatedLayout selectedHome={selectedHome} homes={homes}>
-      <StatsTenant />
-    </AuthenticatedLayout>
-  }
-/>
+        <Route
+          path="/statstenant"
+          element={
+            <AuthenticatedLayout selectedHome={selectedHome} homes={homes}>
+              <StatsTenant />
+            </AuthenticatedLayout>
+          }
+        />
 
-<Route
-  path="/stats"
-  element={
-    <AuthenticatedLayout selectedHome={selectedHome} homes={homes}>
-      {selectedHome?.homeType === 'admin' ? <StatsAdmin /> : <StatsTenant />}
-    </AuthenticatedLayout>
-  }
-/>
-
-        
+        <Route
+          path="/stats"
+          element={
+            <AuthenticatedLayout selectedHome={selectedHome} homes={homes}>
+              {selectedHome?.homeType === "admin" ? (
+                <StatsAdmin />
+              ) : (
+                <StatsTenant />
+              )}
+            </AuthenticatedLayout>
+          }
+        />
 
         <Route
           path="/accountspage"
@@ -366,6 +389,7 @@ const App = () => {
             </AuthenticatedLayout>
           }
         />
+        <Route path="/room-stats/:roomId" element={<StatsRoom />} />
       </Routes>
 
       {isAuthenticatedRoute && <ChatApp />}
