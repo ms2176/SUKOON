@@ -193,7 +193,7 @@ const EditHomes: React.FC<EditHomesProps> = ({ closeEditHomes, onHomeDeleted, on
       onClick={closeEditHomes}
       bg={"transparent"}
     >
-      <IoCloseCircleSharp style={{ background: "transparent" }} size={"25px"} />
+      <IoCloseCircleSharp style={{ background: "transparent" }} size={"25px"} color='black'/>
     </Button>
 
     <Heading textAlign={"center"} color={"black"} fontSize={"xl"} mb={4}>

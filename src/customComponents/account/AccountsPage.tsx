@@ -42,6 +42,8 @@ import { deleteUser } from "firebase/auth";
 import { reauthenticateWithCredential, EmailAuthProvider } from "firebase/auth";
 import DefualtAvatar from "@/images/defaultAvatar.png";
 import { getStorage, ref, deleteObject } from "firebase/storage";
+import { RiNewsLine } from "react-icons/ri";
+import Tutorial from '../homepage/carousel/CarouselComponent'
 
 const AccountsPage = () => {
   const [username, setUsername] = useState("Kaywan"); // Default username
@@ -49,6 +51,7 @@ const AccountsPage = () => {
   const [avatarSrc, setAvatarSrc] = useState(DefualtAvatar); // Default avatar
   const [darkMode, setDarkMode] = useState(false); // Dark mode state
   const { colorMode, toggleColorMode } = useColorMode(); // Chakra UI color mode hook
+  const [showTutorial, setShowTutorial] = useState(false);
 
   const auth = getAuth();
   const db = getFirestore();
@@ -285,7 +288,7 @@ const AccountsPage = () => {
           height="30vh"
         >
           <HStack justify="space-between" bg={"transparent"}>
-            <Heading size="lg" flex="1" bg={"transparent"} color={"white"}>
+            <Heading size="lg" flex="1" bg={"transparent"} color={"white"} className="bold">
               Account
             </Heading>
           </HStack>
@@ -320,10 +323,11 @@ const AccountsPage = () => {
               fontWeight="bold"
               mt={2}
               bg={"transparent"}
+              className="bold"
             >
               {username} {/* Use the fetched username */}
             </Text>
-            <Text fontSize="sm" color={"white"} bg={"transparent"}>
+            <Text fontSize="sm" color={"white"} bg={"transparent"} className="bold">
               {email} {/* Use the fetched email */}
             </Text>
           </Flex>
@@ -385,9 +389,9 @@ const AccountsPage = () => {
 
             <Box height={"1px"} width={"95%"} bg={"#bdbebf"} />
 
-            <Box width={"100%"} height={"auto"} bg={"white"}>
+            <Box width={"100%"} height={"auto"} bg={"white"} onClick={() => setShowTutorial(true)}>
               <HStack bg={"transparent"} spaceX={"10%"}>
-                <FiMoon
+                <RiNewsLine
                   style={{ background: "transparent" }}
                   size={"20%"}
                   color="#16a34a"
@@ -401,7 +405,7 @@ const AccountsPage = () => {
                     fontSize={"sm"}
                     lineHeight={"100%"}
                   >
-                    Dark Mode
+                    Tutorial
                   </Heading>
                   <Heading
                     bg={"transparent"}
@@ -410,83 +414,17 @@ const AccountsPage = () => {
                     fontSize={"sm"}
                     lineHeight={"100%"}
                   >
-                    Choose the dark side...
+                    View the tutorial again!
                   </Heading>
                 </Stack>
 
-                <Switch.Root
-                  colorScheme="green"
-                  checked={darkMode}
-                  onCheckedChange={handleDarkModeToggle}
-                  size="md"
-                  variant="raised"
-                  ml="auto"
-                  // Remove this transparent background
-                  // background="transparent"
-                >
-                  <Switch.HiddenInput />
-                  <Switch.Control
-                    // Remove transparent background here too
-                    // background="transparent"
-                    // Add styles for the track
-                    bg={darkMode ? "#04cc01" : "#e4e4e7"}
-                    _hover={{ bg: darkMode ? "#04cc01" : "#d4d4d8" }}
-                  >
-                    <Switch.Thumb
-                      bg="#f5f5f5"
-                      boxShadow="0 1px 3px rgba(0,0,0,0.2)"
-                      border="1px solid #e0e0e0"
-                    />
-                  </Switch.Control>
-                </Switch.Root>
+                
               </HStack>
             </Box>
 
             <Box height={"1px"} width={"95%"} bg={"#bdbebf"} />
 
-            <Box
-              width={"100%"}
-              height={"auto"}
-              bg={"white"}
-              onClick={() => navigate("/HomeManagement")}
-            >
-              <HStack bg={"transparent"} spaceX={"10%"}>
-                <FiHome
-                  style={{ background: "transparent" }}
-                  size={"20%"}
-                  color="#16a34a"
-                />
-
-                <Stack bg={"transparent"} width={"100%"}>
-                  <Heading
-                    bg={"transparent"}
-                    color={"#09090b"}
-                    width={"100%"}
-                    fontSize={"sm"}
-                    lineHeight={"100%"}
-                  >
-                    Home Management
-                  </Heading>
-                  <Heading
-                    bg={"transparent"}
-                    color={"#a1a1aa"}
-                    width={"100%"}
-                    fontSize={"sm"}
-                    lineHeight={"100%"}
-                  >
-                    View, Create, or join home...
-                  </Heading>
-                </Stack>
-
-                <FiChevronRight
-                  style={{ background: "transparent" }}
-                  size={"20%"}
-                  color="#16a34a"
-                />
-              </HStack>
-            </Box>
-
-            <Box height={"1px"} width={"95%"} bg={"#bdbebf"} />
+            
 
             <Box
               width={"100%"}
@@ -705,6 +643,12 @@ const AccountsPage = () => {
           </Stack>
         </Box>
       </Box>
+
+      {showTutorial && 
+        <div style={{position: 'absolute', top:'50%', left:'50%', transform: 'translate(-50%, -50%)', width:'80%', }} >
+        <Tutorial onClose={() => setShowTutorial(false)} />
+      </div>
+      }
     </Box>
   );
 };

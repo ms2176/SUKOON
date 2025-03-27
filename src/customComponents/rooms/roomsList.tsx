@@ -5,8 +5,8 @@ import AddRoom from './addRooms';
 import { getFirestore, collection, query, where, getDocs, deleteDoc, doc } from 'firebase/firestore';
 import DeviceCol from '@/images/devicesIcons/devicesCol.png';
 import NoImage from '@/images/noImage.png';
+import ConfirmationDialogue from './ConfirmationDialogue'; 
 
-// Define the Room type
 interface Room {
   id: string;
   roomName: string;
@@ -30,7 +30,8 @@ const RoomList: React.FC<RoomListProps> = () => {
   const [showAddRoom, setShowAddRoom] = useState(false);
   const [rooms, setRooms] = useState<Room[]>([]);
   const [deleteMode, setDeleteMode] = useState(false); // State to track delete mode
-
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [roomToDelete, setRoomToDelete] = useState<string | null>(null);
   // Fetch rooms when selectedHome changes
   useEffect(() => {
     const fetchRooms = async () => {
@@ -70,6 +71,8 @@ const RoomList: React.FC<RoomListProps> = () => {
       await deleteDoc(doc(db, 'rooms', roomId));
       setRooms((prevRooms) => prevRooms.filter((room) => room.id !== roomId));
       alert('Room deleted successfully.');
+      setRoomToDelete(null);
+
     } catch (error) {
       console.error('Error deleting room:', error);
       alert('Failed to delete room. Please try again.');
@@ -145,7 +148,8 @@ const RoomList: React.FC<RoomListProps> = () => {
             }}
             onClick={() => {
               if (deleteMode) {
-                handleDeleteRoom(room.id);
+                setRoomToDelete(room.id);
+                setShowDeleteDialog(true);
               } else {
                 navigate(`/devices/${room.id}`);
               }
@@ -203,9 +207,35 @@ const RoomList: React.FC<RoomListProps> = () => {
       </Grid>
 
       {/* Add Room Modal */}
-      {showAddRoom && (
-        <AddRoom
-          onClose={() => setShowAddRoom(false)}
+      {showAddRoom && !showDeleteDialog && (
+        
+        <Box bg={'transparent'} width={'10%'} height={'auto'}> 
+
+          <AddRoom
+            onClose={() => setShowAddRoom(false)}
+          />
+        </Box>
+        
+      )}
+
+      {showDeleteDialog && (
+        <ConfirmationDialogue
+          isOpen={showDeleteDialog}
+          onClose={() => {
+            setShowDeleteDialog(false);
+            setRoomToDelete(null);
+          }}
+          onConfirm={() => {
+            if (roomToDelete) {
+              handleDeleteRoom(roomToDelete);
+            }
+          }}
+          message={
+            <>
+              Are you sure you want to delete this room?<br />
+              This action cannot be undone.
+            </>
+          }
         />
       )}
     </Box>

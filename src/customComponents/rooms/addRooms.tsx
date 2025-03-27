@@ -4,6 +4,8 @@ import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import './addRooms.css';
 import { getFirestore } from 'firebase/firestore';
 import NoImage from '@/images/noImage.png';
+import { Box } from '@chakra-ui/react';
+import { VscClose } from 'react-icons/vsc';
 
 interface AddRoomProps {
   onClose: () => void;
@@ -91,12 +93,12 @@ const AddRoom: React.FC<AddRoomProps> = ({ onClose }) => {
   };
 
   return (
-    <div className="modal-overlay">
+    <div className="modal-overlay" style={{width: '80%', height: 'auto', position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', background: 'transparent'}} >
       <div className="modal-container">
         <h2 className="modal-header">Add a New Room</h2>
-        <button className="modal-close" onClick={onClose}>
-          &times;
-        </button>
+        <Box bg={'transparent'} pos={'absolute'} right={'5%'} top={'5%'}>
+          <VscClose color="#21334a" style={{ background: 'transparent' }} onClick={onClose} />
+        </Box>
         <div className="modal-body">
           <div className="form-control">
             <label>Room Name</label>

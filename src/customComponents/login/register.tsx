@@ -18,7 +18,9 @@ import { useState } from "react";
 import { FiEye } from "react-icons/fi";
 import { FiEyeOff } from "react-icons/fi";
 import { FormControl } from "@chakra-ui/form-control";
-import { IoChevronBack } from "react-icons/io5";
+import { IoChevronBackOutline } from "react-icons/io5";
+import TAS from "./TAS";
+import PP from "./PP";
 import {
   getFirestore,
   doc,
@@ -41,7 +43,9 @@ const Register = () => {
   const goToAuth = () => {
     navigate("/"); // Navigate to Auth page
   };
-
+  
+  const [showTAS, setShowTAS] = useState(false);
+  const [showPP, setShowPP] = useState(false);
   const [username, setUsername] = useState(""); // State for username
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -55,10 +59,34 @@ const Register = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Reset errors
-    setEmailError("");
-    setPasswordError("");
-    setUsernameError("");
+  // Reset errors
+  setEmailError("");
+  setPasswordError("");
+  setUsernameError("");
+
+  let hasError = false;
+  if (!username) {
+    setUsernameError("Username is required.");
+    hasError = true;
+  }
+  if (!email) {
+    setEmailError("Email is required.");
+    hasError = true;
+  }
+  if (!password) {
+    setPasswordError("Password is required.");
+    hasError = true;
+  }
+  if (!confirmPassword) {
+    setPasswordError("Please confirm your password.");
+    hasError = true;
+  }
+  if (hasError) return;
+
+  if (password !== confirmPassword) {
+    setPasswordError("Passwords do not match.");
+    return;
+  }
 
     // Validate inputs
     if (!username) {
@@ -218,6 +246,34 @@ const Register = () => {
 
   return (
     <div style={{ overflow: "auto" }}>
+
+
+      {showTAS && <TAS onClose={() => setShowTAS(false)} />}
+      {showPP && <PP onClose={() => setShowPP(false)} />}
+
+      <Button
+              borderRadius="full"
+              width="50px"
+              height="50px"
+              display="flex"
+              alignItems="center"
+              justifyContent="center"
+              bg="#43eb7f"
+              position="fixed" // Changed from absolute to fixed
+              left="7%"
+              top="9%"
+              boxShadow="0 4px 8px rgba(0, 0, 0, 0.2)"
+              onClick={goToAuth}
+              zIndex={999} // Ensure it stays on top
+            >
+              <IoChevronBackOutline 
+                color="white" 
+                size={24} 
+                style={{ background: "transparent" }}
+              />
+            </Button>
+
+
       <Flex className="registerTop" position="relative" width="100%">
         <img
           src={TopBorderImage}
@@ -231,23 +287,7 @@ const Register = () => {
         />
       </Flex>
 
-      {/* Back Button */}
-      <Button
-        borderRadius={200}
-        width="30px"
-        height="40px"
-        display={"flex"}
-        bg={"#43eb7f"}
-        position="absolute"
-        boxShadow="0 4px 8px rgba(0, 0, 0, 0.2)"
-        onClick={goToAuth}
-        top={"10%"}
-        left={"10%"}
-      >
-        <Text color={"white"} bg={"transparent"}>
-          &lt;
-        </Text>
-      </Button>
+      
 
       <Stack
         className="signUpDataInputStack"
@@ -377,8 +417,8 @@ const Register = () => {
 
         <Text className="registeryText">
           By continuing, you agree to the{" "}
-          <span style={{ color: "#6cce58" }}>Terms of Service </span>
-          and <span style={{ color: "#6cce58" }}> Privacy Policy</span>
+          <span style={{ color: "#6cce58" }} onClick={() => setShowTAS(true)}>Terms of Service </span>
+          and <span style={{ color: "#6cce58" }} onClick={() => setShowPP(true)}> Privacy Policy</span>
         </Text>
 
         <HStack>

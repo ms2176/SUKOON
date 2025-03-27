@@ -203,7 +203,7 @@ const PinnedMenu: React.FC<PinnedMenuProps> = ({ isVisible, onClose, onPinItem, 
           <Stack bg={'transparent'} className="editStack" spaceY={'20px'}>
             <HStack bg={'transparent'} spaceX={'50%'}>
               <Heading className="addPinnedItem" whiteSpace={'nowrap'}>Pin Item</Heading>
-              <Box bg={'transparent'}>
+              <Box bg={'transparent'} pos={'absolute'} right={'5%'} top={'5%'}>
                 <VscClose color="#21334a" style={{ background: 'transparent' }} onClick={onClose} />
               </Box>
             </HStack>

@@ -8,6 +8,7 @@ import { getFirestore, collection, query, where, getDocs, QueryDocumentSnapshot,
 import AddHome from './AddHome'
 import { Navigate } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
+import Carousel from './carousel/CarouselComponent'
 
 interface Home {
   homeName: string;
@@ -66,7 +67,10 @@ const InitialView: React.FC<{
   };
 
   return (
-    <div>
+    <div style={{minHeight: '100vh', position: 'relative', overflow: 'hidden'}}>
+      <Box position="absolute" w="80%" h="auto%" zIndex={100000} bg={'red'} top={'50%'} left={'50%'} transform={'translate(-50%, -50%)'}>
+        <Carousel />
+      </Box>
 
         {isAddHomeVisible && <AddHome onHomeAdded={handleHomeAdded} closeAddHome={toggleAddHome}/> }
       <Stack className='homepageContainer' position={'relative'} display={'flex'} height={'auto'}>
