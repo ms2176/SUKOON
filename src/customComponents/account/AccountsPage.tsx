@@ -43,6 +43,7 @@ import { reauthenticateWithCredential, EmailAuthProvider } from "firebase/auth";
 import DefualtAvatar from "@/images/defaultAvatar.png";
 import { getStorage, ref, deleteObject } from "firebase/storage";
 import { RiNewsLine } from "react-icons/ri";
+import Tutorial from '../homepage/carousel/CarouselComponent'
 
 const AccountsPage = () => {
   const [username, setUsername] = useState("Kaywan"); // Default username
@@ -50,6 +51,7 @@ const AccountsPage = () => {
   const [avatarSrc, setAvatarSrc] = useState(DefualtAvatar); // Default avatar
   const [darkMode, setDarkMode] = useState(false); // Dark mode state
   const { colorMode, toggleColorMode } = useColorMode(); // Chakra UI color mode hook
+  const [showTutorial, setShowTutorial] = useState(false);
 
   const auth = getAuth();
   const db = getFirestore();
@@ -387,7 +389,7 @@ const AccountsPage = () => {
 
             <Box height={"1px"} width={"95%"} bg={"#bdbebf"} />
 
-            <Box width={"100%"} height={"auto"} bg={"white"}>
+            <Box width={"100%"} height={"auto"} bg={"white"} onClick={() => setShowTutorial(true)}>
               <HStack bg={"transparent"} spaceX={"10%"}>
                 <RiNewsLine
                   style={{ background: "transparent" }}
@@ -641,6 +643,12 @@ const AccountsPage = () => {
           </Stack>
         </Box>
       </Box>
+
+      {showTutorial && 
+        <div style={{position: 'absolute', top:'50%', left:'50%', transform: 'translate(-50%, -50%)', width:'80%', }} >
+        <Tutorial onClose={() => setShowTutorial(false)} />
+      </div>
+      }
     </Box>
   );
 };

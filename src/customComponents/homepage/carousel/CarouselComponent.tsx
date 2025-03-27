@@ -15,8 +15,13 @@ import Stats from './images/stats.png'
 import ACC from './images/ACC.png'
 import CB from './images/CB.png'
 import { IoCloseCircleSharp } from "react-icons/io5";
+import React from "react";
 
-const CarouselComponent = () => {
+interface CCProps {
+  onClose: () => void;  // Should be a function that returns void, not just void
+}
+
+const CarouselComponent: React.FC<CCProps> = ({ onClose }) => {
   return (
     <div className="relative w-full h-66 sm:h-64 xl:h-80 2xl:h-96 overflow-hidden">
 
@@ -28,6 +33,8 @@ const CarouselComponent = () => {
         height={"auto"}
         zIndex={99999}
         bg={'transparent'}
+        onClick={onClose}
+
       >
         <IoCloseCircleSharp style={{ background: "transparent" }} size={"20%"} color='white'/>
       </Button>
