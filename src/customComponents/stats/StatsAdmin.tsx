@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Text,
   Flex,
@@ -7,7 +7,10 @@ import {
   SimpleGrid,
   Button,
   ButtonGroup,
+  Spinner,
+  IconButton,
 } from "@chakra-ui/react";
+import { FiRefreshCcw, FiDownload } from "react-icons/fi";
 import { toaster } from "@/components/ui/toaster";
 import { useNavigate } from "react-router-dom";
 import {
@@ -27,12 +30,7 @@ import {
   where,
   getDocs,
 } from "firebase/firestore";
-import { getAuth } from "firebase/auth"; // Add this import
 import "./Stats.css";
-import DownloadButton from "./DownloadButton";
-
-// Import the JSON data - use the custom admin hub JSON
-import adminHubData from "./demo-admin-hub.json";
 
 // Add TypeScript interfaces
 interface Home {
@@ -78,41 +76,53 @@ interface HubData {
 }
 
 const StatsAdmin = () => {
-  // Add this array with your demo user IDs
-  const demoUserIds = [
-    "rPms1L8WRYgeSDGV59I30J6ZaGp1",
-    "A4RUSi3FNTT8mR9kOhx0HJCCvXN2",
-    "eA30YbSS12M7oL19w2i9zSjZbmo1",
-    "3rq9m8Oew9XJ44WbTvNsJhtHLv73",
-    // Add all your demo account IDs here
-  ];
-
   const navigate = useNavigate();
   const [energyData, setEnergyData] = useState<ChartData[]>([]);
   const [loading, setLoading] = useState(true);
-  const [errorMessage, setErrorMessage] = useState<string>(""); // Add error state
+  const [errorMessage, setErrorMessage] = useState<string>("");
   const [timeFilter, setTimeFilter] = useState("monthly"); // Default filter
   const [hubData, setHubData] = useState<HubData | null>(null);
-  const [isDemoUser, setIsDemoUser] = useState(false);
   const [selectedHome, setSelectedHome] = useState<Home | null>(null);
+  const [isLoading, setIsLoading] = useState(false); // For individual API calls
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [lastUpdatedText, setLastUpdatedText] = useState<string>("");
+  const timerRef = useRef<number | null>(null);
 
-  // Check if current user is a demo user
+  // Update relative time every minute
   useEffect(() => {
-    const checkIfDemoUser = async () => {
-      const auth = getAuth();
-      const currentUser = auth.currentUser;
+    const updateRelativeTime = () => {
+      if (!lastUpdated) return;
 
-      if (currentUser && demoUserIds.includes(currentUser.uid)) {
-        setIsDemoUser(true);
+      const now = new Date();
+      const diffMs = now.getTime() - lastUpdated.getTime();
+      const diffSecs = Math.floor(diffMs / 1000);
+      const diffMins = Math.floor(diffSecs / 60);
+      const diffHours = Math.floor(diffMins / 60);
+
+      if (diffSecs < 10) {
+        setLastUpdatedText("just now");
+      } else if (diffSecs < 60) {
+        setLastUpdatedText(`${diffSecs}s ago`);
+      } else if (diffMins < 60) {
+        setLastUpdatedText(`${diffMins}m ago`);
       } else {
-        setIsDemoUser(false);
-        // Force loading to false since we won't be loading any data
-        setLoading(false);
+        setLastUpdatedText(`${diffHours}h ${diffMins % 60}m ago`);
       }
     };
 
-    checkIfDemoUser();
-  }, []);
+    // Initial update
+    updateRelativeTime();
+
+    // Set interval to update every 10 seconds
+    const intervalId = window.setInterval(updateRelativeTime, 10000);
+    timerRef.current = intervalId;
+
+    return () => {
+      if (timerRef.current) {
+        window.clearInterval(timerRef.current);
+      }
+    };
+  }, [lastUpdated]);
 
   // Load selected home from localStorage
   useEffect(() => {
@@ -120,77 +130,78 @@ const StatsAdmin = () => {
     if (storedSelectedHome) {
       const homeData = JSON.parse(storedSelectedHome);
       setSelectedHome(homeData);
+    } else {
+      setErrorMessage("No home selected. Please select a home first.");
+      setLoading(false);
     }
   }, []);
 
-  // Fetch hub data and validate with Firebase - modified for admin view
+  // Fetch hub data from API
   useEffect(() => {
     const fetchHubData = async () => {
-      // Skip data fetching for non-demo users
-      if (!isDemoUser) {
-        setEnergyData([]);
-        setLoading(false);
-        return;
-      }
-
       if (selectedHome && selectedHome.hubCode) {
         setLoading(true);
+        setIsLoading(true);
 
         try {
-          // For admin users, we're going to use the custom admin hub JSON data
-          // instead of checking for matches with the hub code
-          if (selectedHome.homeType === "admin") {
-            setHubData(adminHubData as HubData);
-            processEnergyData(adminHubData as HubData, timeFilter);
-          } else {
-            // If not an admin hub, check Firebase
-            const db = getFirestore();
-            const tenantsRef = collection(db, "userHubs");
-            const tenantsQuery = query(
-              tenantsRef,
-              where("adminHubCode", "==", selectedHome.hubCode)
-            );
+          const apiUrl = `https://testing.sukoonhome.me/admin-hub/${selectedHome.hubCode}/energy`;
 
-            try {
-              const querySnapshot = await getDocs(tenantsQuery);
-              const tenantsData: ChartData[] = [];
-              querySnapshot.forEach((doc) => {
-                const data = doc.data();
-                tenantsData.push({
-                  name: data.homeName,
-                  energy: 0, // You'll need to modify this based on your needs
-                  hubCode: data.hubCode,
-                });
-              });
+          const response = await fetch(apiUrl);
 
-              // Use Firebase data if available
-              if (tenantsData.length > 0) {
-                setEnergyData(tenantsData);
-              } else {
-                // No data found in either source
-                setEnergyData([]);
-              }
-            } catch (error) {
-              console.error("Error fetching tenant hubs:", error);
-              setErrorMessage("Failed to load hub data. Please try again.");
-              setEnergyData([]);
-            }
+          if (!response.ok) {
+            throw new Error(`Failed to fetch hub data: ${response.statusText}`);
           }
+
+          const data = await response.json();
+          setHubData(data as HubData);
+          processEnergyData(data as HubData, timeFilter);
+          setLastUpdated(new Date());
         } catch (error) {
-          console.error("Error in fetchHubData:", error);
+          console.error("Error fetching hub data:", error);
           setErrorMessage(
-            "An error occurred while loading data. Please try again."
+            "Failed to load energy data. Please try again later."
           );
         } finally {
           setLoading(false);
+          setIsLoading(false);
         }
       }
     };
 
     fetchHubData();
-  }, [selectedHome, timeFilter, isDemoUser]); // Add isDemoUser as a dependency
+  }, [selectedHome]); // Only fetch when selectedHome changes
 
-  // Process energy data based on the time filter - modified for admin view with tenant_hubs
+  // Refresh data function
+  const refreshData = async () => {
+    if (selectedHome && selectedHome.hubCode) {
+      setIsLoading(true);
+
+      try {
+        const apiUrl = `https://testing.sukoonhome.me/admin-hub/${selectedHome.hubCode}/energy`;
+
+        const response = await fetch(apiUrl);
+
+        if (!response.ok) {
+          throw new Error(`Failed to fetch hub data: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        setHubData(data as HubData);
+        processEnergyData(data as HubData, timeFilter);
+        setLastUpdated(new Date());
+      } catch (error) {
+        console.error("Error refreshing hub data:", error);
+        toaster.create({
+          description: "Failed to refresh data. Please try again.",
+          type: "error",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    }
+  };
+
+  // Process energy data based on the time filter
   const processEnergyData = (hubData: HubData | null, timeFilter: string) => {
     if (
       !hubData ||
@@ -232,10 +243,6 @@ const StatsAdmin = () => {
       processEnergyData(hubData, timeFilter);
     }
   }, [hubData, timeFilter]);
-
-  const goToHome = () => {
-    navigate("/homepage");
-  };
 
   // Function to download report as CSV
   const downloadReport = () => {
@@ -316,10 +323,28 @@ const StatsAdmin = () => {
     return timeData ? timeData.total_energy : 0;
   };
 
+  // Get energy unit
+  const getEnergyUnit = () => {
+    if (
+      !hubData ||
+      !hubData.energy_data ||
+      !hubData.energy_data[timeFilter as keyof EnergyData]
+    ) {
+      return "kWh";
+    }
+
+    const timeData = hubData.energy_data[timeFilter as keyof EnergyData];
+    return timeData ? timeData.unit : "kWh";
+  };
+
   return (
     <div className="homepageContainer" style={{ overflowX: "hidden" }}>
       {/* Header */}
-      <Box className="homepageHeader" bg="#0b13b0">
+      <Box
+        className="homepageHeader"
+        bg="white"
+        boxShadow="0 2px 4px rgba(0, 0, 0, 0.05)"
+      >
         <Flex
           justifyContent="space-between"
           alignItems="center"
@@ -330,19 +355,34 @@ const StatsAdmin = () => {
             bg="transparent"
             fontWeight="extrabold"
             className="introHomepage"
-            color="black"
+            color="#4A5568"
           >
             Building Statistics
           </Heading>
-          {isDemoUser && <DownloadButton onClick={downloadReport} />}
+          <IconButton
+            aria-label="Download report"
+            onClick={downloadReport}
+            size="md"
+            variant="ghost"
+            colorScheme="blue"
+          >
+            <FiDownload color="#0b13b0" />
+          </IconButton>
         </Flex>
       </Box>
 
       {/* Loading State */}
       {loading ? (
-        <Box textAlign="center" py={10}>
+        <Flex
+          direction="column"
+          alignItems="center"
+          justifyContent="center"
+          py={10}
+          height="200px"
+        >
+          <Spinner color="#0b13b0" size="xl" margin="0 0 16px 0" />
           <Text>Loading energy data...</Text>
-        </Box>
+        </Flex>
       ) : errorMessage ? (
         <Box textAlign="center" py={10} color="red.500">
           <Text>{errorMessage}</Text>
@@ -363,84 +403,149 @@ const StatsAdmin = () => {
             mx="20px"
             borderRadius="10px"
             bg="white"
+            position="relative"
           >
+            {isLoading && (
+              <Flex
+                position="absolute"
+                top="0"
+                left="0"
+                right="0"
+                bottom="0"
+                alignItems="center"
+                justifyContent="center"
+                bg="rgba(255, 255, 255, 0.7)"
+                zIndex="1"
+                borderRadius="10px"
+              >
+                <Spinner color="#0b13b0" size="xl" />
+              </Flex>
+            )}
             <Flex direction="column" width="100%" p="15px">
               <Flex direction="column" mb="15px">
-                <Heading
-                  textAlign="left"
-                  fontSize="xl"
-                  className="pinnedHeader"
-                  color="#21334a"
-                  mb="10px"
+                <Flex
+                  justifyContent="space-between"
+                  alignItems="flex-start"
+                  mb="15px"
+                  flexWrap="wrap"
+                  gap={2}
                 >
-                  Energy Consumed: {getTotalEnergy()}{" "}
-                  {hubData?.energy_data[timeFilter as keyof EnergyData]?.unit ||
-                    "kWh"}
-                </Heading>
-                {isDemoUser && (
-                  <Text color="#0b13b0" fontWeight="medium" mb="15px">
-                    {getTimePeriodLabel()}
-                  </Text>
-                )}
-                {isDemoUser && (
+                  <Box>
+                    <Heading
+                      textAlign="left"
+                      fontSize="xl"
+                      className="pinnedHeader"
+                      color="#21334a"
+                      mb="10px"
+                    >
+                      Energy Consumed: {getTotalEnergy()} {getEnergyUnit()}
+                    </Heading>
+                    <Text color="#0b13b0" fontWeight="medium">
+                      {getTimePeriodLabel()}
+                    </Text>
+                  </Box>
+                  <Flex alignItems="center" alignSelf="flex-start" mt={1}>
+                    {lastUpdated && (
+                      <Text fontSize="sm" color="gray.500" mr={3}>
+                        Last updated: {lastUpdatedText}
+                      </Text>
+                    )}
+                    <IconButton
+                      aria-label="Refresh data"
+                      onClick={refreshData}
+                      isLoading={isLoading}
+                      size="sm"
+                      variant="ghost"
+                      colorScheme="blue"
+                    >
+                      <FiRefreshCcw color="#0b13b0" size={"190%"} />
+                    </IconButton>
+                  </Flex>
+                </Flex>
+                <Box width="100%" overflow="auto" pb={3}>
                   <ButtonGroup
                     size="sm"
-                    isAttached
                     variant="outline"
                     alignSelf="flex-start"
+                    spacing={3}
                   >
                     <Button
-                      colorScheme={timeFilter === "daily" ? "blue" : "gray"}
+                      bg={timeFilter === "daily" ? "#0b13b0" : "transparent"}
+                      color={timeFilter === "daily" ? "white" : "#21334a"}
                       onClick={() => setTimeFilter("daily")}
-                      color="#21334a"
                       className="admin-filter-btn"
+                      px={4}
+                      py={2}
+                      borderWidth={1}
+                      borderColor={
+                        timeFilter === "daily" ? "#0b13b0" : "#E2E8F0"
+                      }
+                      _hover={{
+                        bg: timeFilter === "daily" ? "#0b13b0" : "#e6e9ff",
+                        color: timeFilter === "daily" ? "white" : "#0b13b0",
+                      }}
                     >
                       Daily
                     </Button>
                     <Button
-                      colorScheme={timeFilter === "weekly" ? "blue" : "gray"}
+                      bg={timeFilter === "weekly" ? "#0b13b0" : "transparent"}
+                      color={timeFilter === "weekly" ? "white" : "#21334a"}
                       onClick={() => setTimeFilter("weekly")}
-                      color="#21334a"
                       className="admin-filter-btn"
+                      px={4}
+                      py={2}
+                      borderWidth={1}
+                      borderColor={
+                        timeFilter === "weekly" ? "#0b13b0" : "#E2E8F0"
+                      }
+                      _hover={{
+                        bg: timeFilter === "weekly" ? "#0b13b0" : "#e6e9ff",
+                        color: timeFilter === "weekly" ? "white" : "#0b13b0",
+                      }}
                     >
                       Weekly
                     </Button>
                     <Button
-                      colorScheme={timeFilter === "monthly" ? "blue" : "gray"}
+                      bg={timeFilter === "monthly" ? "#0b13b0" : "transparent"}
+                      color={timeFilter === "monthly" ? "white" : "#21334a"}
                       onClick={() => setTimeFilter("monthly")}
-                      color="#21334a"
                       className="admin-filter-btn"
+                      px={4}
+                      py={2}
+                      borderWidth={1}
+                      borderColor={
+                        timeFilter === "monthly" ? "#0b13b0" : "#E2E8F0"
+                      }
+                      _hover={{
+                        bg: timeFilter === "monthly" ? "#0b13b0" : "#e6e9ff",
+                        color: timeFilter === "monthly" ? "white" : "#0b13b0",
+                      }}
                     >
                       Monthly
                     </Button>
                     <Button
-                      colorScheme={timeFilter === "yearly" ? "blue" : "gray"}
+                      bg={timeFilter === "yearly" ? "#0b13b0" : "transparent"}
+                      color={timeFilter === "yearly" ? "white" : "#21334a"}
                       onClick={() => setTimeFilter("yearly")}
-                      color="#21334a"
                       className="admin-filter-btn"
+                      px={4}
+                      py={2}
+                      borderWidth={1}
+                      borderColor={
+                        timeFilter === "yearly" ? "#0b13b0" : "#E2E8F0"
+                      }
+                      _hover={{
+                        bg: timeFilter === "yearly" ? "#0b13b0" : "#e6e9ff",
+                        color: timeFilter === "yearly" ? "white" : "#0b13b0",
+                      }}
                     >
                       Yearly
                     </Button>
                   </ButtonGroup>
-                )}
+                </Box>
               </Flex>
               <Box height="300px" width="100%">
-                {!isDemoUser ? (
-                  <Flex
-                    height="100%"
-                    justifyContent="center"
-                    alignItems="center"
-                    flexDirection="column"
-                  >
-                    <Text color="#666" fontSize="lg" mb={4}>
-                      No energy data available for this account
-                    </Text>
-                    <Text color="#888" fontSize="sm">
-                      Energy data will appear here after your units collect
-                      usage information.
-                    </Text>
-                  </Flex>
-                ) : energyData.length > 0 ? (
+                {energyData.length > 0 ? (
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart
                       data={energyData}
@@ -466,12 +571,20 @@ const StatsAdmin = () => {
                         axisLine={{ strokeWidth: 1 }}
                         tickLine={{ strokeWidth: 1 }}
                       />
-                      <Tooltip />
+                      <Tooltip
+                        formatter={(value, name) => {
+                          if (name === "energy") {
+                            return [`${value} ${getEnergyUnit()}`, "Energy"];
+                          }
+                          return [value, name];
+                        }}
+                      />
                       <Legend />
                       <Bar
                         dataKey="energy"
                         fill="#0b13b0"
-                        name="Energy (kWh)"
+                        name="Energy"
+                        radius={[5, 5, 0, 0]} // Rounded top corners of bars
                       />
                     </BarChart>
                   </ResponsiveContainer>
@@ -497,7 +610,7 @@ const StatsAdmin = () => {
             mx="20px"
             borderRadius="10px"
             bg="white"
-            mb="30px"
+            mb="100px" // Increased bottom margin to prevent cutoff due to navbar
           >
             <Flex direction="column" width="100%" p="15px">
               <Heading
@@ -509,13 +622,7 @@ const StatsAdmin = () => {
               >
                 Energy by Unit
               </Heading>
-              {!isDemoUser ? (
-                <Flex justifyContent="center" alignItems="center" py={5}>
-                  <Text color="#666">
-                    No unit data available for this account
-                  </Text>
-                </Flex>
-              ) : energyData.length > 0 ? (
+              {energyData.length > 0 ? (
                 <SimpleGrid columns={1} gap={3}>
                   {energyData.map((item, index) => (
                     <Flex
@@ -543,7 +650,7 @@ const StatsAdmin = () => {
                         fontSize="sm"
                         color="white"
                       >
-                        {item.energy} kWh
+                        {item.energy} {getEnergyUnit()}
                       </Text>
                     </Flex>
                   ))}
