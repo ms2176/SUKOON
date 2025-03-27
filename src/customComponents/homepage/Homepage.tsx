@@ -51,14 +51,13 @@ import DoorbellImg from "@/images/devicesIcons/smart-door.png";
 import HeatconvectorImg from "@/images/devicesIcons/heater-convector.png";
 import Dishwasher from "@/images/devicesIcons/dishwasher.png";
 import { auth } from "@/config/firebase_conf.ts";
-import { 
-  FiMonitor, 
-  FiHome, 
-  FiCheck, 
-  FiAlertCircle, 
-  FiZap 
+import {
+  FiMonitor,
+  FiHome,
+  FiCheck,
+  FiAlertCircle,
+  FiZap,
 } from "react-icons/fi";
-
 
 interface Home {
   homeName: string;
@@ -198,12 +197,42 @@ const Homepage: React.FC<{
           setUsername(user.email || "User");
         }
 
-        // Get selected home from localStorage if exists
-        const storedHome = localStorage.getItem("selectedHome");
-        if (storedHome) {
-          const parsedHome = JSON.parse(storedHome);
-          setSelectedHome(parsedHome);
-          onSelectHome(parsedHome);
+        // Fetch user's homes
+        const hubsRef = collection(db, "userHubs");
+        const q = query(hubsRef, where("userId", "==", user.uid));
+
+        try {
+          const querySnapshot = await getDocs(q);
+          const homesData: Home[] = [];
+
+          querySnapshot.forEach((doc: QueryDocumentSnapshot) => {
+            const data = doc.data();
+            homesData.push({
+              homeName: data.homeName,
+              homeType: data.homeType,
+              hubCode: data.hubCode,
+            });
+          });
+
+          // Auto-select logic
+          let homeToSelect = null;
+
+          // First, try to find a tenant hub
+          homeToSelect = homesData.find((home) => home.homeType === "tenant");
+
+          // If no tenant hub, select the first available home
+          if (!homeToSelect && homesData.length > 0) {
+            homeToSelect = homesData[0];
+          }
+
+          // If a home is found, set it as selected
+          if (homeToSelect) {
+            setSelectedHome(homeToSelect);
+            onSelectHome(homeToSelect);
+            localStorage.setItem("selectedHome", JSON.stringify(homeToSelect));
+          }
+        } catch (error) {
+          console.error("Error fetching user hubs:", error);
         }
       } else {
         setUsername("guest");
@@ -212,7 +241,7 @@ const Homepage: React.FC<{
 
     return () => unsubscribe();
   }, []);
-  
+
   const fetchActiveDevicesAndEnergy = async (hubCode: string) => {
     const db = getFirestore();
     const devicesRef = collection(db, "devices");
@@ -221,24 +250,30 @@ const Homepage: React.FC<{
       where("hubCode", "==", hubCode),
       where("on", "==", true)
     );
-  
+
     try {
       // Fetch active devices count
       const querySnapshot = await getDocs(q);
       setActiveDevicesCount(querySnapshot.size);
-      
+
       // Fetch energy data from API
-      const liveEnergyResponse = await fetch(`https://api.sukoonhome.me/hubs/${hubCode}/live-energy`);
+      const liveEnergyResponse = await fetch(
+        `https://api.sukoonhome.me/hubs/${hubCode}/live-energy`
+      );
       if (liveEnergyResponse.ok) {
         const liveEnergyData = await liveEnergyResponse.json();
         setTotalConsumption(`${liveEnergyData.total_consumption}KW`);
       }
-      
+
       // Fetch real energy data for generation
-      const realEnergyResponse = await fetch(`https://api.sukoonhome.me/hub/${hubCode}/real-energy`);
+      const realEnergyResponse = await fetch(
+        `https://api.sukoonhome.me/hub/${hubCode}/real-energy`
+      );
       if (realEnergyResponse.ok) {
         const realEnergyData = await realEnergyResponse.json();
-        setEnergyGeneration(`${realEnergyData.energy_data.daily.total_energy}KW/h`);
+        setEnergyGeneration(
+          `${realEnergyData.energy_data.daily.total_energy}KW/h`
+        );
       }
     } catch (error) {
       console.error("Error fetching active devices and energy:", error);
@@ -534,10 +569,12 @@ const Homepage: React.FC<{
             mt={"20px"}
             mb={"20px"}
             className="introHomepage"
-            fontSize={'110%'}
-            
+            fontSize={"110%"}
           >
-            Ya Halla, <span style={{color:'white'}} className="guestIntro">{username}</span>
+            Ya Halla,{" "}
+            <span style={{ color: "white" }} className="guestIntro">
+              {username}
+            </span>
           </Heading>
         </Box>
 
@@ -612,7 +649,7 @@ const Homepage: React.FC<{
           )}
         </Flex>
 
-        <Flex className="pulseBoxContainer" mt={'2%'}>
+        <Flex className="pulseBoxContainer" mt={"2%"}>
           <Lottie
             loop
             animationData={
@@ -622,8 +659,11 @@ const Homepage: React.FC<{
             }
             play
             className="pulseAnimation"
-            
-            style={{ background: "transparent", height: '450px', width: '450px' }}
+            style={{
+              background: "transparent",
+              height: "450px",
+              width: "450px",
+            }}
           />
           <Box
             className="pulseBox"
@@ -631,10 +671,10 @@ const Homepage: React.FC<{
           >
             <Heading
               bg={"transparent"}
-              color={'white'}
+              color={"white"}
               fontWeight={"bold"}
               className="totalConsShow"
-              fontSize={'120%'}
+              fontSize={"120%"}
             >
               {totalConsumption}/h
             </Heading>
@@ -757,21 +797,21 @@ const Homepage: React.FC<{
               </Box>
             )}
 
-{isExpanded && (
-  <Box
-    textAlign="center"
-    mb={4}
-    position="sticky"  // Makes the heading stick at the top while scrolling
-    top={0}  // Sticks to the very top of the scrollable area
-    zIndex={1}  // Keeps it above the images when scrolling
-    bg="white"  // Background color to avoid overlap visibility issues
-    py={2}  // Adds some padding for better aesthetics
-  >
-    <Heading fontSize="2xl" color="#21334a" bg={"transparent"}>
-      Pinned Items
-    </Heading>
-  </Box>
-)}
+            {isExpanded && (
+              <Box
+                textAlign="center"
+                mb={4}
+                position="sticky" // Makes the heading stick at the top while scrolling
+                top={0} // Sticks to the very top of the scrollable area
+                zIndex={1} // Keeps it above the images when scrolling
+                bg="white" // Background color to avoid overlap visibility issues
+                py={2} // Adds some padding for better aesthetics
+              >
+                <Heading fontSize="2xl" color="#21334a" bg={"transparent"}>
+                  Pinned Items
+                </Heading>
+              </Box>
+            )}
 
             <Grid templateColumns="repeat(2, 1fr)" gap={4} p={4}>
               {pinnedItems.map((item) => (
