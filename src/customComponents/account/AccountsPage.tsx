@@ -513,51 +513,7 @@ const AccountsPage = () => {
             </Box>
 
             <Box height={"1px"} width={"95%"} bg={"#bdbebf"} />
-
-            <Box
-              width={"100%"}
-              height={"auto"}
-              bg={"white"}
-              onClick={() => navigate("/support")}
-            >
-              <HStack bg={"transparent"} spaceX={"10%"}>
-                <FiHelpCircle
-                  style={{ background: "transparent" }}
-                  size={"20%"}
-                  color="#16a34a"
-                />
-
-                <Stack bg={"transparent"} width={"100%"}>
-                  <Heading
-                    bg={"transparent"}
-                    color={"#09090b"}
-                    width={"100%"}
-                    fontSize={"sm"}
-                    lineHeight={"100%"}
-                  >
-                    Support Center
-                  </Heading>
-                  <Heading
-                    bg={"transparent"}
-                    color={"#a1a1aa"}
-                    width={"100%"}
-                    fontSize={"sm"}
-                    lineHeight={"100%"}
-                  >
-                    Need help?
-                  </Heading>
-                </Stack>
-
-                <FiChevronRight
-                  style={{ background: "transparent" }}
-                  size={"20%"}
-                  color="#16a34a"
-                />
-              </HStack>
-            </Box>
-
-            <Box height={"1px"} width={"95%"} bg={"#bdbebf"} />
-
+            
             <Box
               width={"100%"}
               height={"auto"}
