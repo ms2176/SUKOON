@@ -147,6 +147,7 @@ const BeatiMain = () => {
           fontSize={'250%'}
           className='beatiHead'
           mb={'20px'}
+          color={'white'}
         >
           Be'ati
         </Heading>

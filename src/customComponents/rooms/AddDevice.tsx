@@ -15,6 +15,7 @@ import ThermostatImg from '@/images/devicesIcons/thermostat.png';
 import DoorbellImg from '@/images/devicesIcons/smart-door.png';
 import HeatconvectorImg from '@/images/devicesIcons/heater-convector.png';
 import Dishwasher from '@/images/devicesIcons/dishwasher.png';
+import { VscClose } from 'react-icons/vsc';
 
 type DeviceType =
   | 'light'
@@ -277,7 +278,7 @@ const AddDevice = ({ onClose, roomId, refreshDevices }: AddDeviceProps) => {
         display={'flex'}
         alignItems={'center'}
       >
-        <IoMdClose
+        <VscClose
           style={{
             background: 'transparent',
             position: 'absolute',
@@ -363,8 +364,8 @@ const AddDevice = ({ onClose, roomId, refreshDevices }: AddDeviceProps) => {
         </Box>
 
         {isAddActive && (
-          <Box width={'100%'} height={'30vh'} overflowY={'auto'}>
-            <Grid templateColumns={{ base: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' }} gap={4}>
+          <Box width={'100%'} height={'30vh'} overflowY={'auto'} >
+            <Grid templateColumns={{ base: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' }} gap={4} p={4}>
               {availableDevices.map((device) => (
                 <GridItem key={device.id}>
                   <VStack
@@ -384,6 +385,8 @@ const AddDevice = ({ onClose, roomId, refreshDevices }: AddDeviceProps) => {
                     height={'100%'}
                     onClick={() => handleDeviceSelect(device.id)}
                     cursor="pointer"
+                    
+                    
                   >
                     <Image
                       src={getDeviceImage(device.deviceType)}
@@ -406,7 +409,7 @@ const AddDevice = ({ onClose, roomId, refreshDevices }: AddDeviceProps) => {
 
         {!isAddActive && (
           <Box width={'100%'} height={'30vh'} overflowY={'auto'}>
-            <Grid templateColumns={{ base: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' }} gap={4}>
+            <Grid templateColumns={{ base: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' }} gap={4} p={4}>
               {devices.map((device) => (
                 <GridItem key={device.id}>
                   <VStack

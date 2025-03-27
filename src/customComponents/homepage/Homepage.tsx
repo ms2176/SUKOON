@@ -37,6 +37,7 @@ import {
   updateDoc,
   getDoc,
 } from "firebase/firestore";
+import { FaRegBuilding } from "react-icons/fa";
 import NoImage from "@/images/noImage.png";
 // Import device images
 import LightImg from "@/images/devicesIcons/lamp.png";
@@ -592,36 +593,26 @@ const Homepage: React.FC<{
           justifyContent={"center"}
           alignItems={"center"}
           alignContent={"center"}
-          mt={"25px"}
+          mt={"2%"}
           zIndex={1}
           bg={"transparent"}
         >
-          <HStack
-            spaceX={"-5%"}
-            justifyContent={"center"}
-            alignItems={"center"}
-            alignContent={"center"}
-            bg={"transparent"}
-          >
+          {selectedHome?.homeType === "admin" ? (
+            <MiniDisplays
+              Icon={FaRegBuilding}
+              title="Connected Units:"
+              value="0" // Static value for now
+            />
+          ) : (
             <MiniDisplays
               Icon={FiMonitor}
               title="Active devices:"
               value={activeDevicesCount.toString()}
             />
-            <MiniDisplays
-              Icon={FiHome}
-              title="Home Status:"
-              value="Good"
-            />
-            <MiniDisplays
-              Icon={FiZap}
-              title="Energy Generation:"
-              value={energyGeneration}
-            />
-          </HStack>
+          )}
         </Flex>
 
-        <Flex className="pulseBoxContainer">
+        <Flex className="pulseBoxContainer" mt={'2%'}>
           <Lottie
             loop
             animationData={
@@ -631,7 +622,8 @@ const Homepage: React.FC<{
             }
             play
             className="pulseAnimation"
-            style={{ background: "transparent" }}
+            
+            style={{ background: "transparent", height: '450px', width: '450px' }}
           />
           <Box
             className="pulseBox"

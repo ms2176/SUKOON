@@ -191,7 +191,7 @@ const PP = ({ onClose }: PPProps) => {
       
       <Stack spaceY={4} p={6} height="100%" bg="black" mt={'10%'}>
         <Heading color="white" textAlign="center" fontSize="2xl" bg="black" className='bold'>
-          Privacy Policy
+          Our Privacy Policy
         </Heading>
         <Box bg="white" height="1px" width="100%" />
         

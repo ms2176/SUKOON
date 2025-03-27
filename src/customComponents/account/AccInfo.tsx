@@ -147,7 +147,6 @@ const AccInfo = () => {
             <Heading size="lg" flex="1" color="black">
               Profile Edit
             </Heading>
-            <Box boxSize={6} as={FiSettings} color="black" />
           </HStack>
 
           <Flex align="center" direction="column" mt={6} pt={9}>

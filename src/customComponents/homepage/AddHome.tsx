@@ -148,7 +148,7 @@ const AddHome: React.FC<{
             height={"auto"}
             onClick={closeAddHome}
           >
-            <IoCloseCircleSharp style={{ background: "transparent" }} size={"20%"} />
+            <IoCloseCircleSharp style={{ background: "transparent" }} size={"20%"} color='black'/>
           </Button>
 
           <Heading bg={"transparent"} textAlign={"center"} color={"black"}>

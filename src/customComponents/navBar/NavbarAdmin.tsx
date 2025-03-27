@@ -1,5 +1,4 @@
 import { Box, Button, Heading, HStack, Stack } from "@chakra-ui/react";
-import { FaHome } from "react-icons/fa";
 import { SlGraph } from "react-icons/sl";
 import { MdAccountCircle } from "react-icons/md";
 import { FaRegBuilding } from "react-icons/fa";
@@ -7,6 +6,7 @@ import { useNavigate } from 'react-router-dom'; // Import useNavigate
 import { useEffect, useState } from "react";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { getFirestore, collection, query, where, getDocs } from "firebase/firestore"; // Import Firestore functions
+import { FiHome, FiBarChart2, FiUser, FiLayout } from "react-icons/fi";
 
 const NavbarAdmin = () => {
   const navigate = useNavigate();
@@ -71,16 +71,7 @@ const NavbarAdmin = () => {
   };
 
   return (
-    <Box
-      position="fixed"  // Keeps it fixed on the screen
-      bottom="0"        // Moves it to the bottom
-      width="100%"
-      bg="white"     // Temporary color for visibility
-      color="white"
-      p="4"
-      className="navContainer"
-      zIndex={1000}
-    >
+    <Box position="fixed" bottom="-4" width="100%" bg="white" color="white" p="4" className="navContainer" zIndex={1000}>
       <HStack
         bg={'transparent'}
         display={'flex'}
@@ -93,7 +84,7 @@ const NavbarAdmin = () => {
         {/* Home Button */}
         <Button className="navButton" onClick={goToHome}>
           <Stack spaceY={-3} display={'flex'} justifyContent={'center'} alignItems={'center'} alignContent={'center'}>
-            <FaHome size={'70%'} style={{ background: 'transparent' }} color="#21334a" />
+            <FiHome size={'70%'} style={{ background: 'transparent' }} color="#21334a" />
             <Heading color="#21334a" fontSize={'90%'} bg={'transparent'} textAlign={'center'}>
               Home
             </Heading>
@@ -123,7 +114,7 @@ const NavbarAdmin = () => {
           opacity={!hasHubs || loading ? 0.5 : 1} // Gray out if no hubs
         >
           <Stack spaceY={-3} display={'flex'} justifyContent={'center'} alignItems={'center'} alignContent={'center'}>
-            <SlGraph size={'70%'} style={{ background: 'transparent' }} color="#21334a" />
+            <FiBarChart2 size={'70%'} style={{ background: 'transparent' }} color="#21334a" />
             <Heading color="#21334a" fontSize={'90%'} bg={'transparent'} textAlign={'center'}>
               Stats
             </Heading>

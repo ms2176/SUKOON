@@ -1,4 +1,5 @@
-/* login.css */
+
+@import tailwindcss
 
 body {
     overflow: auto;
@@ -6,7 +7,6 @@ body {
     z-index: 20;
 }
 
-/* Main container setup */
 .homepageContainer {
     min-height: 100vh;
     overflow-y: auto;
@@ -37,8 +37,8 @@ body {
 
 .pulseAnimation {
     position: absolute; 
-    width: 500px; 
-    height: 500px;
+    width: 400px; 
+    height: 400px;
     z-index: 0; 
     background-color: transparent;
 }
@@ -134,9 +134,6 @@ body {
     .pinnedinfoContainer {
         gap: 200px;
     }
-<<<<<<< HEAD
-}
-=======
 
     .pinnedHeader, .editHeader {
         font-family: 'SpotifyFont', sans-serif;
@@ -147,7 +144,8 @@ body {
         display: flex;
         align-items: center;
         justify-content: space-between;
->>>>>>> zaid-fixedSettings
+    }
+}
 
 
         

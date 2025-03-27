@@ -9,15 +9,11 @@ const miniDisplays = ({Icon, title, value}) => {
         <HStack color={'black'} bg={'transparent'}>
             <Icon size={40} />
 
-            <Stack gap={0} bg={'transparent'}>
-                <Heading fontSize={'80%'} lineHeight={1} bg={'transparent'}>
-                    {title}
+            <HStack gap={2} bg={'transparent'}>
+                <Heading fontSize={'80%'} lineHeight={1.5} bg={'transparent'}>
+                    {title} {value}
                 </Heading>
-
-                <Text fontSize={'80%'} bg={'transparent'}>
-                    {value}
-                </Text>
-            </Stack>
+            </HStack>
 
         </HStack>
       
