@@ -1,6 +1,7 @@
 import { background } from "@chakra-ui/system";
 import { Carousel } from "flowbite-react";
 import Logo from '@/images/logo.png';
+import Intro from '@/images/tutorial/1.png'
 
 const CarouselComponent = () => {
   return (
@@ -25,7 +26,7 @@ const CarouselComponent = () => {
         className="h-full [&_.group]:!relative [&_.group]:!inset-0 [&_.group]:!translate-y-0"
       >
         <div className="relative h-full" style={{background: 'transparent'}}>
-          <img className="h-full w-full object-cover" src={Logo} alt="Slide 1"/>
+          <img className="h-full w-full object-cover" src={Intro} alt="Slide 1"/>
         </div>
         <div className="relative h-full" style={{background: 'transparent'}}>
           <img className="h-full w-full object-cover" src="https://flowbite.com/docs/images/carousel/carousel-2.svg" alt="Slide 2" />
