@@ -352,30 +352,14 @@ const StatsRoom = () => {
     return timeData ? timeData.unit : "kWh";
   };
 
-  // Get device icon based on type
-  const getDeviceIcon = (deviceType: string) => {
-    switch (deviceType.toLowerCase()) {
-      case "light":
-        return "💡";
-      case "tv":
-        return "📺";
-      case "ac":
-        return "❄️";
-      case "dishwasher":
-        return "🍽️";
-      case "fan":
-        return "🌀";
-      case "thermostat":
-        return "🌡️";
-      default:
-        return "🔌";
-    }
-  };
-
   return (
     <div className="homepageContainer" style={{ overflowX: "hidden" }}>
       {/* Header */}
-      <Box className="homepageHeader">
+      <Box
+        className="homepageHeader"
+        bg="white"
+        boxShadow="0 2px 4px rgba(0, 0, 0, 0.05)"
+      >
         <Flex
           justifyContent="space-between"
           alignItems="center"
@@ -389,14 +373,16 @@ const StatsRoom = () => {
               variant="ghost"
               colorScheme="green"
               mr={2}
+              size="md"
             >
               <FiArrowLeft color="#43eb7f" />
             </IconButton>
             <Heading
               bg="transparent"
-              fontWeight="extrabold"
+              fontWeight="semibold"
               className="introHomepage"
-              color="black"
+              color="#4A5568"
+              fontSize="xl"
             >
               {roomName} Stats
             </Heading>
@@ -467,20 +453,28 @@ const StatsRoom = () => {
               <Flex direction="column" mb="15px">
                 <Flex
                   justifyContent="space-between"
-                  alignItems="center"
-                  mb="10px"
+                  alignItems="flex-start"
+                  mb="15px"
+                  flexWrap="wrap"
+                  gap={2}
                 >
-                  <Heading
-                    textAlign="left"
-                    fontSize="xl"
-                    className="pinnedHeader"
-                    color="#21334a"
-                  >
-                    Energy Consumed: {getTotalEnergy()} {getEnergyUnit()}
-                  </Heading>
-                  <Flex alignItems="center">
+                  <Box>
+                    <Heading
+                      textAlign="left"
+                      fontSize="xl"
+                      className="pinnedHeader"
+                      color="#21334a"
+                      mb="10px"
+                    >
+                      Energy Consumed: {getTotalEnergy()} {getEnergyUnit()}
+                    </Heading>
+                    <Text color="#6cce58" fontWeight="medium">
+                      {getTimePeriodLabel()}
+                    </Text>
+                  </Box>
+                  <Flex alignItems="center" alignSelf="flex-start" mt={1}>
                     {lastUpdated && (
-                      <Text fontSize="sm" color="gray.500" mr={2}>
+                      <Text fontSize="sm" color="gray.500" mr={3}>
                         Last updated: {lastUpdatedText}
                       </Text>
                     )}
@@ -496,47 +490,82 @@ const StatsRoom = () => {
                     </IconButton>
                   </Flex>
                 </Flex>
-                <Text color="#6cce58" fontWeight="medium" mb="15px">
-                  {getTimePeriodLabel()}
-                </Text>
-                <ButtonGroup
-                  size="sm"
-                  variant="outline"
-                  style={{ alignSelf: "flex-start" }}
-                >
-                  <Button
-                    colorScheme={timeFilter === "daily" ? "green" : "gray"}
-                    onClick={() => setTimeFilter("daily")}
-                    color="#21334a"
-                    className="tenant-filter-btn"
-                  >
-                    Daily
-                  </Button>
-                  <Button
-                    colorScheme={timeFilter === "weekly" ? "green" : "gray"}
-                    onClick={() => setTimeFilter("weekly")}
-                    color="#21334a"
-                    className="tenant-filter-btn"
-                  >
-                    Weekly
-                  </Button>
-                  <Button
-                    colorScheme={timeFilter === "monthly" ? "green" : "gray"}
-                    onClick={() => setTimeFilter("monthly")}
-                    color="#21334a"
-                    className="tenant-filter-btn"
-                  >
-                    Monthly
-                  </Button>
-                  <Button
-                    colorScheme={timeFilter === "yearly" ? "green" : "gray"}
-                    onClick={() => setTimeFilter("yearly")}
-                    color="#21334a"
-                    className="tenant-filter-btn"
-                  >
-                    Yearly
-                  </Button>
-                </ButtonGroup>
+                <Box width="100%" overflow="auto" pb={3}>
+                  <ButtonGroup size="sm" variant="outline" spacing={3}>
+                    <Button
+                      bg={timeFilter === "daily" ? "#43eb7f" : "transparent"}
+                      color={timeFilter === "daily" ? "white" : "#21334a"}
+                      onClick={() => setTimeFilter("daily")}
+                      className="tenant-filter-btn"
+                      px={4}
+                      py={2}
+                      borderWidth={1}
+                      borderColor={
+                        timeFilter === "daily" ? "#43eb7f" : "#E2E8F0"
+                      }
+                      _hover={{
+                        bg: timeFilter === "daily" ? "#43eb7f" : "#e6ffe6",
+                        color: timeFilter === "daily" ? "white" : "#43eb7f",
+                      }}
+                    >
+                      Daily
+                    </Button>
+                    <Button
+                      bg={timeFilter === "weekly" ? "#43eb7f" : "transparent"}
+                      color={timeFilter === "weekly" ? "white" : "#21334a"}
+                      onClick={() => setTimeFilter("weekly")}
+                      className="tenant-filter-btn"
+                      px={4}
+                      py={2}
+                      borderWidth={1}
+                      borderColor={
+                        timeFilter === "weekly" ? "#43eb7f" : "#E2E8F0"
+                      }
+                      _hover={{
+                        bg: timeFilter === "weekly" ? "#43eb7f" : "#e6ffe6",
+                        color: timeFilter === "weekly" ? "white" : "#43eb7f",
+                      }}
+                    >
+                      Weekly
+                    </Button>
+                    <Button
+                      bg={timeFilter === "monthly" ? "#43eb7f" : "transparent"}
+                      color={timeFilter === "monthly" ? "white" : "#21334a"}
+                      onClick={() => setTimeFilter("monthly")}
+                      className="tenant-filter-btn"
+                      px={4}
+                      py={2}
+                      borderWidth={1}
+                      borderColor={
+                        timeFilter === "monthly" ? "#43eb7f" : "#E2E8F0"
+                      }
+                      _hover={{
+                        bg: timeFilter === "monthly" ? "#43eb7f" : "#e6ffe6",
+                        color: timeFilter === "monthly" ? "white" : "#43eb7f",
+                      }}
+                    >
+                      Monthly
+                    </Button>
+                    <Button
+                      bg={timeFilter === "yearly" ? "#43eb7f" : "transparent"}
+                      color={timeFilter === "yearly" ? "white" : "#21334a"}
+                      onClick={() => setTimeFilter("yearly")}
+                      className="tenant-filter-btn"
+                      px={4}
+                      py={2}
+                      borderWidth={1}
+                      borderColor={
+                        timeFilter === "yearly" ? "#43eb7f" : "#E2E8F0"
+                      }
+                      _hover={{
+                        bg: timeFilter === "yearly" ? "#43eb7f" : "#e6ffe6",
+                        color: timeFilter === "yearly" ? "white" : "#43eb7f",
+                      }}
+                    >
+                      Yearly
+                    </Button>
+                  </ButtonGroup>
+                </Box>
               </Flex>
               <Box height="300px" width="100%">
                 {energyData.length > 0 ? (
@@ -567,7 +596,12 @@ const StatsRoom = () => {
                         }}
                       />
                       <Legend />
-                      <Bar dataKey="energy" fill="#43eb7f" name="Energy" />
+                      <Bar
+                        dataKey="energy"
+                        fill="#43eb7f"
+                        name="Energy"
+                        radius={[5, 5, 0, 0]}
+                      />
                     </BarChart>
                   </ResponsiveContainer>
                 ) : (
@@ -592,7 +626,7 @@ const StatsRoom = () => {
             mx="20px"
             borderRadius="10px"
             bg="white"
-            mb="30px"
+            mb="100px" // Increased bottom margin to prevent cutoff by navbar
           >
             <Flex direction="column" width="100%" p="15px">
               <Heading
@@ -618,26 +652,38 @@ const StatsRoom = () => {
                       cursor="default"
                       _hover={{ bg: "#f9f9f9" }}
                     >
-                      <Flex alignItems="center">
-                        <Text fontSize="xl" mr={2}>
-                          {getDeviceIcon(item.deviceType)}
+                      <Box maxWidth="65%">
+                        <Text
+                          fontWeight="medium"
+                          color="#21334a"
+                          sx={{
+                            display: "-webkit-box",
+                            WebkitLineClamp: "2",
+                            WebkitBoxOrient: "vertical",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            wordBreak: "break-word",
+                          }}
+                        >
+                          {item.name}
                         </Text>
-                        <Box>
-                          <Text fontWeight="medium" color="#21334a">
-                            {item.name}
-                          </Text>
-                          <Text fontSize="sm" color="#666">
-                            {Math.round(item.usageHours)} hours of use
-                          </Text>
-                        </Box>
-                      </Flex>
+                        <Text fontSize="sm" color="#666">
+                          {Math.round(item.usageHours)} hours of use
+                        </Text>
+                      </Box>
                       <Text
                         bg="#43eb7f"
                         px={3}
                         py={1}
                         borderRadius="full"
                         fontSize="sm"
-                        color={item.energy > 0 ? "white" : "#666"}
+                        fontWeight="medium"
+                        color="white"
+                        minWidth="80px"
+                        height="28px"
+                        display="flex"
+                        alignItems="center"
+                        justifyContent="center"
                       >
                         {item.energy} {getEnergyUnit()}
                       </Text>
