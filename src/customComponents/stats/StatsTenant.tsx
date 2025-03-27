@@ -25,7 +25,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import "./Stats.css";
-// import DownloadButton from "./DownloadButton";
+import DownloadButton from "./DownloadButton";
 
 // Add TypeScript interfaces
 interface ChartData {
@@ -249,7 +249,6 @@ const StatsTenant = () => {
 
   // Handle room click - will be used later for navigation to room stats
   const handleRoomClick = (roomId: string, roomName: string) => {
-    // Navigate to the room stats page
     navigate(`/room-stats/${roomId}`, { state: { roomName } });
   };
 
@@ -350,7 +349,11 @@ const StatsTenant = () => {
   return (
     <div className="homepageContainer" style={{ overflowX: "hidden" }}>
       {/* Header */}
-      <Box className="homepageHeader" bg="#6cce58">
+      <Box
+        className="homepageHeader"
+        bg="white"
+        boxShadow="0 2px 4px rgba(0, 0, 0, 0.05)"
+      >
         <Flex
           justifyContent="space-between"
           alignItems="center"
@@ -361,7 +364,7 @@ const StatsTenant = () => {
             bg="transparent"
             fontWeight="extrabold"
             className="introHomepage"
-            color="black"
+            color="#4A5568"
           >
             Your Statistics
           </Heading>
@@ -431,20 +434,28 @@ const StatsTenant = () => {
               <Flex direction="column" mb="15px">
                 <Flex
                   justifyContent="space-between"
-                  alignItems="center"
-                  mb="10px"
+                  alignItems="flex-start"
+                  mb="15px"
+                  flexWrap="wrap"
+                  gap={2}
                 >
-                  <Heading
-                    textAlign="left"
-                    fontSize="xl"
-                    className="pinnedHeader"
-                    color="#21334a"
-                  >
-                    Energy Consumed: {getTotalEnergy()} {getEnergyUnit()}
-                  </Heading>
-                  <Flex alignItems="center">
+                  <Box>
+                    <Heading
+                      textAlign="left"
+                      fontSize="xl"
+                      className="pinnedHeader"
+                      color="#21334a"
+                      mb="10px"
+                    >
+                      Energy Consumed: {getTotalEnergy()} {getEnergyUnit()}
+                    </Heading>
+                    <Text color="#6cce58" fontWeight="medium">
+                      {getTimePeriodLabel()}
+                    </Text>
+                  </Box>
+                  <Flex alignItems="center" alignSelf="flex-start" mt={1}>
                     {lastUpdated && (
-                      <Text fontSize="sm" color="gray.500" mr={2}>
+                      <Text fontSize="sm" color="gray.500" mr={3}>
                         Last updated: {lastUpdatedText}
                       </Text>
                     )}
@@ -456,51 +467,91 @@ const StatsTenant = () => {
                       variant="ghost"
                       colorScheme="green"
                     >
-                      <FiRefreshCcw color="#43eb7f" size={"190%"} />
+                      <FiRefreshCcw color="#43eb7f" />
                     </IconButton>
                   </Flex>
                 </Flex>
-                <Text color="#6cce58" fontWeight="medium" mb="15px">
-                  {getTimePeriodLabel()}
-                </Text>
-                <ButtonGroup
-                  size="sm"
-                  variant="outline"
-                  style={{ alignSelf: "flex-start" }}
-                >
-                  <Button
-                    colorScheme={timeFilter === "daily" ? "green" : "gray"}
-                    onClick={() => setTimeFilter("daily")}
-                    color="#21334a"
-                    className="tenant-filter-btn"
+                <Box width="100%" overflow="auto" pb={3}>
+                  <ButtonGroup
+                    size="sm"
+                    variant="outline"
+                    style={{ alignSelf: "flex-start" }}
+                    spacing={3}
                   >
-                    Daily
-                  </Button>
-                  <Button
-                    colorScheme={timeFilter === "weekly" ? "green" : "gray"}
-                    onClick={() => setTimeFilter("weekly")}
-                    color="#21334a"
-                    className="tenant-filter-btn"
-                  >
-                    Weekly
-                  </Button>
-                  <Button
-                    colorScheme={timeFilter === "monthly" ? "green" : "gray"}
-                    onClick={() => setTimeFilter("monthly")}
-                    color="#21334a"
-                    className="tenant-filter-btn"
-                  >
-                    Monthly
-                  </Button>
-                  <Button
-                    colorScheme={timeFilter === "yearly" ? "green" : "gray"}
-                    onClick={() => setTimeFilter("yearly")}
-                    color="#21334a"
-                    className="tenant-filter-btn"
-                  >
-                    Yearly
-                  </Button>
-                </ButtonGroup>
+                    <Button
+                      bg={timeFilter === "daily" ? "#6cce58" : "transparent"}
+                      color={timeFilter === "daily" ? "white" : "#21334a"}
+                      onClick={() => setTimeFilter("daily")}
+                      className="tenant-filter-btn"
+                      px={4}
+                      py={2}
+                      borderWidth={1}
+                      borderColor={
+                        timeFilter === "daily" ? "#6cce58" : "#E2E8F0"
+                      }
+                      _hover={{
+                        bg: timeFilter === "daily" ? "#6cce58" : "#e6ffe6",
+                        color: timeFilter === "daily" ? "white" : "#6cce58",
+                      }}
+                    >
+                      Daily
+                    </Button>
+                    <Button
+                      bg={timeFilter === "weekly" ? "#6cce58" : "transparent"}
+                      color={timeFilter === "weekly" ? "white" : "#21334a"}
+                      onClick={() => setTimeFilter("weekly")}
+                      className="tenant-filter-btn"
+                      px={4}
+                      py={2}
+                      borderWidth={1}
+                      borderColor={
+                        timeFilter === "weekly" ? "#6cce58" : "#E2E8F0"
+                      }
+                      _hover={{
+                        bg: timeFilter === "weekly" ? "#6cce58" : "#e6ffe6",
+                        color: timeFilter === "weekly" ? "white" : "#6cce58",
+                      }}
+                    >
+                      Weekly
+                    </Button>
+                    <Button
+                      bg={timeFilter === "monthly" ? "#6cce58" : "transparent"}
+                      color={timeFilter === "monthly" ? "white" : "#21334a"}
+                      onClick={() => setTimeFilter("monthly")}
+                      className="tenant-filter-btn"
+                      px={4}
+                      py={2}
+                      borderWidth={1}
+                      borderColor={
+                        timeFilter === "monthly" ? "#6cce58" : "#E2E8F0"
+                      }
+                      _hover={{
+                        bg: timeFilter === "monthly" ? "#6cce58" : "#e6ffe6",
+                        color: timeFilter === "monthly" ? "white" : "#6cce58",
+                      }}
+                    >
+                      Monthly
+                    </Button>
+                    <Button
+                      bg={timeFilter === "yearly" ? "#6cce58" : "transparent"}
+                      color={timeFilter === "yearly" ? "white" : "#21334a"}
+                      onClick={() => setTimeFilter("yearly")}
+                      className="tenant-filter-btn"
+                      px={4}
+                      py={2}
+                      borderWidth={1}
+                      borderColor={
+                        timeFilter === "yearly" ? "#6cce58" : "#E2E8F0"
+                      }
+                      _hover={{
+                        bg: timeFilter === "yearly" ? "#6cce58" : "#e6ffe6",
+                        color: timeFilter === "yearly" ? "white" : "#6cce58",
+                      }}
+                    >
+                      Yearly
+                    </Button>
+                  </ButtonGroup>
+                </Box>
               </Flex>
               <Box height="300px" width="100%">
                 {energyData.length > 0 ? (
@@ -531,7 +582,12 @@ const StatsTenant = () => {
                         }}
                       />
                       <Legend />
-                      <Bar dataKey="energy" fill="#43eb7f" name="Energy" />
+                      <Bar
+                        dataKey="energy"
+                        fill="#6cce58"
+                        name="Energy"
+                        radius={[5, 5, 0, 0]} // Rounded top corners of bars
+                      />
                     </BarChart>
                   </ResponsiveContainer>
                 ) : (
@@ -556,7 +612,7 @@ const StatsTenant = () => {
             mx="20px"
             borderRadius="10px"
             bg="white"
-            mb="30px"
+            mb="100px" // Increased bottom margin to prevent cutoff due to navbar
           >
             <Flex direction="column" width="100%" p="15px">
               <Heading
