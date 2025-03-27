@@ -43,7 +43,7 @@ import { reauthenticateWithCredential, EmailAuthProvider } from "firebase/auth";
 import DefualtAvatar from "@/images/defaultAvatar.png";
 import { getStorage, ref, deleteObject } from "firebase/storage";
 import { RiNewsLine } from "react-icons/ri";
-import Tutorial from '../homepage/carousel/CarouselComponent'
+import Tutorial from "../homepage/carousel/CarouselComponent";
 
 const AccountsPage = () => {
   const [username, setUsername] = useState("Kaywan"); // Default username
@@ -288,7 +288,13 @@ const AccountsPage = () => {
           height="30vh"
         >
           <HStack justify="space-between" bg={"transparent"}>
-            <Heading size="lg" flex="1" bg={"transparent"} color={"white"} className="bold">
+            <Heading
+              size="lg"
+              flex="1"
+              bg={"transparent"}
+              color={"white"}
+              className="bold"
+            >
               Account
             </Heading>
           </HStack>
@@ -327,7 +333,12 @@ const AccountsPage = () => {
             >
               {username} {/* Use the fetched username */}
             </Text>
-            <Text fontSize="sm" color={"white"} bg={"transparent"} className="bold">
+            <Text
+              fontSize="sm"
+              color={"white"}
+              bg={"transparent"}
+              className="bold"
+            >
               {email} {/* Use the fetched email */}
             </Text>
           </Flex>
@@ -389,7 +400,12 @@ const AccountsPage = () => {
 
             <Box height={"1px"} width={"95%"} bg={"#bdbebf"} />
 
-            <Box width={"100%"} height={"auto"} bg={"white"} onClick={() => setShowTutorial(true)}>
+            <Box
+              width={"100%"}
+              height={"auto"}
+              bg={"white"}
+              onClick={() => setShowTutorial(true)}
+            >
               <HStack bg={"transparent"} spaceX={"10%"}>
                 <RiNewsLine
                   style={{ background: "transparent" }}
@@ -418,13 +434,15 @@ const AccountsPage = () => {
                   </Heading>
                 </Stack>
 
-                
+                <FiChevronRight
+                  style={{ background: "transparent" }}
+                  size={"20%"}
+                  color="#16a34a"
+                />
               </HStack>
             </Box>
 
             <Box height={"1px"} width={"95%"} bg={"#bdbebf"} />
-
-            
 
             <Box
               width={"100%"}
@@ -513,7 +531,7 @@ const AccountsPage = () => {
             </Box>
 
             <Box height={"1px"} width={"95%"} bg={"#bdbebf"} />
-            
+
             <Box
               width={"100%"}
               height={"auto"}
@@ -600,11 +618,20 @@ const AccountsPage = () => {
         </Box>
       </Box>
 
-      {showTutorial && 
-        <div style={{position: 'absolute', top:'50%', left:'50%', transform: 'translate(-50%, -50%)', width:'80%', }} >
-        <Tutorial onClose={() => setShowTutorial(false)} />
-      </div>
-      }
+      {/* Modified tutorial display to show full screen */}
+      {showTutorial && (
+        <Box
+          position="fixed"
+          top="0"
+          left="0"
+          width="100%"
+          height="100vh"
+          zIndex={100000}
+          bg="black"
+        >
+          <Tutorial onClose={() => setShowTutorial(false)} />
+        </Box>
+      )}
     </Box>
   );
 };
