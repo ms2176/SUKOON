@@ -9,7 +9,7 @@ import {
   resendVerificationEmail,
   getCurrentUser,
 } from "@/utilities/firebase_auth_functions";
-import "./Register.css";
+import "./register.css";
 
 const VerifyEmail = () => {
   const navigate = useNavigate();
