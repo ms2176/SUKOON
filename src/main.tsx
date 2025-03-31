@@ -8,7 +8,7 @@ import './index.css';
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <Provider>
-      <BrowserRouter basename="/SUKOON/">  {/* Specify base path for React Router */}
+      <BrowserRouter basename="/">  {/* Specify base path for React Router */}
         <App />
       </BrowserRouter>
     </Provider>
