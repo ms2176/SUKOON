@@ -1,0 +1,18 @@
+version: '3'
+
+services:
+  sukoon-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: sukoon-app
+    restart: unless-stopped
+    networks:
+      - npm_network
+    # You can add environment variables if needed
+    # environment:
+    #   - NODE_ENV=production
+
+networks:
+  npm_network:
+    external: true
