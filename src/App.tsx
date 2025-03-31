@@ -28,7 +28,7 @@ import { useState } from "react";
 import Verification_hold from "./customComponents/login/verification_hold";
 import Alldevices from "./customComponents/rooms/Alldevices";
 import DeviceControlPageNoRoom from "./customComponents/rooms/DeviceControlPageNoRoom";
-import UnitsList from "./customComponents/rooms/unitsList";
+import UnitsList from "./customComponents/rooms/UnitsList";
 import StatsAdmin from "./customComponents/stats/StatsAdmin";
 import StatsTenant from "./customComponents/stats/StatsTenant";
 import StatsRoom from "./customComponents/stats/StatsRoom";
