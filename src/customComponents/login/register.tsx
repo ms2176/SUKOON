@@ -13,7 +13,7 @@ import { MdOutlineEmail } from "react-icons/md";
 import { CiLock } from "react-icons/ci";
 import TopBorderImage from "@/images/pngegg (1).png";
 import { useNavigate } from "react-router-dom"; // Import useNavigate hook
-import "./Register.css";
+import "./register.css";
 import { useState } from "react";
 import { FiEye } from "react-icons/fi";
 import { FiEyeOff } from "react-icons/fi";
