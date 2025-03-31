@@ -8,11 +8,18 @@ COPY package*.json ./
 
 # Install dependencies
 RUN npm ci
-# Install Firebase type definitions
-RUN npm install --save-dev @types/firebase
+
+# Copy environment files first (important to be before the rest of the app)
+COPY .env* ./
 
 # Copy the rest of the application
 COPY . .
+
+
+
+# Display environment variables for debugging (will be visible in build logs)
+RUN echo "Environment variables:" && cat .env || echo "No .env file found"
+RUN echo "Production environment variables:" && cat .env.production || echo "No .env.production file found"
 
 # Build the application
 RUN npm run build
