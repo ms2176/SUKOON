@@ -1,5 +1,5 @@
 import React from 'react'
-import CactusImg from './cactus.png'
+import CactusImg from './Cactus.png'
 import CactusSLImg from './sillohuetes/cactusSL.png'
 
 interface CactusProps {
