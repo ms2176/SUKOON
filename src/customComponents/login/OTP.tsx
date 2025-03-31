@@ -1,6 +1,6 @@
 import { Box, Button, Flex, Heading, HStack, Input, Stack, Text } from '@chakra-ui/react';
 import TopBorderImage from '@/images/pngegg (1).png';
-import './Register.css';
+import './register.css';
 import { CiLock } from 'react-icons/ci';
 import { MdOutlineEmail } from 'react-icons/md';
 import { useNavigate } from 'react-router-dom'; // Import useNavigate
