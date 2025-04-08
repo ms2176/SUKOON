@@ -2,8 +2,6 @@
 
 SUKOON is a modern, React-based smart home management application that allows users to control their smart devices, monitor energy consumption, and participate in gamification features that encourage sustainable living.
 
-![SUKOON Logo](public/vite.svg) <!-- Replace with actual logo -->
-
 ## Features
 
 - **User Authentication**: Secure login and registration with email/password or Google Sign-In
